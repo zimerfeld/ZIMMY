@@ -7,7 +7,7 @@ atualizado: 2026-06-20
 # 🧡 Zimmy Pet — Cofre de Neurônios
 
 > Memória técnica do projeto **Zimmy Pet**, mantida pelo Claude.
-> Repositório: https://github.com/zimerfeld/ZIMMY_PET
+> Repositório: https://github.com/zimerfeld/ZIMMY
 > Código-fonte principal: [[zimmy.gd]] (Godot 4.6, GDScript).
 
 Desktop pet overlay: uma janela transparente, sem bordas e sempre no topo, com uma

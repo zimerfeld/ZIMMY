@@ -41,6 +41,7 @@ const MAX_W := 640          # largura máxima antes de permitir quebra de linha
 const PETS_FILE := "user://pets.json"
 const ACC_FILE := "user://accessories.json"
 const SETTINGS_FILE := "user://settings.json"   # guarda a última posição na tela
+const AUTOMACOES_DIR := "res://Automacoes/"   # scripts de automação (drop-in) — ver Automacoes/LEIAME.md
 const RANDOM_PERIOD := 9.0  # segundos entre pets aleatórios (quando ligado)
 const PET_COLOR_KEYS := ["body_color", "belly_color", "ear_color", "cheek_color",
 	"antenna_color", "nose_color"]
@@ -52,6 +53,7 @@ var saved_pets: Dictionary = {}     # nome -> config (em memória, com Color)
 var saved_accessories: Dictionary = {}  # nome -> config de acessório
 var pet_menu_ids: Dictionary = {}   # id do item no dropdown -> nome do pet
 var acc_menu_ids: Dictionary = {}   # id do item no dropdown -> nome do acessório
+var automation_ids: Dictionary = {} # id do item no submenu -> caminho do script de automação
 var random_pet_on := false
 var random_acc_on := false
 var random_pet_timer := 0.0
@@ -107,6 +109,7 @@ var expression := "neutral"   # emoção refletida no rosto (vinda do emoji fala
 var menu: PopupMenu
 var pets_menu: PopupMenu
 var acc_menu: PopupMenu
+var automations_menu: PopupMenu
 var save_dialog: ConfirmationDialog
 var name_edit: LineEdit
 var save_mode := "pet"      # "pet" ou "acc" — o que o diálogo de salvar grava
@@ -123,6 +126,7 @@ const MI_SAVE_ACC := 7
 const MI_CHOOSE_ACC := 8
 const MI_QUIT := 9
 const MI_RANDOM_ACC := 10
+const MI_AUTOMATIONS := 11
 
 # ------------------------------------------------------------------ config de pet
 ## Config do pet padrão (a carinha original do Zimmy). Sempre disponível.
@@ -245,6 +249,8 @@ func _build_menu() -> void:
 	pets_menu.id_pressed.connect(_on_pick_pet)
 	acc_menu = PopupMenu.new()
 	acc_menu.id_pressed.connect(_on_pick_acc)
+	automations_menu = PopupMenu.new()
+	automations_menu.id_pressed.connect(_on_pick_automation)
 
 	menu = PopupMenu.new()
 	menu.add_item("🦴 Alimentar", MI_FEED)
@@ -261,11 +267,14 @@ func _build_menu() -> void:
 	menu.add_item("🎀 Salvar Acessório...", MI_SAVE_ACC)
 	menu.add_submenu_node_item("🧳 Escolher acessório", acc_menu, MI_CHOOSE_ACC)
 	menu.add_separator()
+	menu.add_submenu_node_item("⚙️ Automações", automations_menu, MI_AUTOMATIONS)
+	menu.add_separator()
 	menu.add_item("Sair", MI_QUIT)
 	menu.id_pressed.connect(_on_menu)
 	add_child(menu)
 	_rebuild_pets_menu()
 	_rebuild_acc_menu()
+	_rebuild_automations_menu()
 
 ## (Re)constrói o dropdown de pets: "Selecione..." (0) e "Default" (1) no topo.
 func _rebuild_pets_menu() -> void:
@@ -292,6 +301,77 @@ func _rebuild_acc_menu() -> void:
 		acc_menu.add_item(nm, next_id)
 		acc_menu_ids[next_id] = nm
 		next_id += 1
+
+# ------------------------------------------------------------------ automações
+## (Re)constrói o submenu de Automações a partir dos scripts em res://Automacoes/.
+## Sem nenhuma automação válida, o item "⚙️ Automações" do menu fica desabilitado.
+func _rebuild_automations_menu() -> void:
+	automations_menu.clear()
+	automation_ids.clear()
+	var list := _scan_automations()
+	var idx := menu.get_item_index(MI_AUTOMATIONS)
+	if list.is_empty():
+		menu.set_item_disabled(idx, true)
+		return
+	menu.set_item_disabled(idx, false)
+	var next_id := 100
+	for a in list:
+		automations_menu.add_item(a["name"], next_id)
+		automation_ids[next_id] = a["path"]
+		next_id += 1
+
+## Lista os scripts .gd de res://Automacoes/ como [{name, path}], ordenados pelo nome.
+func _scan_automations() -> Array:
+	var out: Array = []
+	var dir := DirAccess.open(AUTOMACOES_DIR)
+	if dir == null:
+		return out                     # pasta ausente => nenhuma automação
+	dir.list_dir_begin()
+	var fn := dir.get_next()
+	while fn != "":
+		if not dir.current_is_dir():
+			var f := fn
+			if f.ends_with(".remap"):   # build exportado renomeia .gd -> .gd.remap
+				f = f.trim_suffix(".remap")
+			if f.ends_with(".gd"):
+				var path := AUTOMACOES_DIR + f
+				out.append({"name": _automation_name(path, f), "path": path})
+		fn = dir.get_next()
+	dir.list_dir_end()
+	out.sort_custom(func(a, b): return String(a["name"]).naturalnocasecmp_to(String(b["name"])) < 0)
+	return out
+
+## Nome de exibição da automação: usa a constante AUTOMATION_NAME do script, se houver;
+## senão, deriva do nome do arquivo (snake_case -> "Snake Case").
+func _automation_name(path: String, filename: String) -> String:
+	var gd = load(path)
+	if gd is GDScript:
+		var consts: Dictionary = (gd as GDScript).get_script_constant_map()
+		if consts.has("AUTOMATION_NAME"):
+			return str(consts["AUTOMATION_NAME"])
+	return filename.trim_suffix(".gd").capitalize()
+
+func _on_pick_automation(id: int) -> void:
+	if automation_ids.has(id):
+		_run_automation(String(automation_ids[id]))
+
+## Carrega e executa o script de automação: instancia e chama run(zimmy), onde
+## zimmy é este próprio nó (dá acesso a say(), feed(), pet(), play(), current, etc.).
+func _run_automation(path: String) -> void:
+	var gd = load(path)
+	if not (gd is GDScript):
+		say("automação inválida 🚫")
+		return
+	var inst = (gd as GDScript).new()
+	if inst == null:
+		say("automação inválida 🚫")
+		return
+	if inst is Node:
+		add_child(inst)               # Node persiste para automações contínuas
+	if inst.has_method("run"):
+		inst.run(self)
+	else:
+		say("automação sem run() 🤔")
 
 func _build_save_dialog() -> void:
 	save_dialog = ConfirmationDialog.new()
@@ -891,6 +971,7 @@ func _input(event: InputEvent) -> void:
 				else:
 					_save_window_pos()   # guarda a nova posição
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+			_rebuild_automations_menu()   # capta scripts adicionados sem reiniciar
 			menu.position = DisplayServer.mouse_get_position()
 			menu.reset_size()
 			menu.popup()

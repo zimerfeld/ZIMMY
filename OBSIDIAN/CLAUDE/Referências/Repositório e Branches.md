@@ -5,7 +5,7 @@ atualizado: 2026-06-20
 
 # 📚 Repositório e Branches
 
-- **Remote**: `origin` → https://github.com/zimerfeld/ZIMMY_PET.git
+- **Remote**: `origin` → https://github.com/zimerfeld/ZIMMY.git
 - **Branch padrão remoto**: `main` (`origin/HEAD -> origin/main`).
 - **Branches locais**: `main`, `develop`, `feature/aleatorios` (ativa em 2026-06-20).
 - **Branches remotas**: `origin/main`, `origin/develop`, `origin/feature/aleatorios`.

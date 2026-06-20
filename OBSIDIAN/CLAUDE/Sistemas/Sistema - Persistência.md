@@ -13,6 +13,8 @@ Três arquivos JSON em `user://` (no Windows:
 | `pets.json` | `PETS_FILE` | `{ nome: config_pet }` |
 | `accessories.json` | `ACC_FILE` | `{ nome: config_acessório }` |
 | `settings.json` | `SETTINGS_FILE` | `{ anchor_x, anchor_y }` (última posição) |
+| `schedules.json` | `SCHEDULES_FILE` | `{ caminho_automação: true }` (agendadas ligadas) |
+| `cred_<key>.json` | `CRED_PREFIX` | `{ user, pass }` por automação (e-mail). **Gitignored**, nunca versionar |
 
 ## Serialização de cores
 - `_cfg_to_json(cfg)` — converte cada `Color` em `[r,g,b,a]`; o resto passa direto.
@@ -27,6 +29,11 @@ Três arquivos JSON em `user://` (no Windows:
   [[Fluxo - Inicialização]]).
 - `_read_json(path)` — helper tolerante (retorna `null` se faltar/der erro).
 - `_save_window_pos` / `_load_window_pos` — ver [[Fluxo - Arrastar e Posição]].
+- `_save_schedules` / `_load_schedules` — automações agendadas ligadas
+  (`automation_enabled`); ver [[Sistema - Menu de Contexto]].
+- `load_credentials` / `save_credentials` / `forget_credentials` — credenciais de
+  automação em `user://cred_<key>.json` (um arquivo por automação, gitignored). Gravadas
+  só após validação; ver [[Sistema - Menu de Contexto]].
 
 Gravações disparadas em: salvar pet/acessório ([[Fluxo - Salvar e Carregar]]) e soltar
 o pet após arrastar.

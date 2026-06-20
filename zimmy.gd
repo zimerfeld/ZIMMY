@@ -41,6 +41,7 @@ const MAX_W := 640          # largura máxima antes de permitir quebra de linha
 const PETS_FILE := "user://pets.json"
 const ACC_FILE := "user://accessories.json"
 const SETTINGS_FILE := "user://settings.json"   # guarda a última posição na tela
+const SCHEDULES_FILE := "user://schedules.json" # quais automações agendadas estão ligadas
 const AUTOMACOES_DIR := "res://Automacoes/"   # scripts de automação (drop-in) — ver Automacoes/LEIAME.md
 const RANDOM_PERIOD := 9.0  # segundos entre pets aleatórios (quando ligado)
 const PET_COLOR_KEYS := ["body_color", "belly_color", "ear_color", "cheek_color",
@@ -56,6 +57,26 @@ var acc_menu_ids: Dictionary = {}   # id do item no dropdown -> nome do acessór
 var current_pet_name := "Default"   # nome da opção ativa no submenu de pets ("" se aleatório)
 var current_acc_name := "Nenhum"    # nome da opção ativa no submenu de acessórios ("" se aleatório)
 var automation_ids: Dictionary = {} # id do item no submenu -> caminho do script de automação
+# --- agendador de automações ---
+var schedule_defs: Dictionary = {}     # caminho -> {name, kind, every, at_minute, label} das automações com frequência declarada
+var automation_enabled: Dictionary = {} # caminho -> bool (quais agendadas estão ligadas; persistido)
+var sched_runtime: Dictionary = {}      # caminho -> {accum, last_day, last_hour} (estado de disparo em runtime)
+# --- grupos de menu, badges e credenciais de automações ---
+var automation_groups: Dictionary = {}  # caminho -> nome do grupo (ex.: "email") via const MENU_GROUP
+var automation_badge_keys: Dictionary = {} # caminho -> chave de badge (const BADGE_KEY)
+var automation_cred_keys: Dictionary = {}  # caminho -> chave de credencial (const CRED_KEY)
+var automation_icon_colors: Dictionary = {} # caminho -> Color do ícone (const ICON_COLOR, hex)
+var automation_badges: Dictionary = {}   # chave de badge -> texto exibido (ex.: "3", "!")
+var automation_item_menu: Dictionary = {} # id do item -> PopupMenu onde ele está (menu de automações ou de e-mail)
+var _icon_cache: Dictionary = {}         # hex -> ImageTexture (ícones de provedor)
+# --- credenciais (diálogo + estado) ---
+const CRED_PREFIX := "user://cred_"      # arquivo por automação: user://cred_<key>.json (gitignored)
+var cred_dialog: ConfirmationDialog
+var cred_user_edit: LineEdit
+var cred_pass_edit: LineEdit
+var cred_pending_key := ""               # chave da credencial sendo solicitada agora
+var cred_pending_cb := Callable()        # callback a chamar com {user, pass} ao confirmar
+var cred_prompt_suppressed: Dictionary = {} # chaves cujo prompt o usuário cancelou (não insistir)
 var random_pet_on := false
 var random_acc_on := false
 var random_pet_timer := 0.0
@@ -112,6 +133,7 @@ var menu: PopupMenu
 var pets_menu: PopupMenu
 var acc_menu: PopupMenu
 var automations_menu: PopupMenu
+var email_menu: PopupMenu
 var save_dialog: ConfirmationDialog
 var name_edit: LineEdit
 var save_mode := "pet"      # "pet" ou "acc" — o que o diálogo de salvar grava
@@ -129,6 +151,7 @@ const MI_CHOOSE_ACC := 8
 const MI_QUIT := 9
 const MI_RANDOM_ACC := 10
 const MI_AUTOMATIONS := 11
+const MI_EMAIL := 12
 
 # ------------------------------------------------------------------ config de pet
 ## Config do pet padrão (a carinha original do Zimmy). Sempre disponível.
@@ -142,6 +165,7 @@ func _default_cfg() -> Dictionary:
 		"eye_dx": 18.0, "eye_y": 96.0, "eye_w": 10.0, "eye_h": 12.0,
 		"body_w": 58.0, "body_h": 56.0, "belly_w": 40.0, "belly_h": 34.0,
 		# elementos opcionais que compõem o pet
+		"body_shape": "round",
 		"has_ears": true, "ear_shape": "round",
 		"has_antennae": false, "antenna_color": Color("d8703a"),
 		"has_cheeks": true,
@@ -150,16 +174,35 @@ func _default_cfg() -> Dictionary:
 		"mouth_style": "smile",
 	}
 
-## Gera um pet aleatório: varia cores, proporções, formas e quais elementos existem
-## (orelhas, antenas, nariz, cílios, bochechas e estilo de boca).
+## Gera um pet aleatório com estética equilibrada e cores alegres.
+## - Geometria: sorteia a silhueta do corpo (round/tall/wide/pear) + forma de orelha,
+##   além de proporções, mantendo o estilo "Zimmy".
+## - Cor: parte de um matiz base e deriva as cores de destaque por um *esquema de
+##   harmonia* (análogo/complementar/triádico/mono), com saturação/brilho em faixas
+##   vibrantes-porém-suaves (tema alegre), garantindo contraste corpo↔barriga.
 func _random_cfg() -> Dictionary:
 	var hue := randf()
-	var body := Color.from_hsv(hue, randf_range(0.45, 0.78), randf_range(0.78, 0.96))
-	var belly := Color.from_hsv(hue, randf_range(0.12, 0.32), randf_range(0.92, 1.0))
-	var ear := Color.from_hsv(hue, clampf(body.s + 0.12, 0.0, 1.0), clampf(body.v - 0.18, 0.0, 1.0))
-	var cheek := Color.from_hsv(fposmod(hue + 0.92, 1.0), 0.45, 1.0)
-	cheek.a = 0.6
-	var nose := Color.from_hsv(fposmod(hue + 0.5, 1.0), randf_range(0.35, 0.6), randf_range(0.4, 0.6))
+	# Esquema de harmonia define o matiz de destaque (orelha/antena/nariz).
+	var scheme: String = ["analogous", "complementary", "triadic", "monochrome"].pick_random()
+	var accent_hue := hue
+	match scheme:
+		"analogous":    accent_hue = fposmod(hue + (0.08 if randf() < 0.5 else -0.08), 1.0)
+		"complementary": accent_hue = fposmod(hue + 0.5, 1.0)
+		"triadic":      accent_hue = fposmod(hue + 1.0 / 3.0, 1.0)
+		_:              accent_hue = hue
+	# Faixas alegres: saturação média-alta + brilho alto (evita tons sujos/escuros).
+	var body_s := randf_range(0.42, 0.68)
+	var body_v := randf_range(0.86, 0.98)
+	var body := Color.from_hsv(hue, body_s, body_v)
+	# Barriga: mesmo matiz, bem dessaturada e clara — contraste suave e coeso.
+	var belly := Color.from_hsv(hue, body_s * 0.28, minf(body_v + 0.05, 1.0))
+	# Orelha/antena: matiz de destaque, um pouco mais saturado e mais escuro p/ profundidade.
+	var ear := Color.from_hsv(accent_hue, clampf(body_s + 0.14, 0.0, 0.9), clampf(body_v - 0.14, 0.4, 1.0))
+	# Bochecha: rosado quente fixo (carisma), translúcido.
+	var cheek := Color.from_hsv(fposmod(hue + 0.95, 1.0), 0.5, 1.0)
+	cheek.a = 0.55
+	# Nariz: destaque suave, legível sobre a barriga clara.
+	var nose := Color.from_hsv(accent_hue, randf_range(0.4, 0.6), randf_range(0.45, 0.65))
 	return {
 		"body_color": body, "belly_color": belly, "ear_color": ear, "cheek_color": cheek,
 		"ear_dx": randf_range(28.0, 40.0), "ear_y": randf_range(68.0, 80.0),
@@ -168,6 +211,7 @@ func _random_cfg() -> Dictionary:
 		"eye_w": randf_range(8.0, 12.0), "eye_h": randf_range(9.0, 14.0),
 		"body_w": randf_range(52.0, 62.0), "body_h": randf_range(50.0, 58.0),
 		"belly_w": randf_range(34.0, 44.0), "belly_h": randf_range(30.0, 38.0),
+		"body_shape": ["round", "round", "tall", "wide", "pear"].pick_random(),
 		"has_ears": randf() < 0.85,
 		"ear_shape": ["round", "pointy"].pick_random(),
 		"has_antennae": randf() < 0.4,
@@ -240,6 +284,7 @@ func _ready() -> void:
 	speech.add_theme_font_size_override("font_size", 14)
 	add_child(speech)
 
+	_load_schedules()   # antes de montar o menu, para os checkboxes refletirem o estado
 	_build_menu()
 	_build_save_dialog()
 
@@ -253,6 +298,8 @@ func _build_menu() -> void:
 	acc_menu.id_pressed.connect(_on_pick_acc)
 	automations_menu = PopupMenu.new()
 	automations_menu.id_pressed.connect(_on_pick_automation)
+	email_menu = PopupMenu.new()
+	email_menu.id_pressed.connect(_on_pick_automation)
 
 	menu = PopupMenu.new()
 	menu.add_item("🦴 Alimentar", MI_FEED)
@@ -270,10 +317,12 @@ func _build_menu() -> void:
 	menu.add_submenu_node_item("🧳 Escolher acessório", acc_menu, MI_CHOOSE_ACC)
 	menu.add_separator()
 	menu.add_submenu_node_item("⚙️ Automações", automations_menu, MI_AUTOMATIONS)
+	menu.add_submenu_node_item("📧 E-mails", email_menu, MI_EMAIL)
 	menu.add_separator()
 	menu.add_item("Sair", MI_QUIT)
 	menu.id_pressed.connect(_on_menu)
 	add_child(menu)
+	_build_cred_dialog()
 	_rebuild_pets_menu()
 	_rebuild_acc_menu()
 	_rebuild_automations_menu()
@@ -327,22 +376,78 @@ func _refresh_acc_menu_checks() -> void:
 ## Sem nenhuma automação válida, o item "⚙️ Automações" do menu fica desabilitado.
 func _rebuild_automations_menu() -> void:
 	automations_menu.clear()
+	email_menu.clear()
 	automation_ids.clear()
+	automation_item_menu.clear()
 	var list := _scan_automations()
-	var idx := menu.get_item_index(MI_AUTOMATIONS)
-	if list.is_empty():
-		menu.set_item_disabled(idx, true)
-		return
-	menu.set_item_disabled(idx, false)
+	var n_auto := 0
+	var n_email := 0
 	var next_id := 100
 	for a in list:
-		automations_menu.add_item(a["name"], next_id)
-		automation_ids[next_id] = a["path"]
+		var path: String = a["path"]
+		var sched: Dictionary = a["sched"]
+		var group: String = automation_groups.get(path, "")
+		var target: PopupMenu = email_menu if group == "email" else automations_menu
+		# Rótulo: nome + (frequência, se agendada) + (badge, se houver).
+		var label: String = a["name"]
+		if not sched.is_empty():
+			label += " — %s" % sched["label"]
+		if automation_badge_keys.has(path):
+			var bk: String = automation_badge_keys[path]
+			if automation_badges.has(bk):
+				label += " — %s não lidos" % automation_badges[bk]
+		# E-mail: ícone do provedor à esquerda (cor de ICON_COLOR).
+		var icon: Texture2D = null
+		if group == "email" and automation_icon_colors.has(path):
+			icon = _provider_icon(automation_icon_colors[path])
+		# Agendadas viram item marcável (✓ = ligada); avulsas, item comum.
+		if not sched.is_empty():
+			if icon != null:
+				target.add_icon_check_item(icon, label, next_id)
+			else:
+				target.add_check_item(label, next_id)
+			target.set_item_checked(target.get_item_index(next_id), bool(automation_enabled.get(path, false)))
+		else:
+			if icon != null:
+				target.add_icon_item(icon, label, next_id)
+			else:
+				target.add_item(label, next_id)
+		automation_ids[next_id] = path
+		automation_item_menu[next_id] = target
+		if group == "email":
+			n_email += 1
+		else:
+			n_auto += 1
 		next_id += 1
+	menu.set_item_disabled(menu.get_item_index(MI_AUTOMATIONS), n_auto == 0)
+	menu.set_item_disabled(menu.get_item_index(MI_EMAIL), n_email == 0)
 
-## Lista os scripts .gd de res://Automacoes/ como [{name, path}], ordenados pelo nome.
+## Ícone simples de provedor: um círculo preenchido na cor dada (cacheado por cor).
+func _provider_icon(color: Color) -> Texture2D:
+	var hex := color.to_html(false)
+	if _icon_cache.has(hex):
+		return _icon_cache[hex]
+	var sz := 16
+	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var c := Vector2(sz / 2.0, sz / 2.0)
+	for y in sz:
+		for x in sz:
+			if Vector2(x + 0.5, y + 0.5).distance_to(c) <= sz / 2.0 - 1.0:
+				img.set_pixel(x, y, color)
+	var tex := ImageTexture.create_from_image(img)
+	_icon_cache[hex] = tex
+	return tex
+
+## Lista os scripts .gd de res://Automacoes/ como [{name, path, sched}], ordenados pelo
+## nome. Também (re)preenche schedule_defs com as automações que declaram frequência.
 func _scan_automations() -> Array:
 	var out: Array = []
+	schedule_defs.clear()
+	automation_groups.clear()
+	automation_badge_keys.clear()
+	automation_cred_keys.clear()
+	automation_icon_colors.clear()
 	var dir := DirAccess.open(AUTOMACOES_DIR)
 	if dir == null:
 		return out                     # pasta ausente => nenhuma automação
@@ -355,7 +460,23 @@ func _scan_automations() -> Array:
 				f = f.trim_suffix(".remap")
 			if f.ends_with(".gd"):
 				var path := AUTOMACOES_DIR + f
-				out.append({"name": _automation_name(path, f), "path": path})
+				var gd = load(path)
+				var nm := _automation_name_from(gd, f)
+				var sched := _parse_schedule(gd)
+				if not sched.is_empty():
+					sched["name"] = nm
+					schedule_defs[path] = sched
+				# Consts opcionais para grupo de menu, badge, credencial e cor do ícone.
+				var consts: Dictionary = (gd as GDScript).get_script_constant_map() if gd is GDScript else {}
+				if consts.has("MENU_GROUP"):
+					automation_groups[path] = str(consts["MENU_GROUP"])
+				if consts.has("BADGE_KEY"):
+					automation_badge_keys[path] = str(consts["BADGE_KEY"])
+				if consts.has("CRED_KEY"):
+					automation_cred_keys[path] = str(consts["CRED_KEY"])
+				if consts.has("ICON_COLOR"):
+					automation_icon_colors[path] = Color(str(consts["ICON_COLOR"]))
+				out.append({"name": nm, "path": path, "sched": sched})   # sched == {} quando não há agendamento
 		fn = dir.get_next()
 	dir.list_dir_end()
 	out.sort_custom(func(a, b): return String(a["name"]).naturalnocasecmp_to(String(b["name"])) < 0)
@@ -363,17 +484,152 @@ func _scan_automations() -> Array:
 
 ## Nome de exibição da automação: usa a constante AUTOMATION_NAME do script, se houver;
 ## senão, deriva do nome do arquivo (snake_case -> "Snake Case").
-func _automation_name(path: String, filename: String) -> String:
-	var gd = load(path)
+func _automation_name_from(gd, filename: String) -> String:
 	if gd is GDScript:
 		var consts: Dictionary = (gd as GDScript).get_script_constant_map()
 		if consts.has("AUTOMATION_NAME"):
 			return str(consts["AUTOMATION_NAME"])
 	return filename.trim_suffix(".gd").capitalize()
 
+## Lê a frequência declarada por uma automação (constantes SCHEDULE ou SCHEDULE_SECONDS)
+## e devolve {kind, every, at_minute, label} — ou {} se a automação não tem agendamento.
+## Formatos de SCHEDULE: "30s" / "5m" / "2h" / "hourly" / "daily@09:00"; SCHEDULE_SECONDS: número.
+func _parse_schedule(gd) -> Dictionary:
+	if not (gd is GDScript):
+		return {}
+	var consts: Dictionary = (gd as GDScript).get_script_constant_map()
+	var raw := ""
+	if consts.has("SCHEDULE"):
+		raw = str(consts["SCHEDULE"]).strip_edges().to_lower()
+	elif consts.has("SCHEDULE_SECONDS"):
+		raw = str(consts["SCHEDULE_SECONDS"])
+	if raw == "":
+		return {}
+	if raw.is_valid_float():                       # número puro => segundos
+		return _interval_def(float(raw))
+	if raw == "hourly":                            # toda hora cheia (XX:00)
+		return {"kind": "hourly", "every": 0.0, "at_minute": -1, "label": "toda hora cheia"}
+	if raw.begins_with("daily@"):                  # uma vez por dia em HH:MM
+		var hm := raw.substr(6).split(":")
+		var h := clampi(int(hm[0]), 0, 23)
+		var m := clampi((int(hm[1]) if hm.size() > 1 else 0), 0, 59)
+		return {"kind": "daily", "every": 0.0, "at_minute": h * 60 + m, "label": "todo dia %02d:%02d" % [h, m]}
+	var unit := raw.substr(raw.length() - 1)        # sufixo de unidade: 30s / 5m / 2h
+	var num := raw.substr(0, raw.length() - 1)
+	if num.is_valid_float():
+		match unit:
+			"s": return _interval_def(float(num))
+			"m": return _interval_def(float(num) * 60.0)
+			"h": return _interval_def(float(num) * 3600.0)
+	return {}
+
+func _interval_def(secs: float) -> Dictionary:
+	secs = maxf(secs, 1.0)
+	return {"kind": "interval", "every": secs, "at_minute": -1, "label": "a cada " + _human_secs(secs)}
+
+## "90" -> "1.5min", "3600" -> "1h", "30" -> "30s" (rótulo humano da frequência).
+func _human_secs(s: float) -> String:
+	if s >= 3600.0:
+		return _trim_num(s / 3600.0) + "h"
+	if s >= 60.0:
+		return _trim_num(s / 60.0) + "min"
+	return _trim_num(s) + "s"
+
+func _trim_num(v: float) -> String:
+	if absf(v - round(v)) < 0.01:
+		return str(int(round(v)))
+	return "%.1f" % v
+
 func _on_pick_automation(id: int) -> void:
-	if automation_ids.has(id):
-		_run_automation(String(automation_ids[id]))
+	if not automation_ids.has(id):
+		return
+	var path := String(automation_ids[id])
+	if schedule_defs.has(path):
+		# Agendada: alterna ligada/desligada (persistente) em vez de rodar na hora.
+		var on := not bool(automation_enabled.get(path, false))
+		_set_automation_enabled(path, on, true)
+		var m: PopupMenu = automation_item_menu.get(id, automations_menu)
+		m.set_item_checked(m.get_item_index(id), on)
+	else:
+		_run_automation(path)          # avulsa: executa uma vez
+
+## Liga/desliga uma automação agendada, persiste o estado e (re)inicia o seu runtime.
+func _set_automation_enabled(path: String, on: bool, announce: bool) -> void:
+	automation_enabled[path] = on
+	if on:
+		sched_runtime[path] = {"accum": 0.0, "last_day": -1, "last_hour": -1}
+		if announce and schedule_defs.has(path):
+			say("⏱️ %s ligada (%s)" % [schedule_defs[path].get("name", "automação"), schedule_defs[path]["label"]])
+		# Automações com credencial (e-mail): ao ligar, dispara já (pede login se faltar).
+		if automation_cred_keys.has(path):
+			cred_prompt_suppressed.erase(automation_cred_keys[path])
+			_fire_automation(path)
+	else:
+		sched_runtime.erase(path)
+		if announce and schedule_defs.has(path):
+			say("⏸️ %s desligada" % schedule_defs[path].get("name", "automação"))
+	_save_schedules()
+
+## Percorre as automações agendadas e dispara as que atingiram a sua frequência.
+## Chamado a cada frame por _process.
+func _tick_schedules(delta: float) -> void:
+	var now := Time.get_datetime_dict_from_system()
+	var cur_min: int = int(now.hour) * 60 + int(now.minute)
+	for path in schedule_defs:
+		if not bool(automation_enabled.get(path, false)):
+			continue
+		if not sched_runtime.has(path):
+			sched_runtime[path] = {"accum": 0.0, "last_day": -1, "last_hour": -1}
+		var def: Dictionary = schedule_defs[path]
+		var rt: Dictionary = sched_runtime[path]
+		match def["kind"]:
+			"interval":
+				rt["accum"] += delta
+				if rt["accum"] >= float(def["every"]):
+					rt["accum"] = 0.0
+					_fire_automation(path)
+			"hourly":
+				if int(now.minute) == 0 and rt.get("last_hour", -1) != int(now.hour):
+					rt["last_hour"] = int(now.hour)
+					_fire_automation(path)
+			"daily":
+				if cur_min == int(def["at_minute"]) and rt.get("last_day", -1) != int(now.day):
+					rt["last_day"] = int(now.day)
+					_fire_automation(path)
+
+## Dispara uma automação agendada: instancia e chama run(zimmy) como ação pontual.
+## Diferente do menu avulso, NÃO mantém Nodes vivos — a recorrência é do agendador.
+func _fire_automation(path: String) -> void:
+	var gd = load(path)
+	if not (gd is GDScript):
+		return
+	var inst = (gd as GDScript).new()
+	if inst == null:
+		return
+	if inst.has_method("run"):
+		inst.run(self)
+	if inst is Node:
+		inst.free()
+
+## Carrega quais automações agendadas estavam ligadas (user://schedules.json).
+func _load_schedules() -> void:
+	var parsed = _read_json(SCHEDULES_FILE)
+	if parsed is Dictionary:
+		for path in parsed:
+			if parsed[path]:
+				automation_enabled[path] = true
+				sched_runtime[path] = {"accum": 0.0, "last_day": -1, "last_hour": -1}
+
+## Persiste o conjunto de automações agendadas ligadas.
+func _save_schedules() -> void:
+	var out := {}
+	for path in automation_enabled:
+		if automation_enabled[path]:
+			out[path] = true
+	var f := FileAccess.open(SCHEDULES_FILE, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(out, "  "))
+		f.close()
 
 ## Carrega e executa o script de automação: instancia e chama run(zimmy), onde
 ## zimmy é este próprio nó (dá acesso a say(), feed(), pet(), play(), current, etc.).
@@ -392,6 +648,203 @@ func _run_automation(path: String) -> void:
 		inst.run(self)
 	else:
 		say("automação sem run() 🤔")
+
+## Utilitário para automações web: faz um GET em `url` e chama
+## `cb.call(ok: bool, data)` com o JSON decodificado (Dictionary/Array) ou null.
+## Cria e descarta o HTTPRequest internamente — a automação não precisa gerenciar nada.
+## IMPORTANTE p/ a automação: na closure passada use só `zimmy` e variáveis locais
+## (não `self`), assim ela funciona tanto no clique quanto no disparo agendado.
+func http_get_json(url: String, cb: Callable) -> void:
+	var http := HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_result, code, _headers, body):
+		var data = null
+		if code == 200:
+			data = JSON.parse_string(body.get_string_from_utf8())
+		if cb.is_valid():
+			cb.call(code == 200 and data != null, data)
+		http.queue_free()
+	)
+	if http.request(url) != OK:
+		if cb.is_valid():
+			cb.call(false, null)
+		http.queue_free()
+
+# ------------------------------------------------------------------ badges de automação
+## Define o texto do badge (ex.: contador de não-lidos) de uma automação, por chave
+## (const BADGE_KEY). Aparece no rótulo do item na próxima vez que o menu é montado.
+func set_automation_badge(key: String, text: String) -> void:
+	automation_badges[key] = text
+
+# ------------------------------------------------------------------ credenciais
+## Caminho do arquivo de credencial de uma automação: user://cred_<key>.json (gitignored).
+func _cred_path(key: String) -> String:
+	return CRED_PREFIX + key + ".json"
+
+## Lê as credenciais salvas de `key` (ou {} se não houver / inválidas).
+func load_credentials(key: String) -> Dictionary:
+	var parsed = _read_json(_cred_path(key))
+	if parsed is Dictionary and parsed.has("user") and parsed.has("pass"):
+		return {"user": str(parsed["user"]), "pass": str(parsed["pass"])}
+	return {}
+
+## Grava as credenciais de `key` em disco (arquivo separado por automação).
+func save_credentials(key: String, data: Dictionary) -> void:
+	var f := FileAccess.open(_cred_path(key), FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify({"user": data.get("user", ""), "pass": data.get("pass", "")}, "  "))
+		f.close()
+
+## Apaga as credenciais salvas (ex.: validação falhou — força novo prompt).
+func forget_credentials(key: String) -> void:
+	var da := DirAccess.open("user://")
+	if da and da.file_exists("cred_%s.json" % key):
+		da.remove("cred_%s.json" % key)
+
+## Entrega as credenciais de `key` a `cb.call({user, pass})`. Se não houver salvas,
+## abre o diálogo de login (a menos que o usuário já tenha cancelado este `key`).
+## NÃO salva sozinho — a automação valida e chama confirm_credentials() se válido.
+func with_credentials(key: String, title: String, cb: Callable) -> void:
+	var saved := load_credentials(key)
+	if not saved.is_empty():
+		if cb.is_valid():
+			cb.call(saved)
+		return
+	if cred_prompt_suppressed.has(key) or cred_pending_key != "":
+		return                          # já perguntando, ou usuário cancelou antes
+	cred_pending_key = key
+	cred_pending_cb = cb
+	cred_dialog.title = title
+	cred_user_edit.text = ""
+	cred_pass_edit.text = ""
+	var scr := DisplayServer.screen_get_usable_rect()
+	cred_dialog.size = Vector2i(360, 170)
+	cred_dialog.position = scr.position + (scr.size - cred_dialog.size) / 2
+	cred_dialog.popup()
+	cred_user_edit.grab_focus()
+
+## Salva as credenciais se forem novas ou se usuário/senha mudaram (chamar após validar).
+func confirm_credentials(key: String, data: Dictionary) -> void:
+	var saved := load_credentials(key)
+	if saved.get("user", "") != data.get("user", "") or saved.get("pass", "") != data.get("pass", ""):
+		save_credentials(key, data)
+
+func _build_cred_dialog() -> void:
+	cred_dialog = ConfirmationDialog.new()
+	cred_dialog.ok_button_text = "Entrar"
+	cred_dialog.set_flag(Window.FLAG_ALWAYS_ON_TOP, true)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	var l1 := Label.new(); l1.text = "E-mail:"
+	cred_user_edit = LineEdit.new()
+	cred_user_edit.custom_minimum_size = Vector2(320, 0)
+	cred_user_edit.placeholder_text = "voce@gmail.com"
+	var l2 := Label.new(); l2.text = "App Password (senha de app):"
+	cred_pass_edit = LineEdit.new()
+	cred_pass_edit.secret = true
+	cred_pass_edit.placeholder_text = "senha de aplicativo (não a senha normal)"
+	box.add_child(l1); box.add_child(cred_user_edit)
+	box.add_child(l2); box.add_child(cred_pass_edit)
+	cred_dialog.add_child(box)
+	cred_dialog.confirmed.connect(_on_cred_confirmed)
+	cred_dialog.canceled.connect(_on_cred_canceled)
+	add_child(cred_dialog)
+
+func _on_cred_confirmed() -> void:
+	var u := cred_user_edit.text.strip_edges()
+	var p := cred_pass_edit.text          # senha pode ter espaços; não corta
+	var cb := cred_pending_cb
+	cred_pending_key = ""
+	cred_pending_cb = Callable()
+	if u == "" or p == "":
+		say("login incompleto 🙈")
+		return
+	if cb.is_valid():
+		cb.call({"user": u, "pass": p})
+
+func _on_cred_canceled() -> void:
+	if cred_pending_key != "":
+		cred_prompt_suppressed[cred_pending_key] = true   # não insistir até religar/clicar
+	cred_pending_key = ""
+	cred_pending_cb = Callable()
+
+# ------------------------------------------------------------------ IMAP (e-mail)
+## Conta e-mails NÃO LIDOS via IMAP sobre TLS e chama cb.call(ok: bool, count: int).
+## Usa LOGIN + STATUS INBOX (UNSEEN). Pensado para App Passwords (Gmail/Outlook).
+## É assíncrono (await) — roda sobre este nó, que está na árvore.
+func imap_unread(host: String, port: int, user: String, password: String, cb: Callable) -> void:
+	var tcp := StreamPeerTCP.new()
+	if tcp.connect_to_host(host, port) != OK:
+		cb.call(false, 0); return
+	while tcp.get_status() == StreamPeerTCP.STATUS_CONNECTING:
+		tcp.poll()
+		await get_tree().process_frame
+	if tcp.get_status() != StreamPeerTCP.STATUS_CONNECTED:
+		cb.call(false, 0); return
+	var tls := StreamPeerTLS.new()
+	if tls.connect_to_stream(tcp, host, TLSOptions.client()) != OK:
+		cb.call(false, 0); return
+	while tls.get_status() == StreamPeerTLS.STATUS_HANDSHAKING:
+		tls.poll()
+		await get_tree().process_frame
+	if tls.get_status() != StreamPeerTLS.STATUS_CONNECTED:
+		cb.call(false, 0); return
+	await _imap_read_until(tls, "")                       # saudação "* OK ..."
+	_imap_send(tls, 'a1 LOGIN "%s" "%s"' % [_imap_escape(user), _imap_escape(password)])
+	var login_resp: String = await _imap_read_until(tls, "a1 ")
+	if not login_resp.to_upper().contains("A1 OK"):
+		_imap_send(tls, "a3 LOGOUT")
+		cb.call(false, 0); return
+	_imap_send(tls, "a2 STATUS INBOX (UNSEEN)")
+	var status_resp: String = await _imap_read_until(tls, "a2 ")
+	_imap_send(tls, "a3 LOGOUT")
+	cb.call(true, _imap_parse_unseen(status_resp))
+
+func _imap_send(tls: StreamPeerTLS, line: String) -> void:
+	tls.put_data((line + "\r\n").to_utf8_buffer())
+
+## Lê do socket TLS até aparecer uma linha começando com `tag` (ou, se tag=="", até a
+## primeira linha completa). Devolve todo o texto acumulado. Tem timeout de segurança.
+func _imap_read_until(tls: StreamPeerTLS, tag: String) -> String:
+	var acc := ""
+	var frames := 0
+	while frames < 1800:                                  # ~30s de teto a 60fps
+		tls.poll()
+		var n := tls.get_available_bytes()
+		if n > 0:
+			var chunk = tls.get_data(n)
+			if chunk[0] == OK:
+				acc += (chunk[1] as PackedByteArray).get_string_from_utf8()
+		if tag == "":
+			if acc.contains("\n"):
+				return acc
+		else:
+			for ln in acc.split("\n"):
+				if ln.strip_edges().to_upper().begins_with(tag.strip_edges().to_upper()):
+					return acc
+		if tls.get_status() != StreamPeerTLS.STATUS_CONNECTED and n == 0:
+			return acc
+		frames += 1
+		await get_tree().process_frame
+	return acc
+
+## Extrai o número de "UNSEEN n" da resposta de STATUS (ou 0 se não achar).
+func _imap_parse_unseen(resp: String) -> int:
+	var up := resp.to_upper()
+	var i := up.find("UNSEEN")
+	if i < 0:
+		return 0
+	var rest := resp.substr(i + 6)
+	var digits := ""
+	for ch in rest:
+		if ch >= "0" and ch <= "9":
+			digits += ch
+		elif digits != "":
+			break
+	return int(digits) if digits != "" else 0
+
+func _imap_escape(s: String) -> String:
+	return s.replace("\\", "\\\\").replace("\"", "\\\"")
 
 func _build_save_dialog() -> void:
 	save_dialog = ConfirmationDialog.new()
@@ -638,6 +1091,10 @@ func _process(delta: float) -> void:
 			say("novos acessórios! 🎲")
 			_relayout()
 
+	# Automações agendadas (auto-alimentar, lembretes, comemorações...).
+	if not schedule_defs.is_empty():
+		_tick_schedules(delta)
+
 	# Necessidades com o tempo.
 	hunger = clampf(hunger + delta * 0.7, 0.0, 100.0)
 	if hunger > 70.0:
@@ -744,9 +1201,22 @@ func _draw() -> void:
 			_ellipse(Vector2(100.0 - ear_dx, ear_y) + o, Vector2(ear_w, ear_h), ear_color)
 			_ellipse(Vector2(100.0 + ear_dx, ear_y) + o, Vector2(ear_w, ear_h), ear_color)
 
-	# Corpo + barriga (respiram).
-	_ellipse(Vector2(100, 108) + o, Vector2(body_w, body_h * (1.0 + br)), body_color)
-	_ellipse(Vector2(100, 118) + o, Vector2(belly_w, belly_h * (1.0 + br)), belly_color)
+	# Corpo + barriga (respiram). A silhueta varia conforme body_shape: além de
+	# esticar/achatar, "pear" desenha um bojo inferior extra (corpo em gota).
+	var bw_mul := 1.0
+	var bh_mul := 1.0
+	var by := 0.0
+	match c.get("body_shape", "round"):
+		"tall": bw_mul = 0.9;  bh_mul = 1.2;  by = -3.0   # ovinho em pé
+		"wide": bw_mul = 1.16; bh_mul = 0.86; by = 3.0    # baixinho fofo
+		"pear": bw_mul = 0.96; bh_mul = 1.02; by = 0.0    # gota (bojo embaixo)
+		_:      pass                                       # round (padrão)
+	var bw := body_w * bw_mul
+	var bh := body_h * bh_mul * (1.0 + br)
+	if c.get("body_shape", "round") == "pear":
+		_ellipse(Vector2(100, 122 + by) + o, Vector2(bw * 1.18, bh * 0.6), body_color)  # bojo inferior
+	_ellipse(Vector2(100, 108 + by) + o, Vector2(bw, bh), body_color)
+	_ellipse(Vector2(100, 118 + by * 0.5) + o, Vector2(belly_w * bw_mul, belly_h * bh_mul * (1.0 + br)), belly_color)
 
 	# Bochechas.
 	if c.get("has_cheeks", true):

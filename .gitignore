@@ -18,3 +18,7 @@ mono_crash.*.json
 
 # Claude Code project settings (local-only)
 .claude/settings.json
+
+# Credenciais de automações (NUNCA versionar) — ficam em user://, mas por garantia:
+cred_*.json
+*.cred.json

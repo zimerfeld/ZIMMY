@@ -53,6 +53,8 @@ var saved_pets: Dictionary = {}     # nome -> config (em memória, com Color)
 var saved_accessories: Dictionary = {}  # nome -> config de acessório
 var pet_menu_ids: Dictionary = {}   # id do item no dropdown -> nome do pet
 var acc_menu_ids: Dictionary = {}   # id do item no dropdown -> nome do acessório
+var current_pet_name := "Default"   # nome da opção ativa no submenu de pets ("" se aleatório)
+var current_acc_name := "Nenhum"    # nome da opção ativa no submenu de acessórios ("" se aleatório)
 var automation_ids: Dictionary = {} # id do item no submenu -> caminho do script de automação
 var random_pet_on := false
 var random_acc_on := false
@@ -282,12 +284,21 @@ func _rebuild_pets_menu() -> void:
 	pet_menu_ids.clear()
 	pets_menu.add_item("Selecione...", 0)
 	pets_menu.set_item_disabled(0, true)
-	pets_menu.add_item("Default", 1)
+	pets_menu.add_radio_check_item("Default", 1)
 	var next_id := 100
 	for nm in saved_pets.keys():
-		pets_menu.add_item(nm, next_id)
+		pets_menu.add_radio_check_item(nm, next_id)
 		pet_menu_ids[next_id] = nm
 		next_id += 1
+	_refresh_pets_menu_checks()
+
+## Marca (✓) a opção ativa no submenu de pets conforme current_pet_name.
+func _refresh_pets_menu_checks() -> void:
+	pets_menu.set_item_checked(pets_menu.get_item_index(1), current_pet_name == "Default")
+	for id in pet_menu_ids.keys():
+		var idx := pets_menu.get_item_index(id)
+		if idx >= 0:
+			pets_menu.set_item_checked(idx, String(pet_menu_ids[id]) == current_pet_name)
 
 ## (Re)constrói o dropdown de acessórios: "Selecione..." (0) e "Nenhum" (1) no topo.
 func _rebuild_acc_menu() -> void:
@@ -295,12 +306,21 @@ func _rebuild_acc_menu() -> void:
 	acc_menu_ids.clear()
 	acc_menu.add_item("Selecione...", 0)
 	acc_menu.set_item_disabled(0, true)
-	acc_menu.add_item("Nenhum", 1)
+	acc_menu.add_radio_check_item("Nenhum", 1)
 	var next_id := 100
 	for nm in saved_accessories.keys():
-		acc_menu.add_item(nm, next_id)
+		acc_menu.add_radio_check_item(nm, next_id)
 		acc_menu_ids[next_id] = nm
 		next_id += 1
+	_refresh_acc_menu_checks()
+
+## Marca (✓) a opção ativa no submenu de acessórios conforme current_acc_name.
+func _refresh_acc_menu_checks() -> void:
+	acc_menu.set_item_checked(acc_menu.get_item_index(1), current_acc_name == "Nenhum")
+	for id in acc_menu_ids.keys():
+		var idx := acc_menu.get_item_index(id)
+		if idx >= 0:
+			acc_menu.set_item_checked(idx, String(acc_menu_ids[id]) == current_acc_name)
 
 # ------------------------------------------------------------------ automações
 ## (Re)constrói o submenu de Automações a partir dos scripts em res://Automacoes/.
@@ -402,10 +422,13 @@ func _on_pick_pet(id: int) -> void:
 	_set_random_pet(false)         # escolher um pet específico desliga o aleatório de pet
 	if id == 1:
 		current = _default_cfg()
+		current_pet_name = "Default"
 		say("Default 🐾")
 	elif pet_menu_ids.has(id):
 		current = (saved_pets[pet_menu_ids[id]] as Dictionary).duplicate(true)
+		current_pet_name = String(pet_menu_ids[id])
 		say("%s ✨" % pet_menu_ids[id])
+	_refresh_pets_menu_checks()
 	queue_redraw()
 	_relayout()
 
@@ -416,10 +439,13 @@ func _on_pick_acc(id: int) -> void:
 	_set_show_accessories(true)    # mostra o acessório escolhido
 	if id == 1:
 		current_acc = _default_acc()
+		current_acc_name = "Nenhum"
 		say("sem acessório 🚫")
 	elif acc_menu_ids.has(id):
 		current_acc = (saved_accessories[acc_menu_ids[id]] as Dictionary).duplicate(true)
+		current_acc_name = String(acc_menu_ids[id])
 		say("%s 🎀" % acc_menu_ids[id])
+	_refresh_acc_menu_checks()
 	queue_redraw()
 
 func _set_random_pet(on: bool) -> void:
@@ -428,6 +454,8 @@ func _set_random_pet(on: bool) -> void:
 	random_pet_timer = 0.0
 	if on:
 		current = _random_cfg()
+		current_pet_name = ""          # pet aleatório não corresponde a nenhuma opção salva
+		_refresh_pets_menu_checks()
 		say("novo pet! 🎲")
 		queue_redraw()
 		_relayout()
@@ -438,6 +466,8 @@ func _set_random_acc(on: bool) -> void:
 	random_acc_timer = 0.0
 	if on:
 		current_acc = _random_acc()
+		current_acc_name = ""          # acessório aleatório não corresponde a nenhuma opção salva
+		_refresh_acc_menu_checks()
 		_set_show_accessories(true)   # gerar acessórios também liga a exibição
 		say("novos acessórios! 🎲")
 		queue_redraw()

@@ -82,12 +82,16 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   que está na tela.
 - **📂 Escolher pet ▸** — dropdown para trocar o pet exibido. Sempre tem
   `Selecione...` (índice 0, só rótulo) e `Default` (índice 1) no topo, seguidos dos
-  pets salvos. Escolher um pet específico desliga a geração aleatória.
+  pets salvos. A **opção ativa fica realçada** (marcada com ✓) para você ver de
+  relance qual pet está em uso; com a geração aleatória ligada, nenhuma fica marcada.
+  Escolher um pet específico desliga a geração aleatória.
 - **🎀 Salvar Acessório…** — abre um diálogo para nomear e salvar **só o acessório**
   atual (independente do pet). Também desliga a geração automática ao abrir.
 - **🧳 Escolher acessório ▸** — dropdown independente para trocar o acessório. Tem
   `Selecione...` (só rótulo) e `Nenhum` (limpa os acessórios) no topo, seguidos dos
-  acessórios salvos. Escolher um acessório liga a exibição e desliga o aleatório.
+  acessórios salvos. A **opção ativa fica realçada** (marcada com ✓); com a geração
+  aleatória de acessórios ligada, nenhuma fica marcada. Escolher um acessório liga a
+  exibição e desliga o aleatório.
 - **⚙️ Automações ▸** — submenu com as automações disponíveis (scripts da pasta
   `Automacoes/`). Fica **desabilitado** quando não há nenhuma automação; com uma ou
   mais, lista o nome de cada uma. Escolher executa a automação. Ver **Automações**

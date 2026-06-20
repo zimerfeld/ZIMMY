@@ -30,8 +30,13 @@ Sair (9)
 ## Submenus
 - **pets_menu** (`_rebuild_pets_menu`): `Selecione...` (0, desabilitado, rótulo),
   `Default` (1), depois salvos (ids 100+ ↔ `pet_menu_ids`). Handler `_on_pick_pet`.
+  `Default`/salvos são **radio-check items**; a opção ativa fica marcada (✓) via
+  `_refresh_pets_menu_checks()` conforme `current_pet_name` (`""` quando o pet é
+  aleatório → nada marcado).
 - **acc_menu** (`_rebuild_acc_menu`): `Selecione...` (0), `Nenhum` (1, limpa), salvos
-  (100+ ↔ `acc_menu_ids`). Handler `_on_pick_acc`.
+  (100+ ↔ `acc_menu_ids`). Handler `_on_pick_acc`. `Nenhum`/salvos são radio-check;
+  realce da opção ativa via `_refresh_acc_menu_checks()` (`current_acc_name`, `""`
+  quando aleatório).
 - **automations_menu** (`_rebuild_automations_menu`): scripts `.gd` de
   `res://Automacoes/` (ids 100+ ↔ `automation_ids` → caminho). Handler
   `_on_pick_automation` → `_run_automation` (instancia o script e chama `run(self)`).

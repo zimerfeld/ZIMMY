@@ -21,13 +21,20 @@ Endpoints acionados pelo menu de contexto. Ids `MI_*` despachados em `_on_menu(i
 | 6 | `MI_CHOOSE_PET` | 📂 Escolher pet ▸ | submenu `pets_menu` |
 | 7 | `MI_SAVE_ACC` | 🎀 Salvar Acessório... | `_open_save_dialog("acc")` |
 | 8 | `MI_CHOOSE_ACC` | 🧳 Escolher acessório ▸ | submenu `acc_menu` |
+| 11 | `MI_AUTOMATIONS` | ⚙️ Automações ▸ | submenu `automations_menu` |
 | 9 | `MI_QUIT` | Sair | `get_tree().quit()` |
 
 ## Submenus
 - `_on_pick_pet(id)`: 0=`Selecione...` (ignora), 1=`Default`, 100+=salvos
-  (`pet_menu_ids`).
+  (`pet_menu_ids`). Atualiza `current_pet_name` e realça a opção ativa via
+  `_refresh_pets_menu_checks()` (radio-check ✓).
 - `_on_pick_acc(id)`: 0=`Selecione...`, 1=`Nenhum` (limpa), 100+=salvos
-  (`acc_menu_ids`).
+  (`acc_menu_ids`). Atualiza `current_acc_name` e realça a opção ativa via
+  `_refresh_acc_menu_checks()`.
+- `_on_pick_automation(id)`: 100+=scripts de `Automacoes/` (`automation_ids` →
+  caminho). Carrega o script e chama `run(self)`. Submenu reconstruído por
+  `_rebuild_automations_menu()` (escaneia `res://Automacoes/` via `_scan_automations()`)
+  a cada abertura do menu; item desabilitado quando não há automações.
 
 Fluxos: [[Fluxo - Salvar e Carregar]], [[Fluxo - Geração Aleatória]],
 [[Fluxo - Interação e Limites]].

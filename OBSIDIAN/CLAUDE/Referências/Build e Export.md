@@ -10,7 +10,7 @@ Engine: **Godot 4.6.2 stable** em `C:\GODOT\Godot_v4.6.2-stable_win64.exe\` (a "
 
 ## Rodar pelo editor / linha de comando
 ```powershell
-& "C:\GODOT\Godot_v4.6.2-stable_win64.exe\Godot_v4.6.2-stable_win64.exe" --path "C:\GODOT\ZIMMY_PET"
+& "C:\GODOT\Godot_v4.6.2-stable_win64.exe\Godot_v4.6.2-stable_win64.exe" --path "C:\GODOT\ZIMMY"
 ```
 Rodando assim **não precisa exportar** — o [[zimmy.gd]] é lido direto.
 
@@ -18,12 +18,12 @@ Rodando assim **não precisa exportar** — o [[zimmy.gd]] é lido direto.
 O `build/ZimmyPet.exe` embute o código no `.pck`; mudanças exigem re-export:
 ```powershell
 & "C:\GODOT\Godot_v4.6.2-stable_win64.exe\Godot_v4.6.2-stable_win64_console.exe" `
-  --headless --path "C:\GODOT\ZIMMY_PET" `
-  --export-release "Windows Desktop" "C:\GODOT\ZIMMY_PET\build\ZimmyPet.exe"
+  --headless --path "C:\GODOT\ZIMMY" `
+  --export-release "Windows Desktop" "C:\GODOT\ZIMMY\build\ZimmyPet.exe"
 ```
 Depois embutir o ícone no `.exe`:
 ```powershell
-C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY_PET\build\ZimmyPet.exe" --set-icon "C:\GODOT\ZIMMY_PET\zimmy.ico"
+C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT\ZIMMY\zimmy.ico"
 ```
 > ⚙️ Convenção do projeto: **sempre re-exportar** ao fim de qualquer mudança no jogo.
 

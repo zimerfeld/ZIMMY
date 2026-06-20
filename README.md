@@ -10,7 +10,7 @@ Zimmy fala.
 ## Como rodar
 
 ```powershell
-& "C:\GODOT\Godot_v4.6.2-stable_win64.exe" --path "C:\GODOT\ZIMMY_PET"
+& "C:\GODOT\Godot_v4.6.2-stable_win64.exe" --path "C:\GODOT\ZIMMY"
 ```
 
 Ou abra a pasta no Godot e pressione **F5**.
@@ -38,8 +38,8 @@ Pré-requisitos: **export templates** do Godot 4.6.2 instalados e o preset
 
 ```powershell
 & "C:\GODOT\Godot_v4.6.2-stable_win64.exe\Godot_v4.6.2-stable_win64_console.exe" `
-  --headless --path "C:\GODOT\ZIMMY_PET" `
-  --export-release "Windows Desktop" "C:\GODOT\ZIMMY_PET\build\ZimmyPet.exe"
+  --headless --path "C:\GODOT\ZIMMY" `
+  --export-release "Windows Desktop" "C:\GODOT\ZIMMY\build\ZimmyPet.exe"
 ```
 
 O executável (standalone, com o `.pck` embutido) é gerado em
@@ -49,7 +49,7 @@ Para embutir o ícone Zimmy no próprio `.exe` (caso o `rcedit` não esteja
 configurado no editor), rode depois:
 
 ```powershell
-C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY_PET\build\ZimmyPet.exe" --set-icon "C:\GODOT\ZIMMY_PET\zimmy.ico"
+C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT\ZIMMY\zimmy.ico"
 ```
 
 ## Controles
@@ -82,13 +82,41 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY_PET\build\ZimmyPet.exe" --set-icon "C:\G
   que está na tela.
 - **📂 Escolher pet ▸** — dropdown para trocar o pet exibido. Sempre tem
   `Selecione...` (índice 0, só rótulo) e `Default` (índice 1) no topo, seguidos dos
-  pets salvos. Escolher um pet específico desliga a geração aleatória.
+  pets salvos. A **opção ativa fica realçada** (marcada com ✓) para você ver de
+  relance qual pet está em uso; com a geração aleatória ligada, nenhuma fica marcada.
+  Escolher um pet específico desliga a geração aleatória.
 - **🎀 Salvar Acessório…** — abre um diálogo para nomear e salvar **só o acessório**
   atual (independente do pet). Também desliga a geração automática ao abrir.
 - **🧳 Escolher acessório ▸** — dropdown independente para trocar o acessório. Tem
   `Selecione...` (só rótulo) e `Nenhum` (limpa os acessórios) no topo, seguidos dos
-  acessórios salvos. Escolher um acessório liga a exibição e desliga o aleatório.
+  acessórios salvos. A **opção ativa fica realçada** (marcada com ✓); com a geração
+  aleatória de acessórios ligada, nenhuma fica marcada. Escolher um acessório liga a
+  exibição e desliga o aleatório.
+- **⚙️ Automações ▸** — submenu com as automações disponíveis (scripts da pasta
+  `Automacoes/`). Fica **desabilitado** quando não há nenhuma automação; com uma ou
+  mais, lista o nome de cada uma. Escolher executa a automação. Ver **Automações**
+  abaixo.
 - **Sair**.
+
+## Automações
+
+Automações são scripts `.gd` colocados na pasta **`Automacoes/`** (na raiz do
+projeto). Aparecem no menu de contexto em **⚙️ Automações** — o submenu é
+**reescaneado toda vez que o menu abre**, então scripts novos aparecem sem reiniciar.
+Sem nenhum script válido, o item do menu fica desabilitado.
+
+Cada automação é um GDScript com:
+
+- (opcional) `const AUTOMATION_NAME := "Nome no menu"` — texto exibido no submenu. Sem
+  ele, o nome é derivado do arquivo (`minha_automacao.gd` → "Minha Automacao").
+- um método `run(zimmy)` — chamado ao escolher o item. `zimmy` é o nó principal,
+  dando acesso a `say()`, `feed()`, `pet()`, `play()`, `hop()`, `current`, etc.
+
+Scripts que `extends RefCounted` são descartados após o `run()`; os que `extends Node`
+são adicionados como filhos do Zimmy e **persistem** (úteis para automações contínuas
+via `_process`/timers). Veja `Automacoes/LEIAME.md` e
+`Automacoes/exemplo_automacao.gd.example` (renomeie para `.gd` para ativar) para os
+modelos.
 
 ## Pets
 

@@ -1,0 +1,50 @@
+---
+tags: [moc, zimmy-pet]
+aliases: [Início, MOC, Mapa]
+atualizado: 2026-06-20
+---
+
+# 🧡 Zimmy Pet — Cofre de Neurônios
+
+> Memória técnica do projeto **Zimmy Pet**, mantida pelo Claude.
+> Repositório: https://github.com/zimerfeld/ZIMMY_PET
+> Código-fonte principal: [[zimmy.gd]] (Godot 4.6, GDScript).
+
+Desktop pet overlay: uma janela transparente, sem bordas e sempre no topo, com uma
+carinha procedural (a "Zimmy") que respira, pisca, pula, segue o cursor e reage a
+interações. Tudo é desenhado em código (`_draw()`), sem sprites.
+
+## 🧠 Como usar este cofre
+Veja [[_Memória do Claude]] para a convenção de notas, links e atualização.
+
+## 🧩 Sistemas
+- [[Sistema - Janela Overlay]] — transparência, always-on-top, layout dinâmico
+- [[Sistema - Pets]] — config, geração procedural, formas e elementos
+- [[Sistema - Acessórios]] — camada independente (chapéu/óculos/laço/cachecol)
+- [[Sistema - Render (_draw)]] — pipeline de desenho e primitivas
+- [[Sistema - Animação]] — respiração, pulo, piscada, olhos
+- [[Sistema - Expressões Faciais]] — rosto espelha o emoji falado
+- [[Sistema - Balão de Fala]] — `say()` + `_relayout()`
+- [[Sistema - Interação e Mau Humor]] — cooldown, limite de repetição, reclamações
+- [[Sistema - Persistência]] — `user://` JSON (pets, acessórios, posição)
+- [[Sistema - Menu de Contexto]] — PopupMenu, submenus, diálogos
+
+## 🔀 Fluxos
+- [[Fluxo - Inicialização]] (`_ready`)
+- [[Fluxo - Loop (_process)]]
+- [[Fluxo - Arrastar e Posição]]
+- [[Fluxo - Geração Aleatória]]
+- [[Fluxo - Salvar e Carregar]]
+- [[Fluxo - Interação e Limites]]
+
+## 🚪 Pontos de Entrada (endpoints)
+- [[Entrada - Eventos de Input]] — mouse/teclado
+- [[Entrada - Itens do Menu]] — ids `MI_*`
+- [[Entrada - Funções de Ação]] — `feed/pet/play/_react`
+
+## 📄 Arquivos-Chave
+- [[zimmy.gd]] · [[project.godot]] · [[main.tscn]] · [[export_presets.cfg]]
+- [[tools - make_icon.py]] · [[Arquivo - README]]
+
+## 📚 Referências
+- [[Repositório e Branches]] · [[Build e Export]] · [[Glossário de Configs]]

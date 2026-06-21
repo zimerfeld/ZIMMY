@@ -1,6 +1,6 @@
 ---
 tags: [sistema, persistencia, dados, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 💾 Sistema - Persistência
@@ -12,7 +12,9 @@ Três arquivos JSON em `user://` (no Windows:
 |---|---|---|
 | `pets.json` | `PETS_FILE` | `{ nome: config_pet }` |
 | `accessories.json` | `ACC_FILE` | `{ nome: config_acessório }` |
-| `settings.json` | `SETTINGS_FILE` | `{ anchor_x, anchor_y }` (última posição) |
+| `settings.json` | `SETTINGS_FILE` | `{ anchor_x, anchor_y, pet, acc, show_acc }` (última posição **+ escolha ativa de pet/acessório**) |
+| `schedules.json` | `SCHEDULES_FILE` | `{ caminho_automação: true }` (agendadas ligadas) |
+| `cred_<key>.json` | `CRED_PREFIX` | `{ user, pass }` por automação (e-mail). **Gitignored**, nunca versionar |
 
 ## Serialização de cores
 - `_cfg_to_json(cfg)` — converte cada `Color` em `[r,g,b,a]`; o resto passa direto.
@@ -26,7 +28,19 @@ Três arquivos JSON em `user://` (no Windows:
 - `_load_pets_from_disk` / `_load_accessories_from_disk` (chamados no
   [[Fluxo - Inicialização]]).
 - `_read_json(path)` — helper tolerante (retorna `null` se faltar/der erro).
-- `_save_window_pos` / `_load_window_pos` — ver [[Fluxo - Arrastar e Posição]].
+- `_save_settings` / `_load_window_pos` — grava/lê `settings.json`; ver
+  [[Fluxo - Arrastar e Posição]]. `_save_settings` (antigo `_save_window_pos`) agora
+  grava também `pet`/`acc`/`show_acc` (a escolha ativa).
+- `_load_selection` — restaura a escolha de pet/acessório salva em `settings.json`,
+  chamada no [[Fluxo - Inicialização]] **após** carregar os salvos do disco e **antes**
+  de montar o menu (para os checks ✓ refletirem a opção pré-selecionada). Nomes
+  `pet`/`acc` vazios (geração aleatória) caem no default — aleatório não é restaurável.
+- `_save_schedules` / `_load_schedules` — automações agendadas ligadas
+  (`automation_enabled`); ver [[Sistema - Menu de Contexto]].
+- `load_credentials` / `save_credentials` / `forget_credentials` — credenciais de
+  automação em `user://cred_<key>.json` (um arquivo por automação, gitignored). Gravadas
+  só após validação; ver [[Sistema - Menu de Contexto]].
 
-Gravações disparadas em: salvar pet/acessório ([[Fluxo - Salvar e Carregar]]) e soltar
-o pet após arrastar.
+Gravações disparadas em: salvar pet/acessório ([[Fluxo - Salvar e Carregar]]), soltar
+o pet após arrastar, e **escolher um pet/acessório ou alternar 👓 Mostrar acessórios**
+(cada escolha chama `_save_settings`).

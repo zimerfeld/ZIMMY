@@ -32,9 +32,10 @@ Endpoints acionados pelo menu de contexto. Ids `MI_*` despachados em `_on_menu(i
   (`acc_menu_ids`). Atualiza `current_acc_name` e realça a opção ativa via
   `_refresh_acc_menu_checks()`.
 - `_on_pick_automation(id)`: 100+=scripts de `Automacoes/` (`automation_ids` →
-  caminho). Carrega o script e chama `run(self)`. Submenu reconstruído por
-  `_rebuild_automations_menu()` (escaneia `res://Automacoes/` via `_scan_automations()`)
-  a cada abertura do menu; item desabilitado quando não há automações.
+  caminho). **Avulsa** → `_run_automation` (carrega e chama `run(self)`). **Agendada**
+  (em `schedule_defs`) → alterna `_set_automation_enabled(path, !on)` (✓ persistente em
+  `user://schedules.json`); o disparo recorrente é feito por `_tick_schedules` no
+  `_process`. Submenu reconstruído por `_rebuild_automations_menu()` a cada abertura.
 
 Fluxos: [[Fluxo - Salvar e Carregar]], [[Fluxo - Geração Aleatória]],
 [[Fluxo - Interação e Limites]].

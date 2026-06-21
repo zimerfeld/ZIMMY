@@ -63,7 +63,8 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 
 > **Posição na tela:** na primeira execução o Zimmy abre **centralizado**. Depois,
 > sempre que você o arrasta a posição é gravada em `user://settings.json` e ele
-> reabre no **último lugar** onde ficou.
+> reabre no **último lugar** onde ficou. Esse mesmo arquivo também guarda a **última
+> escolha de pet e acessório**, restaurada automaticamente ao reabrir.
 
 ### Menu de contexto
 
@@ -93,9 +94,13 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   aleatória de acessórios ligada, nenhuma fica marcada. Escolher um acessório liga a
   exibição e desliga o aleatório.
 - **⚙️ Automações ▸** — submenu com as automações disponíveis (scripts da pasta
-  `Automacoes/`). Fica **desabilitado** quando não há nenhuma automação; com uma ou
-  mais, lista o nome de cada uma. Escolher executa a automação. Ver **Automações**
-  abaixo.
+  `Automacoes/`). Fica **desabilitado** quando não há nenhuma automação. Automações
+  **avulsas** aparecem como botões (executam uma vez ao clicar); automações
+  **agendadas** aparecem como itens **marcáveis** (✓ = ligada) com a frequência no
+  rótulo — é o **agendador visual**. Ver **Automações** abaixo.
+- **📧 E-mails ▸** — submenu dedicado aos provedores de e-mail (Gmail, Outlook), cada um
+  com o **ícone à esquerda** e o **contador de não lidos** no rótulo. Fica **desabilitado**
+  se não houver automações de e-mail. Ver **E-mails** abaixo.
 - **Sair**.
 
 ## Automações
@@ -109,14 +114,75 @@ Cada automação é um GDScript com:
 
 - (opcional) `const AUTOMATION_NAME := "Nome no menu"` — texto exibido no submenu. Sem
   ele, o nome é derivado do arquivo (`minha_automacao.gd` → "Minha Automacao").
-- um método `run(zimmy)` — chamado ao escolher o item. `zimmy` é o nó principal,
-  dando acesso a `say()`, `feed()`, `pet()`, `play()`, `hop()`, `current`, etc.
+- (opcional) `const SCHEDULE := "..."` — frequência para o Zimmy rodar a automação
+  sozinho (ver **Agendador** abaixo).
+- um método `run(zimmy)` — chamado ao escolher o item (ou no disparo agendado). `zimmy`
+  é o nó principal, dando acesso a `say()`, `feed()`, `pet()`, `play()`, `hop()`,
+  `current`, e ao estado (`hunger`, `happy`), etc.
 
 Scripts que `extends RefCounted` são descartados após o `run()`; os que `extends Node`
 são adicionados como filhos do Zimmy e **persistem** (úteis para automações contínuas
 via `_process`/timers). Veja `Automacoes/LEIAME.md` e
 `Automacoes/exemplo_automacao.gd.example` (renomeie para `.gd` para ativar) para os
 modelos.
+
+### Agendador (frequência / recorrência)
+
+Uma automação que declara `const SCHEDULE` roda **sozinha** na frequência indicada,
+sem precisar clicar. Ela aparece no submenu **⚙️ Automações** como um item **marcável**
+(✓ = ligada) com o intervalo no rótulo — esse é o **agendador visual**. Ligar/desligar
+é **persistente**: o que estava ligado volta a rodar ao reabrir o Zimmy (estado em
+`user://schedules.json`). Formatos de `SCHEDULE`: `"30s"`/`"5m"`/`"2h"` (a cada N),
+`"hourly"` (toda hora cheia, no minuto :00), `"daily@09:00"` (1×/dia no horário); ou
+`const SCHEDULE_SECONDS := 300` (segundos). Para agendadas, o agendador cuida da
+recorrência — o `run()` faz a ação **uma vez** (use `extends RefCounted`).
+
+### Automações web (`http_get_json`)
+
+Automações podem buscar dados da internet com o utilitário `zimmy.http_get_json(url, cb)`
+— ele faz um GET e chama `cb.call(ok, data)` com o JSON decodificado, cuidando do
+`HTTPRequest` por baixo. Na *closure* use só `zimmy` e variáveis locais (não `self`),
+para funcionar tanto no clique quanto no disparo agendado.
+
+### Exemplos prontos (`Automacoes/`)
+
+| Automação | Arquivo | Tipo |
+|---|---|---|
+| Auto-alimentar 🦴 | `auto_alimentar.gd` | a cada 20s — alimenta se com fome |
+| Lembrete Pomodoro ☕ | `lembrete_pomodoro.gd` | a cada 25min — lembra de pausar |
+| Comemorar hora cheia 🎉 | `comemoracao_hora_cheia.gd` | `hourly` — comemora cada virada de hora |
+| Cotação USD/EUR/GBP/JPY/CNY 💱 | `cotacao_*.gd` | avulsas — cotação da moeda em BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), grátis). As 5 moedas de maior influência (cesta SDR) formam o "submenu de moedas" em ⚙️ Automações |
+| Desligar PC 🔌 | `desligar_pc.gd` | `daily@23:00` — desliga o Windows com 60s de aviso |
+| Cancelar desligamento ❌ | `cancelar_desligamento.gd` | avulsa — aborta o desligamento (`shutdown /a`) |
+| Alarme ⏰ | `alarme.gd` | `daily@08:00` — pula, avisa e dá um bipe |
+| Gmail / Outlook 📧 | `email_gmail.gd`, `email_outlook.gd` | a cada 5min — contam e-mails não lidos via IMAP; aparecem no submenu **📧 E-mails** |
+
+> **Atenção (desligar PC):** `desligar_pc.gd` executa `shutdown` de verdade. Vem
+> **desligado** por padrão e dá 60s de aviso; para abortar, rode "Cancelar desligamento".
+
+### E-mails (submenu 📧 E-mails) — contador de não lidos
+
+Automações que declaram `const MENU_GROUP := "email"` aparecem num submenu dedicado
+**📧 E-mails**, com o **ícone do provedor à esquerda** (cor de `ICON_COLOR`) e o
+**contador de não lidos no rótulo**. Cada provedor (`email_gmail.gd`, `email_outlook.gd`)
+busca a contagem por **IMAP sobre TLS** (`zimmy.imap_unread(...)`) a cada 5 min.
+
+**Pré-requisito — App Password** (a senha normal **não funciona mais**):
+
+- **Gmail**: ative a verificação em 2 etapas e gere uma *Senha de app* em
+  [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords); confira
+  que o **IMAP está ativado** (Gmail ▸ Configurações ▸ Encaminhamento e POP/IMAP).
+- **Outlook/Hotmail**: gere uma *Senha de aplicativo* em
+  [account.microsoft.com/security](https://account.microsoft.com/security). Contas
+  **Microsoft 365 corporativas** costumam ter IMAP/básico **desativado** pelo admin — aí
+  não funciona.
+
+**Credenciais**: ao **ligar** um provedor no menu, o Zimmy pede *e-mail* + *App Password*.
+Elas são salvas **por automação** em `user://cred_<chave>.json` (ex.: `cred_email_gmail.json`)
+— **fora do repositório** e cobertas pelo `.gitignore` (`cred_*.json`). Só são gravadas/
+atualizadas **após um login válido**; se a senha mudar e o login falhar, o arquivo é
+descartado e o Zimmy pergunta de novo. Reutilize esse fluxo em qualquer automação com
+`zimmy.with_credentials(key, titulo, cb)` + `zimmy.confirm_credentials(key, dados)`.
 
 ## Pets
 
@@ -126,13 +192,22 @@ modelos.
   proporções de orelhas, olhos, corpo e barriga + flags de quais elementos existem e
   o estilo da boca). O `_draw()` desenha a partir desse config, então o mesmo código
   gera o Default, os aleatórios e os salvos.
-- **Geração aleatória**: `_random_cfg()` sorteia matiz, proporções, **formas**
-  (orelhas redondas/pontudas, estilo de boca: `smile`/`cat`/`open`/`line`) e a
-  **presença de elementos** (antenas, nariz, cílios, bochechas), dentro de faixas que
-  mantêm o estilo "Zimmy".
+- **Geração aleatória**: `_random_cfg()` busca **estética equilibrada e cores alegres**:
+  - **Geometria** — sorteia a **silhueta do corpo** (`body_shape`: `round`/`tall`/
+    `wide`/`pear` — ovinho em pé, baixinho fofo ou corpo em gota), a **forma de
+    orelha** (redonda/pontuda), o **estilo de boca** (`smile`/`cat`/`open`/`line`),
+    as **proporções** e a **presença de elementos** (antenas, nariz, cílios,
+    bochechas).
+  - **Cor** — parte de um matiz base e deriva as cores de destaque por um **esquema de
+    harmonia** (análogo / complementar / triádico / mono), com saturação e brilho em
+    faixas **vibrantes-porém-suaves** (tema alegre, evitando tons sujos/escuros) e
+    garantindo contraste entre corpo e barriga.
 - **Persistência**: pets salvos ficam em `user://pets.json` e voltam a aparecer no
   dropdown na próxima execução. (No Windows, `user://` fica em
   `%APPDATA%\Godot\app_userdata\Zimmy Pet\`.)
+- **A escolha ativa é lembrada**: o pet selecionado é gravado em `user://settings.json`
+  e, ao reabrir o Zimmy, ele volta carregado e **pré-selecionado** (✓) no dropdown
+  "Escolher pet".
 
 ## Acessórios
 
@@ -148,7 +223,9 @@ modelos.
   junto e vice-versa. Assim dá para combinar qualquer pet com qualquer acessório
   salvo.
 - **Persistência**: acessórios salvos ficam em `user://accessories.json` (separado de
-  `pets.json`).
+  `pets.json`). A **escolha ativa** de acessório (e o estado de **👓 Mostrar
+  acessórios**) também é gravada em `user://settings.json` e restaurada na próxima
+  abertura, voltando **pré-selecionada** (✓) no dropdown "Escolher acessório".
 
 ## Como o overlay funciona
 

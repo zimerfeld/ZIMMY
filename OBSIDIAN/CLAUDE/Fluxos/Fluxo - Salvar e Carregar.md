@@ -1,6 +1,6 @@
 ---
 tags: [fluxo, persistencia, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 💾 Fluxo - Salvar e Carregar
@@ -28,3 +28,9 @@ Pets e acessórios são salvos/carregados **independentemente**. Ver
 
 > `Selecione...` (id 0) em ambos é só rótulo desabilitado.
 Carga inicial do disco: [[Fluxo - Inicialização]].
+
+## Escolha lembrada entre sessões
+- `_on_pick_pet` e `_on_pick_acc` chamam `_save_settings()` ao final, gravando a
+  escolha (`pet`/`acc`/`show_acc`) em `settings.json` ([[Sistema - Persistência]]).
+- Na próxima abertura, `_load_selection()` restaura o pet/acessório escolhido e ele
+  reaparece **pré-selecionado** (✓) no dropdown. Ver [[Fluxo - Inicialização]].

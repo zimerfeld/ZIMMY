@@ -13,10 +13,15 @@ A carinha original (laranja). **Sempre disponível e nunca removida.** Fixa core
 proporções e elementos: `has_ears=true/round`, `has_cheeks=true`, sem antenas/nariz/
 cílios, `mouth_style="smile"`.
 
-## Aleatório — `_random_cfg()` (`zimmy.gd:148`)
-Sorteia, mantendo o estilo "Zimmy":
-- **Cores** por matiz (`hue`) coerente: corpo, barriga, orelha (mais escura), bochecha
-  (complementar), nariz.
+## Aleatório — `_random_cfg()`
+Busca **estética equilibrada e cores alegres**, mantendo o estilo "Zimmy":
+- **Cores** — matiz base (`hue`); as cores de destaque (orelha/antena/nariz) vêm de um
+  **esquema de harmonia** sorteado: `analogous`/`complementary`/`triadic`/`monochrome`
+  (`accent_hue`). Saturação/brilho em faixas vibrantes-porém-suaves (`body_s` 0.42–0.68,
+  `body_v` 0.86–0.98) → evita tons sujos/escuros. Barriga = mesmo matiz dessaturado e
+  claro (contraste coeso); bochecha = rosado quente translúcido.
+- **Geometria** — `body_shape` ∈ {`round`(2×), `tall`, `wide`, `pear`}: o `_draw()`
+  estica/achata a silhueta e, no `pear`, desenha um bojo inferior extra (corpo em gota).
 - **Proporções** em faixas (`randf_range`).
 - **Formas/elementos** (probabilidades): `has_ears` 85%, `ear_shape` round/pointy,
   `has_antennae` 40%, `has_cheeks` 70%, `has_nose` 60%, `has_eyelashes` 50%,

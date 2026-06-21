@@ -1,7 +1,7 @@
 ---
 tags: [arquivo, config, zimmy-pet]
 caminho: project.godot
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 📄 project.godot
@@ -9,6 +9,13 @@ atualizado: 2026-06-20
 Config do projeto Godot. `config/features = "4.6"`. Cena inicial:
 `run/main_scene = "res://main.tscn"` ([[main.tscn]]). Ícone do editor:
 `res://icon.png`.
+
+## `[application]` — boot splash
+```ini
+boot_splash/show_image=false          # esconde o logo do Godot na abertura
+boot_splash/bg_color=Color(0, 0, 0, 0) # fundo do splash transparente
+```
+Sem isso, o **logo do Godot** apareceria por um instante ao iniciar o `.exe`.
 
 ## `[display]` — o segredo do overlay
 ```ini

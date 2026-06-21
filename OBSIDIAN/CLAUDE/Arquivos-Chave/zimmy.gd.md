@@ -2,7 +2,7 @@
 tags: [arquivo, codigo, zimmy-pet]
 caminho: zimmy.gd
 linguagem: GDScript
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 📄 zimmy.gd
@@ -19,8 +19,8 @@ atualizado: 2026-06-20
 5. **`_ready()`** → [[Fluxo - Inicialização]]
 6. **Menu/UI** — `_build_menu`, `_rebuild_pets_menu`, `_rebuild_acc_menu`,
    `_build_save_dialog`, handlers → [[Sistema - Menu de Contexto]]
-7. **Setters** — `_set_random_pet`, `_set_random_acc`, `_stop_random_all`,
-   `_set_show_accessories`, `_open_save_dialog`, `_on_save_confirmed`
+7. **Setters** — `_set_random_pet`, `_set_random_acc`, `_set_show_accessories`,
+   `_open_save_dialog`, `_on_save_confirmed`, `_do_rename`, `_on_delete_confirmed`
 8. **Persistência** — `_cfg_to_json`, `_json_to_cfg`, `_save_dict_to_disk`,
    load/save de pets/acessórios, `_read_json`, `_save/_load_window_pos`
    → [[Sistema - Persistência]]

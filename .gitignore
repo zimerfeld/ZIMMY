@@ -1,0 +1,24 @@
+# Godot 4+ specific ignores
+.godot/
+.nomedia
+
+# Godot-specific ignores
+.import/
+export.cfg
+export_credentials.cfg
+*.tmp
+
+# Imported translations (automatically generated from CSV files)
+*.translation
+
+# Mono-specific ignores
+.mono/
+data_*/
+mono_crash.*.json
+
+# Claude Code project settings (local-only)
+.claude/settings.json
+
+# Credenciais de automações (NUNCA versionar) — ficam em user://, mas por garantia:
+cred_*.json
+*.cred.json

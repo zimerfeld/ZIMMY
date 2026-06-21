@@ -1,0 +1,14 @@
+# Modelo de automação do Zimmy.
+# Renomeie este arquivo para "exemplo_automacao.gd" (remova .example) para ativá-lo;
+# ele então aparecerá no menu de contexto em ⚙️ Automações.
+
+extends RefCounted
+
+# Texto exibido no submenu (opcional). Sem isto, o nome vem do arquivo.
+const AUTOMATION_NAME := "Exemplo: festa 🎉"
+
+# Chamado ao escolher a automação no menu. `zimmy` é o nó principal (zimmy.gd).
+func run(zimmy) -> void:
+	zimmy.say("automação rodando! 🎉")
+	zimmy.play()
+	zimmy.hop(420.0)

@@ -1,0 +1,38 @@
+---
+tags: [sistema, interacao, gameplay, zimmy-pet]
+atualizado: 2026-06-20
+---
+
+# 😤 Sistema - Interação e Mau Humor
+
+Limita o spam de interações e dá personalidade ao pet. Centralizado em
+`_can_act(action)` (`zimmy.gd:846`), chamado no início de cada ação
+([[Entrada - Funções de Ação]]).
+
+## Regras
+1. **Máx. 1 ação/clique por segundo** — `action_cd` (= `ACTION_COOLDOWN=1.0`),
+   decrementado no [[Fluxo - Loop (_process)]].
+2. **A mesma ação no máx. 3x seguidas** — `last_action` + `action_repeats`
+   (`MAX_REPEAT=3`). Uma ação **diferente** zera a contagem.
+3. **Insistir na mesma ação em <1s → reclamação** — se `action_cd>0` e a ação é a
+   mesma, chama `_complain()`.
+
+## `_complain()` (`zimmy.gd:864`)
+Expressa **repulsa / raiva / tristeza / indiferença / descaso** (frase aleatória de
+`MOOD_NEG`, ex.: "para com isso! 😠", "tanto faz 😑", "...zzz 😴"), reduz `happy` em 6
+e respeita um cooldown próprio `complain_cd` (`COMPLAIN_COOLDOWN=1.5`) para não
+spammar fala. O emoji da frase também **deixa o rosto** raivoso/enojado/triste/
+indiferente — ver [[Sistema - Expressões Faciais]].
+
+## Tabela de decisão (mesma ação)
+| Situação | Resultado |
+|---|---|
+| 1ª–3ª vez, ≥1s entre elas | executa |
+| repete <1s (insistência) | bloqueia + `_complain()` |
+| 4ª+ vez, ≥1s, sem spam | bloqueia em silêncio |
+| ação diferente | zera contador e executa |
+
+> Só as ações de carinho/alimentar/brincar/clique passam por aqui. Trocar pet/
+> acessório e abrir menu **não** são limitados.
+
+Detalhe do fluxo em [[Fluxo - Interação e Limites]].

@@ -1,6 +1,6 @@
 ---
 tags: [referencia, dados, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 🗂️ Glossário de Configs
@@ -10,33 +10,74 @@ Tipos de dado que descrevem o que aparece na tela. Ver [[Sistema - Pets]],
 
 ## Config de Pet (`current`, `saved_pets[nome]`)
 Cores (serializadas como `[r,g,b,a]`, ver `PET_COLOR_KEYS`):
-`body_color`, `belly_color`, `ear_color`, `cheek_color`, `antenna_color`, `nose_color`.
+`body_color`, `belly_color`, `ear_color`, `cheek_color`, `antenna_color`, `nose_color`,
+`horn_color`.
 
 Proporções (floats): `ear_dx`, `ear_y`, `ear_w`, `ear_h`, `eye_dx`, `eye_y`,
 `eye_w`, `eye_h`, `body_w`, `body_h`, `belly_w`, `belly_h`.
 
-Elementos/forma:
+Elementos/forma (base):
 - `has_ears` (bool) + `ear_shape` (`round` | `pointy`)
 - `has_antennae` (bool)
 - `has_cheeks` (bool)
 - `has_nose` (bool)
 - `has_eyelashes` (bool)
 - `mouth_style` (`smile` | `cat` | `open` | `line`)
+- `body_shape` (`round` | `tall` | `wide` | `pear`)
+
+Categorias geométricas extras do "esqueleto" (todas com `none` quando ausentes):
+- `tail` (`none` | `curl` | `puff` | `stub`)
+- `horn` (`none` | `unicorn` | `devil` | `antlers`) + `horn_color`
+- `hair_tuft` (`none` | `tuft` | `cowlick` | `mohawk`)
+- `eye_shape` (`round` | `oval` | `tall` | `sleepy`)
+- `pupil_style` (`round` | `big` | `cat` | `sparkle`)
+- `eyebrow` (`none` | `flat` | `raised` | `serious`)
+- `feet` (`none` | `paws`)
+- `arms` (`none` | `nubs`)
+- `belly_mark` (`none` | `spot` | `heart`)
+- `whiskers` (`none` | `short` | `long`)
+- `wings` (`none` | `small`)
+- `freckles` (`none` | `freckles`)
 
 > O **Default** (`_default_cfg()`) fixa essas chaves na carinha original; o aleatório
 > (`_random_cfg()`) as sorteia. `_json_to_cfg()` parte do default, então arquivos
 > antigos/parciais ganham as chaves novas automaticamente.
 
 ## Config de Acessório (`current_acc`, `saved_accessories[nome]`)
-Cores (`ACC_COLOR_KEYS`): `hat_color`, `glasses_color`, `bow_color`, `scarf_color`.
-Tipos:
+Cores (`ACC_COLOR_KEYS`): `hat_color`, `glasses_color`, `bow_color`, `scarf_color`,
+`necklace_color`, `earring_color`, `collar_color`, `headphone_color`, `monocle_color`,
+`mustache_color`, `flower_color`, `badge_color`, `tie_color`, `sash_color`,
+`mask_color`, `sticker_color`.
+
+Tipos originais:
 - `hat`: `none` | `beanie` | `tophat` | `crown` | `cap`
 - `glasses`: `none` | `round` | `square` | `star`
 - `bow`: `none` | `head` | `neck`
 - `scarf`: `none` | `present`
 
+Categorias geométricas extras (todas com `none` quando ausentes):
+- `necklace` (`pearls` | `pendant`)
+- `earrings` (`studs` | `hoops`)
+- `collar` (`plain` | `bell`)
+- `headphones` (`present`)
+- `monocle` (`present`)
+- `mustache` (`curly` | `thin`)
+- `flower` (`present`)
+- `badge` (`star` | `heart`)
+- `tie` (`necktie` | `bowtie`)
+- `sash` (`present`)
+- `mask` (`medical` | `ninja`)
+- `cheek_sticker` (`star` | `heart`)
+
 ## Settings (`user://settings.json`)
-`{ "anchor_x": int, "anchor_y": int }` — âncora (centro-inferior) da última posição.
+`{ "anchor_x": int, "anchor_y": int, "pet": str, "acc": str, "show_acc": bool,
+"lang": "pt"|"en" }` — âncora (centro-inferior) da última posição **+ escolha ativa** de
+pet/acessório, estado de exibição de acessórios e **idioma da UI**. Ver
+[[Sistema - Persistência]].
+
+## i18n (`STRINGS` / `STRING_LISTS`)
+Tabelas `const` com `{ "pt": ..., "en": ... }` por chave. `t(key)` devolve o texto e
+`ta(key)` a lista (mood/feed/pet/play) no idioma `lang`. Cobre menu, diálogos e falas.
 
 ## Constantes notáveis ([[zimmy.gd]])
 `PET_BOX=200`, `PET_SCALE=0.75`, `PET_DRAW=150`, `HOP_HEADROOM=80`,

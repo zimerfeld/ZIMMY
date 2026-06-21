@@ -24,7 +24,9 @@ Três arquivos JSON em `user://` (no Windows:
 
 ## Funções (`zimmy.gd:410+`)
 - `_save_dict_to_disk(path, store)` + wrappers `_save_pets_to_disk` /
-  `_save_accessories_to_disk`.
+  `_save_accessories_to_disk`. **Exclusão**: `_on_delete_confirmed` faz
+  `saved_pets`/`saved_accessories``.erase(nome)` e regrava via esses mesmos wrappers —
+  remoção permanente do JSON; ver [[Fluxo - Salvar e Carregar]].
 - `_load_pets_from_disk` / `_load_accessories_from_disk` (chamados no
   [[Fluxo - Inicialização]]).
 - `_read_json(path)` — helper tolerante (retorna `null` se faltar/der erro).

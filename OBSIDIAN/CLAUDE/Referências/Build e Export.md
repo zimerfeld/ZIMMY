@@ -1,6 +1,6 @@
 ---
 tags: [referencia, build, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 🏗️ Build e Export
@@ -26,6 +26,12 @@ Depois embutir o ícone no `.exe`:
 C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT\ZIMMY\zimmy.ico"
 ```
 > ⚙️ Convenção do projeto: **sempre re-exportar** ao fim de qualquer mudança no jogo.
+
+## Build automático (`.claude/build-if-changed.ps1`)
+Disparado pelo **Stop hook**. Re-exporta só se algum `.gd/.tscn/.json/.godot/.cfg` for
+mais novo que o `.exe`. **Antes de exportar, encerra qualquer `ZimmyPet.exe` em
+execução** (`Stop-Process`) e remove um `ZimmyPet.tmp` residual — senão o rename do
+arquivo temporário falha com *"locked by a running instance"*.
 
 ## Preset
 Definido em [[export_presets.cfg]]: plataforma Windows Desktop, `embed_pck=true`,

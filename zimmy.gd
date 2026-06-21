@@ -45,8 +45,11 @@ const SCHEDULES_FILE := "user://schedules.json" # quais automações agendadas e
 const AUTOMACOES_DIR := "res://Automacoes/"   # scripts de automação (drop-in) — ver Automacoes/LEIAME.md
 const RANDOM_PERIOD := 9.0  # segundos entre pets aleatórios (quando ligado)
 const PET_COLOR_KEYS := ["body_color", "belly_color", "ear_color", "cheek_color",
-	"antenna_color", "nose_color"]
-const ACC_COLOR_KEYS := ["hat_color", "glasses_color", "bow_color", "scarf_color"]
+	"antenna_color", "nose_color", "horn_color"]
+const ACC_COLOR_KEYS := ["hat_color", "glasses_color", "bow_color", "scarf_color",
+	"necklace_color", "earring_color", "collar_color", "headphone_color",
+	"monocle_color", "mustache_color", "flower_color", "badge_color", "tie_color",
+	"sash_color", "mask_color", "sticker_color"]
 
 var current: Dictionary = {}        # config do pet exibido agora
 var current_acc: Dictionary = {}    # config do acessório exibido agora
@@ -54,6 +57,8 @@ var saved_pets: Dictionary = {}     # nome -> config (em memória, com Color)
 var saved_accessories: Dictionary = {}  # nome -> config de acessório
 var pet_menu_ids: Dictionary = {}   # id do item no dropdown -> nome do pet
 var acc_menu_ids: Dictionary = {}   # id do item no dropdown -> nome do acessório
+var pet_del_ids: Dictionary = {}    # id do item no submenu "Excluir pet" -> nome do pet
+var acc_del_ids: Dictionary = {}    # id do item no submenu "Excluir acessório" -> nome do acessório
 var current_pet_name := "Default"   # nome da opção ativa no submenu de pets ("" se aleatório)
 var current_acc_name := "Nenhum"    # nome da opção ativa no submenu de acessórios ("" se aleatório)
 var automation_ids: Dictionary = {} # id do item no submenu -> caminho do script de automação
@@ -74,6 +79,8 @@ const CRED_PREFIX := "user://cred_"      # arquivo por automação: user://cred_
 var cred_dialog: ConfirmationDialog
 var cred_user_edit: LineEdit
 var cred_pass_edit: LineEdit
+var cred_l1: Label   # rótulo "E-mail:" (retraduzido ao abrir o diálogo)
+var cred_l2: Label   # rótulo "App Password..." (idem)
 var cred_pending_key := ""               # chave da credencial sendo solicitada agora
 var cred_pending_cb := Callable()        # callback a chamar com {user, pass} ao confirmar
 var cred_prompt_suppressed: Dictionary = {} # chaves cujo prompt o usuário cancelou (não insistir)
@@ -93,11 +100,6 @@ const MAX_REPEAT := 3
 const COMPLAIN_COOLDOWN := 1.5    # respiro entre reclamações (evita spam de fala)
 # Frases de mau humor quando insistem na mesma ação: repulsa / raiva / tristeza /
 # indiferença / descaso.
-const MOOD_NEG := [
-	"eca, de novo não 🤢", "para com isso! 😠", "grrr... 😤",
-	"de novo?... 😢", "tô cansado disso 😞",
-	"tanto faz 😑", "que seja... 🙄", "...zzz 😴",
-]
 var action_cd := 0.0
 var last_action := ""
 var action_repeats := 0
@@ -134,9 +136,16 @@ var pets_menu: PopupMenu
 var acc_menu: PopupMenu
 var automations_menu: PopupMenu
 var email_menu: PopupMenu
+var pets_del_menu: PopupMenu
+var acc_del_menu: PopupMenu
+var lang_menu: PopupMenu
 var save_dialog: ConfirmationDialog
 var name_edit: LineEdit
 var save_mode := "pet"      # "pet" ou "acc" — o que o diálogo de salvar grava
+var save_action := "save"   # "save" (novo) ou "rename" (renomear um item já salvo)
+var delete_dialog: ConfirmationDialog
+var delete_mode := "pet"    # "pet" ou "acc" — o que o diálogo de exclusão remove
+var delete_name := ""       # nome do item pendente de exclusão
 
 # --- ids dos itens do menu principal ---
 const MI_FEED := 0
@@ -152,6 +161,135 @@ const MI_QUIT := 9
 const MI_RANDOM_ACC := 10
 const MI_AUTOMATIONS := 11
 const MI_EMAIL := 12
+const MI_DEL_PET := 13
+const MI_DEL_ACC := 14
+const MI_LANG := 15
+const LANG_PT := 1   # ids dos itens do submenu de idioma
+const LANG_EN := 2
+
+# --- idioma (i18n) ---
+var lang := "pt"   # "pt" (Português BR) ou "en" (English US); persistido em settings.json
+
+# Tabela de textos do sistema (menu, diálogos, falas). Cada chave traz pt/en.
+const STRINGS := {
+	# menu de contexto
+	"mi_feed":       {"pt": "🦴 Alimentar",          "en": "🦴 Feed"},
+	"mi_pet":        {"pt": "🤚 Carinho",            "en": "🤚 Pet"},
+	"mi_play":       {"pt": "🎾 Brincar",            "en": "🎾 Play"},
+	"mi_random":     {"pt": "🎲 Gerar pets",         "en": "🎲 Random pets"},
+	"mi_random_acc": {"pt": "🎲 Gerar acessórios",   "en": "🎲 Random accessories"},
+	"mi_show_acc":   {"pt": "👓 Mostrar acessórios", "en": "👓 Show accessories"},
+	"mi_save_pet":   {"pt": "💾 Salvar Pet...",      "en": "💾 Save Pet..."},
+	"mi_rename_pet": {"pt": "💾 Renomear Pet...",    "en": "💾 Rename Pet..."},
+	"mi_choose_pet": {"pt": "📂 Escolher pet",       "en": "📂 Choose pet"},
+	"mi_del_pet":    {"pt": "🗑️ Excluir pet",        "en": "🗑️ Delete pet"},
+	"mi_save_acc":   {"pt": "🎀 Salvar Acessório...","en": "🎀 Save Accessory..."},
+	"mi_rename_acc": {"pt": "🎀 Renomear Acessório...","en": "🎀 Rename Accessory..."},
+	"mi_choose_acc": {"pt": "🧳 Escolher acessório", "en": "🧳 Choose accessory"},
+	"mi_del_acc":    {"pt": "🗑️ Excluir acessório",  "en": "🗑️ Delete accessory"},
+	"mi_automations":{"pt": "⚙️ Automações",         "en": "⚙️ Automations"},
+	"mi_emails":     {"pt": "📧 E-mails",            "en": "📧 E-mails"},
+	"mi_language":   {"pt": "🌐 Idioma",             "en": "🌐 Language"},
+	"mi_quit":       {"pt": "Sair",                  "en": "Quit"},
+	# submenus / sentinelas (rótulo exibido; o valor lógico continua "Default"/"Nenhum")
+	"select":        {"pt": "Selecione...",          "en": "Select..."},
+	"default_pet":   {"pt": "Padrão",                "en": "Default"},
+	"none_acc":      {"pt": "Nenhum",                "en": "None"},
+	"no_saved_pets": {"pt": "(nenhum pet salvo)",    "en": "(no saved pets)"},
+	"no_saved_acc":  {"pt": "(nenhum acessório salvo)","en": "(no saved accessories)"},
+	# diálogos salvar / renomear
+	"save_pet_title":   {"pt": "Salvar Pet",         "en": "Save Pet"},
+	"save_acc_title":   {"pt": "Salvar Acessório",   "en": "Save Accessory"},
+	"rename_pet_title": {"pt": "Renomear Pet",       "en": "Rename Pet"},
+	"rename_acc_title": {"pt": "Renomear Acessório", "en": "Rename Accessory"},
+	"name_pet_label":   {"pt": "Nome do pet:",       "en": "Pet name:"},
+	"name_acc_label":   {"pt": "Nome do acessório:", "en": "Accessory name:"},
+	"newname_pet_label":{"pt": "Novo nome do pet:",  "en": "New pet name:"},
+	"newname_acc_label":{"pt": "Novo nome do acessório:","en": "New accessory name:"},
+	"ph_pet":           {"pt": "ex: Fofinho",        "en": "e.g. Fluffy"},
+	"ph_acc":           {"pt": "ex: Chapéu de Festa","en": "e.g. Party Hat"},
+	"btn_save":         {"pt": "Salvar",             "en": "Save"},
+	"btn_rename":       {"pt": "Renomear",           "en": "Rename"},
+	# diálogo excluir
+	"delete_title":   {"pt": "Excluir",              "en": "Delete"},
+	"btn_delete":     {"pt": "Excluir",              "en": "Delete"},
+	"btn_cancel":     {"pt": "Cancelar",             "en": "Cancel"},
+	"delete_confirm": {"pt": "Excluir o %s \"%s\" permanentemente?",
+		"en": "Permanently delete the %s \"%s\"?"},
+	"kind_pet":       {"pt": "pet",                  "en": "pet"},
+	"kind_acc":       {"pt": "acessório",            "en": "accessory"},
+	# diálogo de credenciais
+	"cred_ok":        {"pt": "Entrar",               "en": "Sign in"},
+	"cred_email_label":{"pt": "E-mail:",             "en": "E-mail:"},
+	"cred_pass_label":{"pt": "App Password (senha de app):", "en": "App Password:"},
+	"cred_user_ph":   {"pt": "voce@gmail.com",       "en": "you@gmail.com"},
+	"cred_pass_ph":   {"pt": "senha de aplicativo (não a senha normal)",
+		"en": "app password (not your normal password)"},
+	# falas (say)
+	"hello":          {"pt": "olá! eu sou o Zimmy 🧡","en": "hi! I'm Zimmy 🧡"},
+	"say_default":    {"pt": "Padrão 🐾",            "en": "Default 🐾"},
+	"say_no_acc":     {"pt": "sem acessório 🚫",     "en": "no accessory 🚫"},
+	"pet_deleted":    {"pt": "pet excluído: %s 🗑️",  "en": "pet deleted: %s 🗑️"},
+	"acc_deleted":    {"pt": "acessório excluído: %s 🗑️","en": "accessory deleted: %s 🗑️"},
+	"new_pet":        {"pt": "novo pet! 🎲",         "en": "new pet! 🎲"},
+	"new_acc":        {"pt": "novos acessórios! 🎲", "en": "new accessories! 🎲"},
+	"name_invalid":   {"pt": "nome inválido 🙈",     "en": "invalid name 🙈"},
+	"pet_saved":      {"pt": "pet salvo: %s 💾",     "en": "pet saved: %s 💾"},
+	"acc_saved":      {"pt": "acessório salvo: %s 🎀","en": "accessory saved: %s 🎀"},
+	"name_kept":      {"pt": "nome mantido 🙂",      "en": "name unchanged 🙂"},
+	"pet_exists":     {"pt": "já existe um pet com esse nome 🙈",
+		"en": "a pet with that name already exists 🙈"},
+	"acc_exists":     {"pt": "já existe um acessório com esse nome 🙈",
+		"en": "an accessory with that name already exists 🙈"},
+	"pet_renamed":    {"pt": "pet renomeado: %s ✏️", "en": "pet renamed: %s ✏️"},
+	"acc_renamed":    {"pt": "acessório renomeado: %s ✏️","en": "accessory renamed: %s ✏️"},
+	"automation_invalid":{"pt": "automação inválida 🚫","en": "invalid automation 🚫"},
+	"automation_norun":{"pt": "automação sem run() 🤔","en": "automation has no run() 🤔"},
+	"login_incomplete":{"pt": "login incompleto 🙈", "en": "incomplete login 🙈"},
+	"hi_react":       {"pt": "oi! 👋",               "en": "hi! 👋"},
+	"sched_on":       {"pt": "⏱️ %s ligada (%s)",    "en": "⏱️ %s on (%s)"},
+	"sched_off":      {"pt": "⏸️ %s desligada",      "en": "⏸️ %s off"},
+	# automações: rótulos de frequência / badges
+	"automation":     {"pt": "automação",            "en": "automation"},
+	"unread":         {"pt": "não lidos",            "en": "unread"},
+	"freq_hourly":    {"pt": "toda hora cheia",      "en": "every hour"},
+	"freq_daily":     {"pt": "todo dia %02d:%02d",   "en": "daily at %02d:%02d"},
+	"freq_every":     {"pt": "a cada %s",            "en": "every %s"},
+}
+
+# Listas de falas (sorteadas) por idioma.
+const STRING_LISTS := {
+	"mood_neg": {
+		"pt": ["eca, de novo não 🤢", "para com isso! 😠", "grrr... 😤",
+			"de novo?... 😢", "tô cansado disso 😞", "tanto faz 😑",
+			"que seja... 🙄", "...zzz 😴"],
+		"en": ["ugh, not again 🤢", "stop it! 😠", "grrr... 😤",
+			"again?... 😢", "I'm tired of this 😞", "whatever 😑",
+			"sure... 🙄", "...zzz 😴"],
+	},
+	"feed": {
+		"pt": ["nhac nhac! 😋", "obrigado!", "que delícia 🦴"],
+		"en": ["nom nom! 😋", "thank you!", "yummy 🦴"],
+	},
+	"pet_react": {
+		"pt": ["ronron... 🥰", "adoro carinho!", "mais! mais!"],
+		"en": ["purr... 🥰", "I love pets!", "more! more!"],
+	},
+	"play": {
+		"pt": ["yupiii! 🎾", "de novo!", "tô voando! 🚀"],
+		"en": ["yippee! 🎾", "again!", "I'm flying! 🚀"],
+	},
+}
+
+## Texto traduzido para o idioma atual (cai no pt, depois na própria chave, se faltar).
+func t(key: String) -> String:
+	var e: Dictionary = STRINGS.get(key, {})
+	return e.get(lang, e.get("pt", key))
+
+## Lista de falas traduzida para o idioma atual.
+func ta(key: String) -> Array:
+	var e: Dictionary = STRING_LISTS.get(key, {})
+	return e.get(lang, e.get("pt", []))
 
 # ------------------------------------------------------------------ config de pet
 ## Config do pet padrão (a carinha original do Zimmy). Sempre disponível.
@@ -172,11 +310,26 @@ func _default_cfg() -> Dictionary:
 		"has_nose": false, "nose_color": Color("c47a5a"),
 		"has_eyelashes": false,
 		"mouth_style": "smile",
+		# --- categorias geométricas adicionais (esqueleto) — Default fica "limpo" ---
+		"tail": "none",
+		"horn": "none", "horn_color": Color("f5e6c8"),
+		"hair_tuft": "none",
+		"eye_shape": "round",
+		"pupil_style": "round",
+		"eyebrow": "none",
+		"feet": "none",
+		"arms": "none",
+		"belly_mark": "none",
+		"whiskers": "none",
+		"wings": "none",
+		"freckles": "none",
 	}
 
 ## Gera um pet aleatório com estética equilibrada e cores alegres.
-## - Geometria: sorteia a silhueta do corpo (round/tall/wide/pear) + forma de orelha,
-##   além de proporções, mantendo o estilo "Zimmy".
+## - Geometria: além da silhueta do corpo (round/tall/wide/pear) e forma de orelha,
+##   sorteia ~uma dúzia de categorias independentes do "esqueleto" — rabo, chifre,
+##   topete, formato de olho, estilo de pupila, sobrancelha, patas, bracinhos, marca
+##   na barriga, bigodes, asas e sardas — para variar muito além do Default.
 ## - Cor: parte de um matiz base e deriva as cores de destaque por um *esquema de
 ##   harmonia* (análogo/complementar/triádico/mono), com saturação/brilho em faixas
 ##   vibrantes-porém-suaves (tema alegre), garantindo contraste corpo↔barriga.
@@ -221,6 +374,20 @@ func _random_cfg() -> Dictionary:
 		"nose_color": nose,
 		"has_eyelashes": randf() < 0.5,
 		"mouth_style": ["smile", "cat", "open", "line"].pick_random(),
+		# --- categorias geométricas adicionais (sorteadas de forma independente) ---
+		"tail": ["none", "none", "curl", "puff", "stub"].pick_random(),
+		"horn": ["none", "none", "none", "unicorn", "devil", "antlers"].pick_random(),
+		"horn_color": Color.from_hsv(fposmod(hue + 0.12, 1.0), randf_range(0.2, 0.5), randf_range(0.9, 1.0)),
+		"hair_tuft": ["none", "none", "tuft", "cowlick", "mohawk"].pick_random(),
+		"eye_shape": ["round", "round", "oval", "tall", "sleepy"].pick_random(),
+		"pupil_style": ["round", "round", "big", "cat", "sparkle"].pick_random(),
+		"eyebrow": ["none", "none", "none", "flat", "raised", "serious"].pick_random(),
+		"feet": ["none", "paws"].pick_random(),
+		"arms": ["none", "nubs"].pick_random(),
+		"belly_mark": ["none", "none", "spot", "heart"].pick_random(),
+		"whiskers": ["none", "none", "short", "long"].pick_random(),
+		"wings": ["none", "none", "none", "small"].pick_random(),
+		"freckles": ["none", "freckles"].pick_random(),
 	}
 
 # ------------------------------------------------------------------ config de acessório
@@ -231,9 +398,23 @@ func _default_acc() -> Dictionary:
 		"glasses": "none", "glasses_color": Color("2c3e50"),
 		"bow": "none", "bow_color": Color("e84393"),
 		"scarf": "none", "scarf_color": Color("2980b9"),
+		# --- categorias geométricas adicionais (Default não veste nada) ---
+		"necklace": "none", "necklace_color": Color("f1c40f"),
+		"earrings": "none", "earring_color": Color("f1c40f"),
+		"collar": "none", "collar_color": Color("e74c3c"),
+		"headphones": "none", "headphone_color": Color("34495e"),
+		"monocle": "none", "monocle_color": Color("bdc3c7"),
+		"mustache": "none", "mustache_color": Color("4a3527"),
+		"flower": "none", "flower_color": Color("e84393"),
+		"badge": "none", "badge_color": Color("f39c12"),
+		"tie": "none", "tie_color": Color("8e44ad"),
+		"sash": "none", "sash_color": Color("c0392b"),
+		"mask": "none", "mask_color": Color("ecf0f1"),
+		"cheek_sticker": "none", "sticker_color": Color("e84393"),
 	}
 
-## Gera acessórios aleatórios (chapéu/óculos/laço/cachecol e cores).
+## Gera acessórios aleatórios. Além dos 4 originais (chapéu/óculos/laço/cachecol),
+## sorteia ~uma dúzia de categorias geométricas independentes (cada uma com cor própria).
 func _random_acc() -> Dictionary:
 	return {
 		"hat": ["none", "beanie", "tophat", "crown", "cap"].pick_random(),
@@ -244,6 +425,31 @@ func _random_acc() -> Dictionary:
 		"bow_color": Color.from_hsv(randf(), randf_range(0.5, 0.9), randf_range(0.8, 1.0)),
 		"scarf": ["none", "present"].pick_random(),
 		"scarf_color": Color.from_hsv(randf(), randf_range(0.4, 0.8), randf_range(0.6, 0.9)),
+		# --- categorias geométricas adicionais (sorteadas de forma independente) ---
+		"necklace": ["none", "none", "pearls", "pendant"].pick_random(),
+		"necklace_color": Color.from_hsv(randf(), randf_range(0.4, 0.8), randf_range(0.8, 1.0)),
+		"earrings": ["none", "none", "studs", "hoops"].pick_random(),
+		"earring_color": Color.from_hsv(randf(), randf_range(0.3, 0.7), randf_range(0.85, 1.0)),
+		"collar": ["none", "none", "plain", "bell"].pick_random(),
+		"collar_color": Color.from_hsv(randf(), randf_range(0.5, 0.9), randf_range(0.7, 0.95)),
+		"headphones": ["none", "none", "none", "present"].pick_random(),
+		"headphone_color": Color.from_hsv(randf(), randf_range(0.2, 0.6), randf_range(0.25, 0.55)),
+		"monocle": ["none", "none", "none", "present"].pick_random(),
+		"monocle_color": Color.from_hsv(randf(), randf_range(0.1, 0.4), randf_range(0.5, 0.8)),
+		"mustache": ["none", "none", "curly", "thin"].pick_random(),
+		"mustache_color": Color.from_hsv(randf(), randf_range(0.2, 0.5), randf_range(0.2, 0.45)),
+		"flower": ["none", "none", "present"].pick_random(),
+		"flower_color": Color.from_hsv(randf(), randf_range(0.5, 0.9), randf_range(0.85, 1.0)),
+		"badge": ["none", "none", "star", "heart"].pick_random(),
+		"badge_color": Color.from_hsv(randf(), randf_range(0.5, 0.9), randf_range(0.8, 1.0)),
+		"tie": ["none", "none", "necktie", "bowtie"].pick_random(),
+		"tie_color": Color.from_hsv(randf(), randf_range(0.4, 0.85), randf_range(0.6, 0.9)),
+		"sash": ["none", "none", "none", "present"].pick_random(),
+		"sash_color": Color.from_hsv(randf(), randf_range(0.5, 0.9), randf_range(0.7, 0.95)),
+		"mask": ["none", "none", "none", "medical", "ninja"].pick_random(),
+		"mask_color": Color.from_hsv(randf(), randf_range(0.05, 0.35), randf_range(0.75, 0.98)),
+		"cheek_sticker": ["none", "none", "star", "heart"].pick_random(),
+		"sticker_color": Color.from_hsv(randf(), randf_range(0.5, 0.9), randf_range(0.85, 1.0)),
 	}
 
 func _ready() -> void:
@@ -289,7 +495,7 @@ func _ready() -> void:
 	_build_menu()
 	_build_save_dialog()
 
-	say("olá! eu sou o Zimmy 🧡")
+	say(t("hello"))
 
 # ------------------------------------------------------------------ menu / UI
 func _build_menu() -> void:
@@ -297,50 +503,113 @@ func _build_menu() -> void:
 	pets_menu.id_pressed.connect(_on_pick_pet)
 	acc_menu = PopupMenu.new()
 	acc_menu.id_pressed.connect(_on_pick_acc)
+	pets_del_menu = PopupMenu.new()
+	pets_del_menu.id_pressed.connect(_on_del_pet)
+	acc_del_menu = PopupMenu.new()
+	acc_del_menu.id_pressed.connect(_on_del_acc)
 	automations_menu = PopupMenu.new()
 	automations_menu.id_pressed.connect(_on_pick_automation)
 	email_menu = PopupMenu.new()
 	email_menu.id_pressed.connect(_on_pick_automation)
+	lang_menu = PopupMenu.new()
+	lang_menu.add_radio_check_item("Português (Brasil)", LANG_PT)
+	lang_menu.add_radio_check_item("English (US)", LANG_EN)
+	lang_menu.id_pressed.connect(_on_pick_language)
 
 	menu = PopupMenu.new()
-	menu.add_item("🦴 Alimentar", MI_FEED)
-	menu.add_item("🤚 Carinho", MI_PET)
-	menu.add_item("🎾 Brincar", MI_PLAY)
+	menu.add_item(t("mi_feed"), MI_FEED)
+	menu.add_item(t("mi_pet"), MI_PET)
+	menu.add_item(t("mi_play"), MI_PLAY)
 	menu.add_separator()
-	menu.add_check_item("🎲 Gerar pets", MI_RANDOM)
-	menu.add_check_item("🎲 Gerar acessórios", MI_RANDOM_ACC)
-	menu.add_check_item("👓 Mostrar acessórios", MI_SHOW_ACC)
+	menu.add_check_item(t("mi_random"), MI_RANDOM)
+	menu.add_check_item(t("mi_random_acc"), MI_RANDOM_ACC)
+	menu.add_check_item(t("mi_show_acc"), MI_SHOW_ACC)
 	menu.set_item_checked(menu.get_item_index(MI_SHOW_ACC), show_accessories)
 	menu.add_separator()
-	menu.add_item("💾 Salvar Pet...", MI_SAVE_PET)
-	menu.add_submenu_node_item("📂 Escolher pet", pets_menu, MI_CHOOSE_PET)
-	menu.add_item("🎀 Salvar Acessório...", MI_SAVE_ACC)
-	menu.add_submenu_node_item("🧳 Escolher acessório", acc_menu, MI_CHOOSE_ACC)
+	menu.add_item(t("mi_save_pet"), MI_SAVE_PET)
+	menu.add_submenu_node_item(t("mi_choose_pet"), pets_menu, MI_CHOOSE_PET)
+	menu.add_submenu_node_item(t("mi_del_pet"), pets_del_menu, MI_DEL_PET)
+	menu.add_item(t("mi_save_acc"), MI_SAVE_ACC)
+	menu.add_submenu_node_item(t("mi_choose_acc"), acc_menu, MI_CHOOSE_ACC)
+	menu.add_submenu_node_item(t("mi_del_acc"), acc_del_menu, MI_DEL_ACC)
 	menu.add_separator()
-	menu.add_submenu_node_item("⚙️ Automações", automations_menu, MI_AUTOMATIONS)
-	menu.add_submenu_node_item("📧 E-mails", email_menu, MI_EMAIL)
+	menu.add_submenu_node_item(t("mi_automations"), automations_menu, MI_AUTOMATIONS)
+	menu.add_submenu_node_item(t("mi_emails"), email_menu, MI_EMAIL)
+	menu.add_submenu_node_item(t("mi_language"), lang_menu, MI_LANG)
 	menu.add_separator()
-	menu.add_item("Sair", MI_QUIT)
+	menu.add_item(t("mi_quit"), MI_QUIT)
 	menu.id_pressed.connect(_on_menu)
 	add_child(menu)
 	_build_cred_dialog()
+	_build_delete_dialog()
 	_rebuild_pets_menu()
 	_rebuild_acc_menu()
 	_rebuild_automations_menu()
+	_refresh_lang_checks()
+
+## Marca (✓) o idioma ativo no submenu de idioma.
+func _refresh_lang_checks() -> void:
+	lang_menu.set_item_checked(lang_menu.get_item_index(LANG_PT), lang == "pt")
+	lang_menu.set_item_checked(lang_menu.get_item_index(LANG_EN), lang == "en")
+
+## Troca o idioma, persiste e reaplica todos os rótulos da UI.
+func _on_pick_language(id: int) -> void:
+	var new_lang := "en" if id == LANG_EN else "pt"
+	if new_lang == lang:
+		return
+	lang = new_lang
+	_apply_menu_labels()
+	_refresh_lang_checks()
+	_save_settings()
+
+## Reaplica os rótulos do menu principal e submenus ao idioma atual.
+func _apply_menu_labels() -> void:
+	menu.set_item_text(menu.get_item_index(MI_FEED), t("mi_feed"))
+	menu.set_item_text(menu.get_item_index(MI_PET), t("mi_pet"))
+	menu.set_item_text(menu.get_item_index(MI_PLAY), t("mi_play"))
+	menu.set_item_text(menu.get_item_index(MI_RANDOM), t("mi_random"))
+	menu.set_item_text(menu.get_item_index(MI_RANDOM_ACC), t("mi_random_acc"))
+	menu.set_item_text(menu.get_item_index(MI_SHOW_ACC), t("mi_show_acc"))
+	menu.set_item_text(menu.get_item_index(MI_CHOOSE_PET), t("mi_choose_pet"))
+	menu.set_item_text(menu.get_item_index(MI_DEL_PET), t("mi_del_pet"))
+	menu.set_item_text(menu.get_item_index(MI_CHOOSE_ACC), t("mi_choose_acc"))
+	menu.set_item_text(menu.get_item_index(MI_DEL_ACC), t("mi_del_acc"))
+	menu.set_item_text(menu.get_item_index(MI_AUTOMATIONS), t("mi_automations"))
+	menu.set_item_text(menu.get_item_index(MI_EMAIL), t("mi_emails"))
+	menu.set_item_text(menu.get_item_index(MI_LANG), t("mi_language"))
+	menu.set_item_text(menu.get_item_index(MI_QUIT), t("mi_quit"))
+	_refresh_save_labels()                 # MI_SAVE_PET/ACC (Salvar vs Renomear)
+	_rebuild_pets_menu()                   # sentinelas "Selecione..."/"Padrão"
+	_rebuild_acc_menu()                    # sentinelas "Selecione..."/"Nenhum"
 
 ## (Re)constrói o dropdown de pets: "Selecione..." (0) e "Default" (1) no topo.
 func _rebuild_pets_menu() -> void:
 	pets_menu.clear()
 	pet_menu_ids.clear()
-	pets_menu.add_item("Selecione...", 0)
+	pets_menu.add_item(t("select"), 0)
 	pets_menu.set_item_disabled(0, true)
-	pets_menu.add_radio_check_item("Default", 1)
+	pets_menu.add_radio_check_item(t("default_pet"), 1)
 	var next_id := 100
 	for nm in saved_pets.keys():
 		pets_menu.add_radio_check_item(nm, next_id)
 		pet_menu_ids[next_id] = nm
 		next_id += 1
 	_refresh_pets_menu_checks()
+	_rebuild_pets_del_menu()
+
+## (Re)constrói o submenu "Excluir pet": só pets salvos (Default/Selecione não entram).
+func _rebuild_pets_del_menu() -> void:
+	pets_del_menu.clear()
+	pet_del_ids.clear()
+	if saved_pets.is_empty():
+		pets_del_menu.add_item(t("no_saved_pets"), 0)
+		pets_del_menu.set_item_disabled(0, true)
+		return
+	var next_id := 100
+	for nm in saved_pets.keys():
+		pets_del_menu.add_item("🗑️ %s" % nm, next_id)
+		pet_del_ids[next_id] = nm
+		next_id += 1
 
 ## Marca (✓) a opção ativa no submenu de pets conforme current_pet_name.
 func _refresh_pets_menu_checks() -> void:
@@ -354,15 +623,30 @@ func _refresh_pets_menu_checks() -> void:
 func _rebuild_acc_menu() -> void:
 	acc_menu.clear()
 	acc_menu_ids.clear()
-	acc_menu.add_item("Selecione...", 0)
+	acc_menu.add_item(t("select"), 0)
 	acc_menu.set_item_disabled(0, true)
-	acc_menu.add_radio_check_item("Nenhum", 1)
+	acc_menu.add_radio_check_item(t("none_acc"), 1)
 	var next_id := 100
 	for nm in saved_accessories.keys():
 		acc_menu.add_radio_check_item(nm, next_id)
 		acc_menu_ids[next_id] = nm
 		next_id += 1
 	_refresh_acc_menu_checks()
+	_rebuild_acc_del_menu()
+
+## (Re)constrói o submenu "Excluir acessório": só acessórios salvos (Nenhum/Selecione não entram).
+func _rebuild_acc_del_menu() -> void:
+	acc_del_menu.clear()
+	acc_del_ids.clear()
+	if saved_accessories.is_empty():
+		acc_del_menu.add_item(t("no_saved_acc"), 0)
+		acc_del_menu.set_item_disabled(0, true)
+		return
+	var next_id := 100
+	for nm in saved_accessories.keys():
+		acc_del_menu.add_item("🗑️ %s" % nm, next_id)
+		acc_del_ids[next_id] = nm
+		next_id += 1
 
 ## Marca (✓) a opção ativa no submenu de acessórios conforme current_acc_name.
 func _refresh_acc_menu_checks() -> void:
@@ -396,7 +680,7 @@ func _rebuild_automations_menu() -> void:
 		if automation_badge_keys.has(path):
 			var bk: String = automation_badge_keys[path]
 			if automation_badges.has(bk):
-				label += " — %s não lidos" % automation_badges[bk]
+				label += " — %s %s" % [automation_badges[bk], t("unread")]
 		# E-mail: ícone do provedor à esquerda (cor de ICON_COLOR).
 		var icon: Texture2D = null
 		if group == "email" and automation_icon_colors.has(path):
@@ -509,12 +793,12 @@ func _parse_schedule(gd) -> Dictionary:
 	if raw.is_valid_float():                       # número puro => segundos
 		return _interval_def(float(raw))
 	if raw == "hourly":                            # toda hora cheia (XX:00)
-		return {"kind": "hourly", "every": 0.0, "at_minute": -1, "label": "toda hora cheia"}
+		return {"kind": "hourly", "every": 0.0, "at_minute": -1, "label": t("freq_hourly")}
 	if raw.begins_with("daily@"):                  # uma vez por dia em HH:MM
 		var hm := raw.substr(6).split(":")
 		var h := clampi(int(hm[0]), 0, 23)
 		var m := clampi((int(hm[1]) if hm.size() > 1 else 0), 0, 59)
-		return {"kind": "daily", "every": 0.0, "at_minute": h * 60 + m, "label": "todo dia %02d:%02d" % [h, m]}
+		return {"kind": "daily", "every": 0.0, "at_minute": h * 60 + m, "label": t("freq_daily") % [h, m]}
 	var unit := raw.substr(raw.length() - 1)        # sufixo de unidade: 30s / 5m / 2h
 	var num := raw.substr(0, raw.length() - 1)
 	if num.is_valid_float():
@@ -526,7 +810,7 @@ func _parse_schedule(gd) -> Dictionary:
 
 func _interval_def(secs: float) -> Dictionary:
 	secs = maxf(secs, 1.0)
-	return {"kind": "interval", "every": secs, "at_minute": -1, "label": "a cada " + _human_secs(secs)}
+	return {"kind": "interval", "every": secs, "at_minute": -1, "label": t("freq_every") % _human_secs(secs)}
 
 ## "90" -> "1.5min", "3600" -> "1h", "30" -> "30s" (rótulo humano da frequência).
 func _human_secs(s: float) -> String:
@@ -560,7 +844,7 @@ func _set_automation_enabled(path: String, on: bool, announce: bool) -> void:
 	if on:
 		sched_runtime[path] = {"accum": 0.0, "last_day": -1, "last_hour": -1}
 		if announce and schedule_defs.has(path):
-			say("⏱️ %s ligada (%s)" % [schedule_defs[path].get("name", "automação"), schedule_defs[path]["label"]])
+			say(t("sched_on") % [schedule_defs[path].get("name", t("automation")), schedule_defs[path]["label"]])
 		# Automações com credencial (e-mail): ao ligar, dispara já (pede login se faltar).
 		if automation_cred_keys.has(path):
 			cred_prompt_suppressed.erase(automation_cred_keys[path])
@@ -568,7 +852,7 @@ func _set_automation_enabled(path: String, on: bool, announce: bool) -> void:
 	else:
 		sched_runtime.erase(path)
 		if announce and schedule_defs.has(path):
-			say("⏸️ %s desligada" % schedule_defs[path].get("name", "automação"))
+			say(t("sched_off") % schedule_defs[path].get("name", t("automation")))
 	_save_schedules()
 
 ## Percorre as automações agendadas e dispara as que atingiram a sua frequência.
@@ -637,18 +921,18 @@ func _save_schedules() -> void:
 func _run_automation(path: String) -> void:
 	var gd = load(path)
 	if not (gd is GDScript):
-		say("automação inválida 🚫")
+		say(t("automation_invalid"))
 		return
 	var inst = (gd as GDScript).new()
 	if inst == null:
-		say("automação inválida 🚫")
+		say(t("automation_invalid"))
 		return
 	if inst is Node:
 		add_child(inst)               # Node persiste para automações contínuas
 	if inst.has_method("run"):
 		inst.run(self)
 	else:
-		say("automação sem run() 🤔")
+		say(t("automation_norun"))
 
 ## Utilitário para automações web: faz um GET em `url` e chama
 ## `cb.call(ok: bool, data)` com o JSON decodificado (Dictionary/Array) ou null.
@@ -716,6 +1000,11 @@ func with_credentials(key: String, title: String, cb: Callable) -> void:
 	cred_pending_key = key
 	cred_pending_cb = cb
 	cred_dialog.title = title
+	cred_dialog.ok_button_text = t("cred_ok")        # reflete o idioma atual
+	cred_l1.text = t("cred_email_label")
+	cred_l2.text = t("cred_pass_label")
+	cred_user_edit.placeholder_text = t("cred_user_ph")
+	cred_pass_edit.placeholder_text = t("cred_pass_ph")
 	cred_user_edit.text = ""
 	cred_pass_edit.text = ""
 	var scr := DisplayServer.screen_get_usable_rect()
@@ -732,20 +1021,20 @@ func confirm_credentials(key: String, data: Dictionary) -> void:
 
 func _build_cred_dialog() -> void:
 	cred_dialog = ConfirmationDialog.new()
-	cred_dialog.ok_button_text = "Entrar"
+	cred_dialog.ok_button_text = t("cred_ok")
 	cred_dialog.set_flag(Window.FLAG_ALWAYS_ON_TOP, true)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
-	var l1 := Label.new(); l1.text = "E-mail:"
+	cred_l1 = Label.new(); cred_l1.text = t("cred_email_label")
 	cred_user_edit = LineEdit.new()
 	cred_user_edit.custom_minimum_size = Vector2(320, 0)
-	cred_user_edit.placeholder_text = "voce@gmail.com"
-	var l2 := Label.new(); l2.text = "App Password (senha de app):"
+	cred_user_edit.placeholder_text = t("cred_user_ph")
+	cred_l2 = Label.new(); cred_l2.text = t("cred_pass_label")
 	cred_pass_edit = LineEdit.new()
 	cred_pass_edit.secret = true
-	cred_pass_edit.placeholder_text = "senha de aplicativo (não a senha normal)"
-	box.add_child(l1); box.add_child(cred_user_edit)
-	box.add_child(l2); box.add_child(cred_pass_edit)
+	cred_pass_edit.placeholder_text = t("cred_pass_ph")
+	box.add_child(cred_l1); box.add_child(cred_user_edit)
+	box.add_child(cred_l2); box.add_child(cred_pass_edit)
 	cred_dialog.add_child(box)
 	cred_dialog.confirmed.connect(_on_cred_confirmed)
 	cred_dialog.canceled.connect(_on_cred_canceled)
@@ -758,7 +1047,7 @@ func _on_cred_confirmed() -> void:
 	cred_pending_key = ""
 	cred_pending_cb = Callable()
 	if u == "" or p == "":
-		say("login incompleto 🙈")
+		say(t("login_incomplete"))
 		return
 	if cb.is_valid():
 		cb.call({"user": u, "pass": p})
@@ -849,7 +1138,7 @@ func _imap_escape(s: String) -> String:
 
 func _build_save_dialog() -> void:
 	save_dialog = ConfirmationDialog.new()
-	save_dialog.ok_button_text = "Salvar"
+	save_dialog.ok_button_text = t("btn_save")
 	save_dialog.set_flag(Window.FLAG_ALWAYS_ON_TOP, true)
 	name_edit = LineEdit.new()
 	name_edit.custom_minimum_size = Vector2(240, 0)
@@ -857,6 +1146,16 @@ func _build_save_dialog() -> void:
 	save_dialog.register_text_enter(name_edit)
 	save_dialog.confirmed.connect(_on_save_confirmed)
 	add_child(save_dialog)
+
+## Diálogo de confirmação de exclusão (compartilhado por pets e acessórios).
+func _build_delete_dialog() -> void:
+	delete_dialog = ConfirmationDialog.new()
+	delete_dialog.title = t("delete_title")
+	delete_dialog.ok_button_text = t("btn_delete")
+	delete_dialog.cancel_button_text = t("btn_cancel")
+	delete_dialog.set_flag(Window.FLAG_ALWAYS_ON_TOP, true)
+	delete_dialog.confirmed.connect(_on_delete_confirmed)
+	add_child(delete_dialog)
 
 func _on_menu(id: int) -> void:
 	match id:
@@ -866,8 +1165,8 @@ func _on_menu(id: int) -> void:
 		MI_RANDOM: _set_random_pet(not random_pet_on)
 		MI_RANDOM_ACC: _set_random_acc(not random_acc_on)
 		MI_SHOW_ACC: _set_show_accessories(not show_accessories)
-		MI_SAVE_PET: _open_save_dialog("pet")
-		MI_SAVE_ACC: _open_save_dialog("acc")
+		MI_SAVE_PET: _open_save_dialog("pet", "rename" if saved_pets.has(current_pet_name) else "save")
+		MI_SAVE_ACC: _open_save_dialog("acc", "rename" if saved_accessories.has(current_acc_name) else "save")
 		MI_QUIT: get_tree().quit()
 
 func _on_pick_pet(id: int) -> void:
@@ -877,7 +1176,7 @@ func _on_pick_pet(id: int) -> void:
 	if id == 1:
 		current = _default_cfg()
 		current_pet_name = "Default"
-		say("Default 🐾")
+		say(t("say_default"))
 	elif pet_menu_ids.has(id):
 		current = (saved_pets[pet_menu_ids[id]] as Dictionary).duplicate(true)
 		current_pet_name = String(pet_menu_ids[id])
@@ -895,7 +1194,7 @@ func _on_pick_acc(id: int) -> void:
 	if id == 1:
 		current_acc = _default_acc()
 		current_acc_name = "Nenhum"
-		say("sem acessório 🚫")
+		say(t("say_no_acc"))
 	elif acc_menu_ids.has(id):
 		current_acc = (saved_accessories[acc_menu_ids[id]] as Dictionary).duplicate(true)
 		current_acc_name = String(acc_menu_ids[id])
@@ -903,6 +1202,58 @@ func _on_pick_acc(id: int) -> void:
 	_refresh_acc_menu_checks()
 	_save_settings()   # persiste a escolha para a próxima abertura
 	queue_redraw()
+
+## Excluir pet/acessório — abre a confirmação; só itens salvos chegam aqui
+## (Default/Nenhum/Selecione nunca aparecem nos submenus de exclusão).
+func _on_del_pet(id: int) -> void:
+	if pet_del_ids.has(id):
+		_open_delete_dialog("pet", String(pet_del_ids[id]))
+
+func _on_del_acc(id: int) -> void:
+	if acc_del_ids.has(id):
+		_open_delete_dialog("acc", String(acc_del_ids[id]))
+
+func _open_delete_dialog(mode: String, nm: String) -> void:
+	delete_mode = mode
+	delete_name = nm
+	var tipo := t("kind_pet") if mode == "pet" else t("kind_acc")
+	delete_dialog.title = t("delete_title")
+	delete_dialog.ok_button_text = t("btn_delete")
+	delete_dialog.cancel_button_text = t("btn_cancel")
+	delete_dialog.dialog_text = t("delete_confirm") % [tipo, nm]
+	var scr := DisplayServer.screen_get_usable_rect()
+	delete_dialog.reset_size()
+	delete_dialog.position = scr.position + (scr.size - delete_dialog.size) / 2
+	delete_dialog.popup()
+
+func _on_delete_confirmed() -> void:
+	if delete_mode == "pet":
+		if not saved_pets.has(delete_name):
+			return
+		saved_pets.erase(delete_name)
+		_save_pets_to_disk()
+		# Ao excluir um pet, recarrega sempre o Default.
+		_set_random_pet(false)
+		current = _default_cfg()
+		current_pet_name = "Default"
+		_save_settings()
+		queue_redraw()
+		_relayout()
+		_rebuild_pets_menu()
+		say(t("pet_deleted") % delete_name)
+	else:
+		if not saved_accessories.has(delete_name):
+			return
+		saved_accessories.erase(delete_name)
+		_save_accessories_to_disk()
+		# Ao excluir um acessório, recarrega sempre o Default (Nenhum).
+		_set_random_acc(false)
+		current_acc = _default_acc()
+		current_acc_name = "Nenhum"
+		_save_settings()
+		queue_redraw()
+		_rebuild_acc_menu()
+		say(t("acc_deleted") % delete_name)
 
 func _set_random_pet(on: bool) -> void:
 	random_pet_on = on
@@ -912,7 +1263,7 @@ func _set_random_pet(on: bool) -> void:
 		current = _random_cfg()
 		current_pet_name = ""          # pet aleatório não corresponde a nenhuma opção salva
 		_refresh_pets_menu_checks()
-		say("novo pet! 🎲")
+		say(t("new_pet"))
 		queue_redraw()
 		_relayout()
 
@@ -925,13 +1276,8 @@ func _set_random_acc(on: bool) -> void:
 		current_acc_name = ""          # acessório aleatório não corresponde a nenhuma opção salva
 		_refresh_acc_menu_checks()
 		_set_show_accessories(true)   # gerar acessórios também liga a exibição
-		say("novos acessórios! 🎲")
+		say(t("new_acc"))
 		queue_redraw()
-
-## Desliga as duas gerações automáticas (usado ao abrir um diálogo de Salvar).
-func _stop_random_all() -> void:
-	_set_random_pet(false)
-	_set_random_acc(false)
 
 func _set_show_accessories(on: bool) -> void:
 	show_accessories = on
@@ -939,20 +1285,30 @@ func _set_show_accessories(on: bool) -> void:
 	_save_settings()   # persiste o estado de exibição de acessórios
 	queue_redraw()
 
-func _open_save_dialog(mode: String) -> void:
-	# Requisito: ao abrir o diálogo de salvar, desliga a geração automática para
-	# salvar exatamente o que está na tela.
-	_stop_random_all()
+func _open_save_dialog(mode: String, action := "save") -> void:
 	save_mode = mode
-	if mode == "pet":
-		save_dialog.title = "Salvar Pet"
-		save_dialog.get_label().text = "Nome do pet:"
-		name_edit.placeholder_text = "ex: Fofinho"
+	save_action = action
+	var is_pet := mode == "pet"
+	if action == "rename":
+		# Renomear um item já salvo: pré-preenche o nome atual para edição.
+		var atual := current_pet_name if is_pet else current_acc_name
+		save_dialog.title = t("rename_pet_title") if is_pet else t("rename_acc_title")
+		save_dialog.get_label().text = t("newname_pet_label") if is_pet else t("newname_acc_label")
+		save_dialog.ok_button_text = t("btn_rename")
+		name_edit.text = atual
+		name_edit.select_all()
 	else:
-		save_dialog.title = "Salvar Acessório"
-		save_dialog.get_label().text = "Nome do acessório:"
-		name_edit.placeholder_text = "ex: Chapéu de Festa"
-	name_edit.text = ""
+		# Salvar novo: congela a geração automática **do item sendo salvo** para gravar
+		# exatamente o que está na tela (o outro tipo continua como estava).
+		if is_pet:
+			_set_random_pet(false)
+		else:
+			_set_random_acc(false)
+		save_dialog.title = t("save_pet_title") if is_pet else t("save_acc_title")
+		save_dialog.get_label().text = t("name_pet_label") if is_pet else t("name_acc_label")
+		save_dialog.ok_button_text = t("btn_save")
+		name_edit.placeholder_text = t("ph_pet") if is_pet else t("ph_acc")
+		name_edit.text = ""
 	var scr := DisplayServer.screen_get_usable_rect()
 	save_dialog.size = Vector2i(320, 150)
 	save_dialog.position = scr.position + (scr.size - save_dialog.size) / 2
@@ -962,18 +1318,107 @@ func _open_save_dialog(mode: String) -> void:
 func _on_save_confirmed() -> void:
 	var nm := name_edit.text.strip_edges()
 	if nm == "" or nm == "Default" or nm == "Selecione..." or nm == "Nenhum":
-		say("nome inválido 🙈")
+		say(t("name_invalid"))
+		return
+	if save_action == "rename":
+		_do_rename(nm)
 		return
 	if save_mode == "pet":
+		_set_random_pet(false)         # ao confirmar, desmarca "Gerar pets"
 		saved_pets[nm] = current.duplicate(true)
+		current_pet_name = nm          # o pet recém-salvo passa a ser o ativo (vira "Renomear")
 		_save_pets_to_disk()
 		_rebuild_pets_menu()
-		say("pet salvo: %s 💾" % nm)
+		_save_settings()
+		say(t("pet_saved") % nm)
 	else:
+		_set_random_acc(false)         # ao confirmar, desmarca "Gerar acessórios"
 		saved_accessories[nm] = current_acc.duplicate(true)
+		current_acc_name = nm          # idem para o acessório
 		_save_accessories_to_disk()
 		_rebuild_acc_menu()
-		say("acessório salvo: %s 🎀" % nm)
+		_save_settings()
+		say(t("acc_saved") % nm)
+
+## Renomeia o item salvo atualmente ativo, preservando a ordem no dropdown e
+## persistindo a mudança em disco + settings.json.
+func _do_rename(new_name: String) -> void:
+	if save_mode == "pet":
+		var old_name := current_pet_name
+		if not saved_pets.has(old_name):
+			return
+		if new_name == old_name:
+			say(t("name_kept"))
+			return
+		if saved_pets.has(new_name):
+			say(t("pet_exists"))
+			return
+		saved_pets = _rename_key(saved_pets, old_name, new_name)
+		current_pet_name = new_name
+		_save_pets_to_disk()
+		_rebuild_pets_menu()
+		_save_settings()
+		say(t("pet_renamed") % new_name)
+	else:
+		var old_name := current_acc_name
+		if not saved_accessories.has(old_name):
+			return
+		if new_name == old_name:
+			say(t("name_kept"))
+			return
+		if saved_accessories.has(new_name):
+			say(t("acc_exists"))
+			return
+		saved_accessories = _rename_key(saved_accessories, old_name, new_name)
+		current_acc_name = new_name
+		_save_accessories_to_disk()
+		_rebuild_acc_menu()
+		_save_settings()
+		say(t("acc_renamed") % new_name)
+
+## Renomeia uma chave de Dictionary preservando a ordem de inserção (o dropdown
+## não embaralha ao renomear).
+func _rename_key(store: Dictionary, old_name: String, new_name: String) -> Dictionary:
+	var out := {}
+	for k in store:
+		out[new_name if k == old_name else k] = store[k]
+	return out
+
+## Ajusta os rótulos: vira "Renomear" (mesmo ícone) quando o item exibido já está
+## salvo; senão fica "Salvar". Chamado antes de abrir o menu.
+func _refresh_save_labels() -> void:
+	var pet_saved := saved_pets.has(current_pet_name)
+	menu.set_item_text(menu.get_item_index(MI_SAVE_PET),
+		t("mi_rename_pet") if pet_saved else t("mi_save_pet"))
+	var acc_saved := saved_accessories.has(current_acc_name)
+	menu.set_item_text(menu.get_item_index(MI_SAVE_ACC),
+		t("mi_rename_acc") if acc_saved else t("mi_save_acc"))
+
+## Escolhe a posição do menu de contexto: ao lado do pet (direita → esquerda →
+## abaixo → acima), sem cobri-lo e sempre dentro da área útil da tela. Se nenhum lado
+## couber, usa o primeiro candidato clampado às bordas da tela.
+func _context_menu_position(menu_size: Vector2i) -> Vector2i:
+	var scr := DisplayServer.screen_get_usable_rect()
+	# Retângulo real do pet na tela (dentro da janela, ignorando a faixa transparente).
+	var win_pos := get_window().position
+	var pet_rect := Rect2i(win_pos + Vector2i(int(pet_x), int(pet_y)),
+		Vector2i(PET_DRAW, PET_DRAW))
+	var gap := 8
+	var candidates: Array[Vector2i] = [
+		Vector2i(pet_rect.end.x + gap, pet_rect.position.y),                  # direita
+		Vector2i(pet_rect.position.x - gap - menu_size.x, pet_rect.position.y), # esquerda
+		Vector2i(pet_rect.position.x, pet_rect.end.y + gap),                  # abaixo
+		Vector2i(pet_rect.position.x, pet_rect.position.y - gap - menu_size.y), # acima
+	]
+	for pos in candidates:
+		var r := Rect2i(pos, menu_size)
+		if scr.encloses(r) and not r.intersects(pet_rect):
+			return pos
+	# Fallback: clampa o candidato da direita às bordas da tela.
+	var f: Vector2i = candidates[0]
+	f.x = clampi(f.x, scr.position.x, scr.position.x + scr.size.x - menu_size.x)
+	f.y = clampi(f.y, scr.position.y, scr.position.y + scr.size.y - menu_size.y)
+	return f
 
 # ------------------------------------------------------------------ persistência
 func _cfg_to_json(cfg: Dictionary) -> Dictionary:
@@ -1040,7 +1485,7 @@ func _save_settings() -> void:
 		f.store_string(JSON.stringify({
 			"anchor_x": anchor.x, "anchor_y": anchor.y,
 			"pet": current_pet_name, "acc": current_acc_name,
-			"show_acc": show_accessories,
+			"show_acc": show_accessories, "lang": lang,
 		}, "  "))
 		f.close()
 
@@ -1059,6 +1504,8 @@ func _load_selection() -> void:
 	var parsed = _read_json(SETTINGS_FILE)
 	if not (parsed is Dictionary):
 		return
+	if parsed.has("lang"):
+		lang = "en" if String(parsed["lang"]) == "en" else "pt"
 	if parsed.has("show_acc"):
 		show_accessories = bool(parsed["show_acc"])
 	if parsed.has("pet"):
@@ -1116,14 +1563,14 @@ func _process(delta: float) -> void:
 		if random_pet_timer >= RANDOM_PERIOD:
 			random_pet_timer = 0.0
 			current = _random_cfg()
-			say("novo pet! 🎲")
+			say(t("new_pet"))
 			_relayout()
 	if random_acc_on:
 		random_acc_timer += delta
 		if random_acc_timer >= RANDOM_PERIOD:
 			random_acc_timer = 0.0
 			current_acc = _random_acc()
-			say("novos acessórios! 🎲")
+			say(t("new_acc"))
 			_relayout()
 
 	# Automações agendadas (auto-alimentar, lembretes, comemorações...).
@@ -1213,9 +1660,29 @@ func _draw() -> void:
 	var belly_w: float = c["belly_w"]
 	var belly_h: float = c["belly_h"]
 
+	# Geometria da silhueta — calculada cedo para as camadas traseiras (asas/rabo/
+	# patas) e as do topo (chifre/topete) se posicionarem em relação ao corpo.
+	var bw_mul := 1.0
+	var bh_mul := 1.0
+	var by := 0.0
+	match c.get("body_shape", "round"):
+		"tall": bw_mul = 0.9;  bh_mul = 1.2;  by = -3.0   # ovinho em pé
+		"wide": bw_mul = 1.16; bh_mul = 0.86; by = 3.0    # baixinho fofo
+		"pear": bw_mul = 0.96; bh_mul = 1.02; by = 0.0    # gota (bojo embaixo)
+		_:      pass                                       # round (padrão)
+	var bw := body_w * bw_mul
+	var bh := body_h * bh_mul * (1.0 + br)
+	var head_top := 108.0 + by - bh                        # topo do "crânio"
+
 	# Sombra (fica no chão, encolhe quando ele pula).
 	var sh := 1.0 + y_off * 0.0035               # y_off é negativo no ar
 	_ellipse(Vector2(100, 178), Vector2(46.0 * sh, 7.0), Color(0, 0, 0, 0.10))
+
+	# Asas e rabo (camadas mais atrás, por trás do corpo).
+	if c.get("wings", "none") != "none":
+		_draw_wings(o, bw, by, belly_color)
+	if c.get("tail", "none") != "none":
+		_draw_tail(c.get("tail"), o, bw, bh, by, ear_color)
 
 	# Antenas (atrás do corpo).
 	if c.get("has_antennae", false):
@@ -1236,33 +1703,49 @@ func _draw() -> void:
 			_ellipse(Vector2(100.0 - ear_dx, ear_y) + o, Vector2(ear_w, ear_h), ear_color)
 			_ellipse(Vector2(100.0 + ear_dx, ear_y) + o, Vector2(ear_w, ear_h), ear_color)
 
-	# Corpo + barriga (respiram). A silhueta varia conforme body_shape: além de
-	# esticar/achatar, "pear" desenha um bojo inferior extra (corpo em gota).
-	var bw_mul := 1.0
-	var bh_mul := 1.0
-	var by := 0.0
-	match c.get("body_shape", "round"):
-		"tall": bw_mul = 0.9;  bh_mul = 1.2;  by = -3.0   # ovinho em pé
-		"wide": bw_mul = 1.16; bh_mul = 0.86; by = 3.0    # baixinho fofo
-		"pear": bw_mul = 0.96; bh_mul = 1.02; by = 0.0    # gota (bojo embaixo)
-		_:      pass                                       # round (padrão)
-	var bw := body_w * bw_mul
-	var bh := body_h * bh_mul * (1.0 + br)
+	# Patas (atrás da base do corpo, p/ o corpo cobrir o topo delas).
+	if c.get("feet", "none") != "none":
+		_draw_feet(o, bw, bh, by, body_color)
+
+	# Corpo + barriga (respiram). A silhueta usa bw/bh/by calculados acima; "pear"
+	# desenha um bojo inferior extra (corpo em gota).
 	if c.get("body_shape", "round") == "pear":
 		_ellipse(Vector2(100, 122 + by) + o, Vector2(bw * 1.18, bh * 0.6), body_color)  # bojo inferior
 	_ellipse(Vector2(100, 108 + by) + o, Vector2(bw, bh), body_color)
 	_ellipse(Vector2(100, 118 + by * 0.5) + o, Vector2(belly_w * bw_mul, belly_h * bh_mul * (1.0 + br)), belly_color)
+
+	# Bracinhos nas laterais do corpo.
+	if c.get("arms", "none") != "none":
+		_draw_arms(o, bw, by, body_color)
+
+	# Chifre e topete (no alto da cabeça, por cima do corpo).
+	if c.get("horn", "none") != "none":
+		_draw_horns(c.get("horn"), o, head_top, c.get("horn_color", ear_color))
+	if c.get("hair_tuft", "none") != "none":
+		_draw_hair(c.get("hair_tuft"), o, head_top, ear_color)
+
+	# Marca na barriga.
+	if c.get("belly_mark", "none") != "none":
+		_draw_belly_mark(c.get("belly_mark"), o, by, ear_color, cheek_color)
 
 	# Bochechas.
 	if c.get("has_cheeks", true):
 		_ellipse(Vector2(70, 116) + o, Vector2(7, 4), cheek_color)
 		_ellipse(Vector2(130, 116) + o, Vector2(7, 4), cheek_color)
 
+	# Sardas (pontinhos sob os olhos).
+	if c.get("freckles", "none") != "none":
+		_draw_freckles(o, ear_color)
+
 	# Nariz (entre/abaixo dos olhos).
 	if c.get("has_nose", false):
 		var nose_color: Color = c.get("nose_color", INK)
 		var ny := eye_y + 9.0
 		_triangle(Vector2(100, ny + 3.0) + o, Vector2(96, ny - 2.0) + o, Vector2(104, ny - 2.0) + o, nose_color)
+
+	# Bigodes (ao lado do focinho).
+	if c.get("whiskers", "none") != "none":
+		_draw_whiskers(c.get("whiskers"), o)
 
 	# Olhos / boca. Se há fala com emoji emotivo, o rosto espelha a emoção;
 	# senão, usa o rosto padrão (olhos seguindo o cursor + boca do config).
@@ -1272,21 +1755,29 @@ func _draw() -> void:
 	if expr != "neutral":
 		_draw_expression(expr, lx, rx, eye_y, eye_w, eye_h, o)
 	else:
+		# Formato do olho ajusta as proporções do branco do olho.
+		var ew_eff := eye_w
+		var eh_eff := eye_h
+		match c.get("eye_shape", "round"):
+			"oval":   ew_eff = eye_w * 1.18; eh_eff = eye_h * 0.82
+			"tall":   eh_eff = eye_h * 1.3
+			"sleepy": eh_eff = eye_h * 0.55
+			_:        pass
 		if blink_t > 0.0:
-			_ellipse(Vector2(lx, eye_y) + o, Vector2(eye_w, 2), Color.WHITE)
-			_ellipse(Vector2(rx, eye_y) + o, Vector2(eye_w, 2), Color.WHITE)
+			_ellipse(Vector2(lx, eye_y) + o, Vector2(ew_eff, 2), Color.WHITE)
+			_ellipse(Vector2(rx, eye_y) + o, Vector2(ew_eff, 2), Color.WHITE)
 		else:
-			_ellipse(Vector2(lx, eye_y) + o, Vector2(eye_w, eye_h), Color.WHITE)
-			_ellipse(Vector2(rx, eye_y) + o, Vector2(eye_w, eye_h), Color.WHITE)
-			draw_circle(Vector2(lx + 2.0, eye_y + 2.0) + o + pupil_off, 5.5, INK)
-			draw_circle(Vector2(rx + 2.0, eye_y + 2.0) + o + pupil_off, 5.5, INK)
-			draw_circle(Vector2(lx + 4.0, eye_y - 1.0) + o + pupil_off, 1.8, Color.WHITE)
-			draw_circle(Vector2(rx + 4.0, eye_y - 1.0) + o + pupil_off, 1.8, Color.WHITE)
+			_ellipse(Vector2(lx, eye_y) + o, Vector2(ew_eff, eh_eff), Color.WHITE)
+			_ellipse(Vector2(rx, eye_y) + o, Vector2(ew_eff, eh_eff), Color.WHITE)
+			_draw_pupils(Vector2(lx, eye_y) + o, Vector2(rx, eye_y) + o, c.get("pupil_style", "round"))
+			# Sobrancelhas (só no rosto neutro de olhos abertos).
+			if c.get("eyebrow", "none") != "none":
+				_draw_eyebrows(c.get("eyebrow"), lx, rx, eye_y, eh_eff, o)
 
 		# Cílios.
 		if c.get("has_eyelashes", false):
-			_draw_eyelashes(Vector2(lx, eye_y) + o, eye_w, eye_h, -1.0)
-			_draw_eyelashes(Vector2(rx, eye_y) + o, eye_w, eye_h, 1.0)
+			_draw_eyelashes(Vector2(lx, eye_y) + o, ew_eff, eh_eff, -1.0)
+			_draw_eyelashes(Vector2(rx, eye_y) + o, ew_eff, eh_eff, 1.0)
 
 		# Boca (estilo configurável).
 		_draw_mouth(c.get("mouth_style", "smile"), o)
@@ -1385,6 +1876,146 @@ func _draw_antenna(base: Vector2, tip: Vector2, col: Color) -> void:
 	draw_line(base, tip, col, 2.0, true)
 	draw_circle(tip, 4.0, col)
 
+# ---------------------------------------- partes geométricas adicionais (esqueleto)
+## Rabo (atrás do corpo): enroladinho, fofo (puff) ou tococo (stub).
+func _draw_tail(style: String, o: Vector2, bw: float, bh: float, by: float, col: Color) -> void:
+	var base := Vector2(100.0 + bw * 0.72, 108.0 + by + bh * 0.35) + o
+	match style:
+		"puff":
+			_ellipse(base + Vector2(9, -2), Vector2(11, 11), col)
+		"curl":
+			var pts := PackedVector2Array()
+			for i in 18:
+				var tt := float(i) / 17.0
+				var ang := tt * PI * 1.7
+				var rad := 3.0 + tt * 9.0
+				pts.append(base + Vector2(7.0 + cos(ang) * rad, -sin(ang) * rad))
+			draw_polyline(pts, col, 4.0, true)
+		_:  # "stub"
+			_ellipse(base + Vector2(6, 0), Vector2(7, 6), col)
+
+## Chifres no alto da cabeça: único (unicorn), dois retos (devil) ou galhada (antlers).
+func _draw_horns(style: String, o: Vector2, head_top: float, col: Color) -> void:
+	var ty := head_top + 4.0
+	match style:
+		"unicorn":
+			_triangle(Vector2(96, ty) + o, Vector2(104, ty) + o, Vector2(100, ty - 16.0) + o, col)
+		"devil":
+			_triangle(Vector2(80, ty) + o, Vector2(88, ty) + o, Vector2(82, ty - 12.0) + o, col)
+			_triangle(Vector2(112, ty) + o, Vector2(120, ty) + o, Vector2(118, ty - 12.0) + o, col)
+		_:  # "antlers"
+			for sx in [-1.0, 1.0]:
+				var s := float(sx)
+				var b := Vector2(100.0 + s * 14.0, ty) + o
+				draw_line(b, b + Vector2(s * 4.0, -14.0), col, 3.0, true)
+				draw_line(b + Vector2(s * 2.0, -7.0), b + Vector2(s * 9.0, -10.0), col, 2.5, true)
+
+## Topete/cabelo no alto da cabeça: tufo, cacho (cowlick) ou crista (mohawk).
+func _draw_hair(style: String, o: Vector2, head_top: float, col: Color) -> void:
+	var ty := head_top + 2.0
+	match style:
+		"mohawk":
+			for i in 5:
+				var x := 100.0 + (float(i) - 2.0) * 7.0
+				var h := 12.0 - absf(float(i) - 2.0) * 2.0
+				_triangle(Vector2(x - 4.0, ty) + o, Vector2(x + 4.0, ty) + o, Vector2(x, ty - h) + o, col)
+		"cowlick":
+			var pts := _quad(Vector2(100, ty) + o, Vector2(110, ty - 16.0) + o, Vector2(116, ty - 4.0) + o, 12)
+			draw_polyline(pts, col, 3.5, true)
+		_:  # "tuft"
+			for sx in [-6.0, 0.0, 6.0]:
+				draw_line(Vector2(100.0 + sx, ty) + o, Vector2(100.0 + sx * 1.4, ty - 12.0) + o, col, 3.0, true)
+
+## Patinhas na base do corpo.
+func _draw_feet(o: Vector2, bw: float, bh: float, by: float, col: Color) -> void:
+	var fy := 108.0 + by + bh * 0.82
+	_ellipse(Vector2(100.0 - bw * 0.42, fy) + o, Vector2(11, 7), col)
+	_ellipse(Vector2(100.0 + bw * 0.42, fy) + o, Vector2(11, 7), col)
+
+## Bracinhos nas laterais do corpo.
+func _draw_arms(o: Vector2, bw: float, by: float, col: Color) -> void:
+	_ellipse(Vector2(100.0 - bw * 0.92, 120.0 + by) + o, Vector2(7, 10), col)
+	_ellipse(Vector2(100.0 + bw * 0.92, 120.0 + by) + o, Vector2(7, 10), col)
+
+## Asinhas atrás do corpo.
+func _draw_wings(o: Vector2, bw: float, by: float, col: Color) -> void:
+	for sx in [-1.0, 1.0]:
+		var s := float(sx)
+		var b := Vector2(100.0 + s * bw * 0.7, 100.0 + by) + o
+		var w := PackedVector2Array([
+			b,
+			b + Vector2(s * 22.0, -10.0),
+			b + Vector2(s * 26.0, 4.0),
+			b + Vector2(s * 18.0, 6.0),
+			b + Vector2(s * 22.0, 16.0),
+			b + Vector2(s * 6.0, 10.0),
+		])
+		draw_colored_polygon(w, col)
+
+## Marca na barriga: bolinha (spot) ou coraçãozinho (heart).
+func _draw_belly_mark(style: String, o: Vector2, by: float, spot: Color, heart: Color) -> void:
+	var c := Vector2(100, 120.0 + by * 0.5) + o
+	if style == "heart":
+		draw_circle(c + Vector2(-2.5, -1.0), 3.0, heart)
+		draw_circle(c + Vector2(2.5, -1.0), 3.0, heart)
+		_triangle(c + Vector2(-5.0, 0.0), c + Vector2(5.0, 0.0), c + Vector2(0.0, 6.0), heart)
+	else:  # "spot"
+		_ellipse(c, Vector2(6, 5), spot)
+
+## Bigodes ao lado do focinho (curtos ou longos).
+func _draw_whiskers(style: String, o: Vector2) -> void:
+	var ln := 14.0 if style == "long" else 9.0
+	for side in [-1.0, 1.0]:
+		var s := float(side)
+		var bx := 100.0 + s * 16.0
+		for k in 3:
+			var yy := 112.0 + float(k) * 4.0
+			draw_line(Vector2(bx, yy) + o, Vector2(bx + s * ln, yy - 3.0 + float(k) * 3.0) + o, INK, 1.2, true)
+
+## Sardinhas sob os olhos.
+func _draw_freckles(o: Vector2, col: Color) -> void:
+	for side in [-1.0, 1.0]:
+		var s := float(side)
+		for k in 3:
+			draw_circle(Vector2(100.0 + s * (16.0 + float(k) * 4.0), 112.0 + float(k % 2) * 3.0) + o, 1.4, col)
+
+## Sobrancelhas (rosto neutro): retas, levantadas ou sérias (\  /).
+func _draw_eyebrows(style: String, lx: float, rx: float, eye_y: float, eh: float, o: Vector2) -> void:
+	var top := eye_y - eh - 5.0
+	match style:
+		"flat":
+			draw_line(Vector2(lx - 5.0, top) + o, Vector2(lx + 5.0, top) + o, INK, 2.0, true)
+			draw_line(Vector2(rx - 5.0, top) + o, Vector2(rx + 5.0, top) + o, INK, 2.0, true)
+		"raised":
+			draw_line(Vector2(lx - 5.0, top - 2.0) + o, Vector2(lx + 5.0, top - 4.0) + o, INK, 2.0, true)
+			draw_line(Vector2(rx - 5.0, top - 4.0) + o, Vector2(rx + 5.0, top - 2.0) + o, INK, 2.0, true)
+		_:  # "serious"
+			draw_line(Vector2(lx - 5.0, top - 3.0) + o, Vector2(lx + 5.0, top) + o, INK, 2.2, true)
+			draw_line(Vector2(rx - 5.0, top) + o, Vector2(rx + 5.0, top - 3.0) + o, INK, 2.2, true)
+
+## Pupilas conforme o estilo (o pupil_off faz seguir o cursor). lc/rc já com offset.
+func _draw_pupils(lc: Vector2, rc: Vector2, style: String) -> void:
+	var p := pupil_off
+	match style:
+		"big":
+			for ec in [lc, rc]:
+				draw_circle(ec + Vector2(1.5, 1.5) + p, 7.0, INK)
+				draw_circle(ec + Vector2(3.5, -1.5) + p, 2.4, Color.WHITE)
+				draw_circle(ec + Vector2(-1.5, 2.5) + p, 1.2, Color.WHITE)
+		"cat":
+			for ec in [lc, rc]:
+				_ellipse(ec + Vector2(2.0, 2.0) + p, Vector2(2.2, 6.5), INK)
+				draw_circle(ec + Vector2(3.5, -1.5) + p, 1.4, Color.WHITE)
+		"sparkle":
+			for ec in [lc, rc]:
+				draw_circle(ec + Vector2(2.0, 2.0) + p, 5.5, INK)
+				_star(ec + Vector2(3.5, -1.5) + p, 2.8, 1.1, 4, Color.WHITE)
+		_:  # "round"
+			draw_circle(lc + Vector2(2.0, 2.0) + p, 5.5, INK)
+			draw_circle(rc + Vector2(2.0, 2.0) + p, 5.5, INK)
+			draw_circle(lc + Vector2(4.0, -1.0) + p, 1.8, Color.WHITE)
+			draw_circle(rc + Vector2(4.0, -1.0) + p, 1.8, Color.WHITE)
+
 # ------------------------------------------------------------------ acessórios
 func _draw_accessories(o: Vector2, eye_dx: float, eye_y: float, eye_w: float) -> void:
 	var a := current_acc
@@ -1446,6 +2077,148 @@ func _draw_accessories(o: Vector2, eye_dx: float, eye_y: float, eye_w: float) ->
 		"neck":
 			_draw_bow(Vector2(100, 150) + o, bow_col)
 
+	# --- categorias geométricas adicionais (cada uma independente) ---
+	if a.get("sash", "none") != "none":
+		_draw_sash(o, a.get("sash_color", Color("c0392b")))
+	if a.get("collar", "none") != "none":
+		_draw_collar(a.get("collar"), o, a.get("collar_color", Color("e74c3c")))
+	if a.get("necklace", "none") != "none":
+		_draw_necklace(a.get("necklace"), o, a.get("necklace_color", Color("f1c40f")))
+	if a.get("tie", "none") != "none":
+		_draw_tie(a.get("tie"), o, a.get("tie_color", Color("8e44ad")))
+	if a.get("badge", "none") != "none":
+		_draw_badge(a.get("badge"), o, a.get("badge_color", Color("f39c12")))
+	if a.get("headphones", "none") != "none":
+		_draw_headphones(o, a.get("headphone_color", Color("34495e")))
+	if a.get("flower", "none") != "none":
+		_draw_flower(o, a.get("flower_color", Color("e84393")))
+	if a.get("earrings", "none") != "none":
+		_draw_earrings(a.get("earrings"), o, a.get("earring_color", Color("f1c40f")))
+	if a.get("monocle", "none") != "none":
+		_draw_monocle(o, eye_dx, eye_y, eye_w, a.get("monocle_color", Color("bdc3c7")))
+	if a.get("mustache", "none") != "none":
+		_draw_mustache(a.get("mustache"), o, a.get("mustache_color", Color("4a3527")))
+	if a.get("mask", "none") != "none":
+		_draw_mask(a.get("mask"), o, a.get("mask_color", Color("ecf0f1")))
+	if a.get("cheek_sticker", "none") != "none":
+		_draw_cheek_sticker(a.get("cheek_sticker"), o, a.get("sticker_color", Color("e84393")))
+
+# ---------------------------------------- acessórios geométricos adicionais
+## Faixa diagonal atravessando o corpo.
+func _draw_sash(o: Vector2, col: Color) -> void:
+	var p := PackedVector2Array([
+		Vector2(70, 120) + o, Vector2(80, 116) + o,
+		Vector2(132, 152) + o, Vector2(122, 156) + o])
+	draw_colored_polygon(p, col)
+
+## Coleira no pescoço: lisa ou com guizo.
+func _draw_collar(style: String, o: Vector2, col: Color) -> void:
+	_ellipse(Vector2(100, 142) + o, Vector2(30, 7), col)
+	_ellipse(Vector2(100, 142) + o, Vector2(24, 4), col.darkened(0.25))
+	if style == "bell":
+		draw_circle(Vector2(100, 150) + o, 5.0, Color("f1c40f"))
+		draw_circle(Vector2(100, 151) + o, 1.6, col.darkened(0.4))
+
+## Colar: fio de pérolas ou pingente.
+func _draw_necklace(style: String, o: Vector2, col: Color) -> void:
+	var arc := _quad(Vector2(80, 136) + o, Vector2(100, 150) + o, Vector2(120, 136) + o, 16)
+	if style == "pearls":
+		for i in range(0, arc.size(), 2):
+			draw_circle(arc[i], 2.4, col)
+	else:  # "pendant"
+		draw_polyline(arc, col.lightened(0.2), 1.6, true)
+		draw_circle(Vector2(100, 150) + o, 4.0, col)
+		_triangle(Vector2(96, 150) + o, Vector2(104, 150) + o, Vector2(100, 158) + o, col)
+
+## Gravata (necktie) ou gravata-borboleta (bowtie), no pescoço.
+func _draw_tie(style: String, o: Vector2, col: Color) -> void:
+	if style == "bowtie":
+		var c := Vector2(100, 142) + o
+		_triangle(c, c + Vector2(-11, -7), c + Vector2(-11, 7), col)
+		_triangle(c, c + Vector2(11, -7), c + Vector2(11, 7), col)
+		draw_circle(c, 3.0, col.darkened(0.25))
+	else:  # "necktie"
+		var top := Vector2(100, 138) + o
+		_triangle(top + Vector2(-5, 0), top + Vector2(5, 0), top + Vector2(0, 7), col)
+		draw_colored_polygon(PackedVector2Array([
+			top + Vector2(-4, 7), top + Vector2(4, 7),
+			top + Vector2(6, 26), top + Vector2(0, 32), top + Vector2(-6, 26)]), col)
+
+## Broche no peito: estrela ou coração.
+func _draw_badge(style: String, o: Vector2, col: Color) -> void:
+	var c := Vector2(84, 134) + o
+	if style == "heart":
+		draw_circle(c + Vector2(-2.5, -1.0), 3.0, col)
+		draw_circle(c + Vector2(2.5, -1.0), 3.0, col)
+		_triangle(c + Vector2(-5, 0), c + Vector2(5, 0), c + Vector2(0, 6), col)
+	else:  # "star"
+		_star(c, 5.5, 2.4, 5, col)
+
+## Fones de ouvido: arco sobre a cabeça + conchas nas laterais.
+func _draw_headphones(o: Vector2, col: Color) -> void:
+	draw_arc(Vector2(100, 92) + o, 34.0, PI + 0.2, TAU - 0.2, 24, col, 4.0, true)
+	_ellipse(Vector2(67, 92) + o, Vector2(7, 11), col)
+	_ellipse(Vector2(133, 92) + o, Vector2(7, 11), col)
+
+## Florzinha na lateral da cabeça.
+func _draw_flower(o: Vector2, col: Color) -> void:
+	var c := Vector2(74, 70) + o
+	for i in 5:
+		var a := TAU * float(i) / 5.0
+		draw_circle(c + Vector2(cos(a), sin(a)) * 5.0, 3.2, col)
+	draw_circle(c, 3.0, Color("f9e79f"))
+
+## Brincos: tachas (studs) ou argolas (hoops), nas laterais inferiores da cabeça.
+func _draw_earrings(style: String, o: Vector2, col: Color) -> void:
+	for sx in [-1.0, 1.0]:
+		var s := float(sx)
+		var c := Vector2(100.0 + s * 30.0, 104.0) + o
+		if style == "hoops":
+			draw_arc(c + Vector2(0, 3), 4.0, 0.0, TAU, 16, col, 2.0, true)
+		else:  # "studs"
+			draw_circle(c, 2.6, col)
+
+## Monóculo no olho direito + correntinha.
+func _draw_monocle(o: Vector2, eye_dx: float, eye_y: float, eye_w: float, col: Color) -> void:
+	var rc := Vector2(100.0 + eye_dx, eye_y) + o
+	draw_arc(rc, eye_w + 4.0, 0.0, TAU, 24, col, 2.2, true)
+	draw_line(rc + Vector2(0, eye_w + 4.0), rc + Vector2(-2, eye_w + 18.0), col.darkened(0.2), 1.4, true)
+
+## Bigode: encaracolado ou fino, abaixo do focinho.
+func _draw_mustache(style: String, o: Vector2, col: Color) -> void:
+	var c := Vector2(100, 110) + o
+	if style == "thin":
+		draw_line(c + Vector2(-10, 0), c + Vector2(0, 2), col, 2.0, true)
+		draw_line(c + Vector2(0, 2), c + Vector2(10, 0), col, 2.0, true)
+	else:  # "curly"
+		var l := _quad(c, c + Vector2(-9, 1), c + Vector2(-12, -5), 10)
+		var r := _quad(c, c + Vector2(9, 1), c + Vector2(12, -5), 10)
+		draw_polyline(l, col, 2.6, true)
+		draw_polyline(r, col, 2.6, true)
+
+## Máscara cobrindo a parte de baixo do rosto (cirúrgica ou ninja).
+func _draw_mask(style: String, o: Vector2, col: Color) -> void:
+	if style == "ninja":
+		draw_rect(Rect2(Vector2(72, 104) + o, Vector2(56, 18)), col)
+	else:  # "medical"
+		draw_colored_polygon(PackedVector2Array([
+			Vector2(84, 106) + o, Vector2(116, 106) + o,
+			Vector2(113, 124) + o, Vector2(100, 128) + o, Vector2(87, 124) + o]), col)
+		draw_line(Vector2(84, 106) + o, Vector2(72, 100) + o, col.darkened(0.2), 1.6, true)
+		draw_line(Vector2(116, 106) + o, Vector2(128, 100) + o, col.darkened(0.2), 1.6, true)
+
+## Adesivo na bochecha: estrelinha ou coraçãozinho (em cada lado).
+func _draw_cheek_sticker(style: String, o: Vector2, col: Color) -> void:
+	for sx in [-1.0, 1.0]:
+		var s := float(sx)
+		var c := Vector2(100.0 + s * 30.0, 116.0) + o
+		if style == "heart":
+			draw_circle(c + Vector2(-1.6, -0.6), 1.8, col)
+			draw_circle(c + Vector2(1.6, -0.6), 1.8, col)
+			_triangle(c + Vector2(-3, 0), c + Vector2(3, 0), c + Vector2(0, 3.5), col)
+		else:  # "star"
+			_star(c, 3.2, 1.3, 5, col)
+
 func _draw_bow(center: Vector2, col: Color) -> void:
 	var s := 9.0
 	_triangle(center, center + Vector2(-s, -s * 0.7), center + Vector2(-s, s * 0.7), col)
@@ -1482,9 +2255,9 @@ func _star(center: Vector2, outer: float, inner: float, points: int, col: Color)
 func _quad(p0: Vector2, p1: Vector2, p2: Vector2, n: int) -> PackedVector2Array:
 	var pts := PackedVector2Array()
 	for i in n + 1:
-		var t := float(i) / n
-		var u := 1.0 - t
-		pts.append(u * u * p0 + 2.0 * u * t * p1 + t * t * p2)
+		var tt := float(i) / n
+		var u := 1.0 - tt
+		pts.append(u * u * p0 + 2.0 * u * tt * p1 + tt * tt * p2)
 	return pts
 
 # ------------------------------------------------------------------ entrada
@@ -1507,8 +2280,10 @@ func _input(event: InputEvent) -> void:
 					_save_settings()   # guarda a nova posição
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			_rebuild_automations_menu()   # capta scripts adicionados sem reiniciar
-			menu.position = DisplayServer.mouse_get_position()
+			_refresh_save_labels()        # "Salvar" vira "Renomear" se o item já existe
 			menu.reset_size()
+			# Posiciona ao lado do pet, sem cobri-lo e dentro da tela.
+			menu.position = _context_menu_position(menu.size)
 			menu.popup()
 
 	elif event is InputEventMouseMotion and dragging:
@@ -1549,21 +2324,21 @@ func _complain() -> void:
 		return
 	complain_cd = COMPLAIN_COOLDOWN
 	happy = clampf(happy - 6.0, 0.0, 100.0)
-	say(MOOD_NEG.pick_random())
+	say(ta("mood_neg").pick_random())
 
 func feed() -> void:
 	if not _can_act("feed"):
 		return
 	hunger = clampf(hunger - 25.0, 0.0, 100.0)
 	happy = clampf(happy + 8.0, 0.0, 100.0)
-	say(["nhac nhac! 😋", "obrigado!", "que delícia 🦴"].pick_random())
+	say(ta("feed").pick_random())
 	hop()
 
 func pet() -> void:
 	if not _can_act("pet"):
 		return
 	happy = clampf(happy + 15.0, 0.0, 100.0)
-	say(["ronron... 🥰", "adoro carinho!", "mais! mais!"].pick_random())
+	say(ta("pet_react").pick_random())
 	hop(220.0)
 
 func play() -> void:
@@ -1571,27 +2346,27 @@ func play() -> void:
 		return
 	happy = clampf(happy + 12.0, 0.0, 100.0)
 	hunger = clampf(hunger + 10.0, 0.0, 100.0)
-	say(["yupiii! 🎾", "de novo!", "tô voando! 🚀"].pick_random())
+	say(ta("play").pick_random())
 	hop(420.0)
 
 func _react() -> void:
 	if not _can_act("react"):
 		return
 	happy = clampf(happy + 5.0, 0.0, 100.0)
-	say("oi! 👋")
+	say(t("hi_react"))
 	hop()
 
 func hop(force := 320.0) -> void:
 	vy = -force
 
-func say(t: String) -> void:
-	speech.text = t
-	expression = _expression_from_text(t)
+func say(msg: String) -> void:
+	speech.text = msg
+	expression = _expression_from_text(msg)
 	speech_clear = 2.5
 	_relayout()
 
 ## Deduz a emoção do rosto a partir dos emojis da fala (prioridade pela ordem).
-func _expression_from_text(t: String) -> String:
+func _expression_from_text(msg: String) -> String:
 	var map := {
 		"happy": ["🥰", "😋", "😍", "🤩", "🧡", "✨"],
 		"excited": ["🚀", "🎾", "🎉", "🎲", "⭐"],
@@ -1603,6 +2378,6 @@ func _expression_from_text(t: String) -> String:
 	}
 	for expr in map:
 		for e in map[expr]:
-			if t.contains(e):
+			if msg.contains(e):
 				return expr
 	return "neutral"

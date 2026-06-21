@@ -1,6 +1,6 @@
 ---
 tags: [sistema, overlay, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 🪟 Sistema - Janela Overlay
@@ -11,7 +11,8 @@ a área de trabalho e se redimensiona dinamicamente.
 ## Configuração (estática)
 Em [[project.godot]] `[display]`: `borderless`, `always_on_top`, `transparent`,
 `per_pixel_transparency/allowed`. `[rendering]`: `gl_compatibility` +
-`viewport/transparent_background`.
+`viewport/transparent_background`. `[application]`: `boot_splash/show_image=false` +
+`boot_splash/bg_color=Color(0,0,0,0)` para **não exibir o logo do Godot** na abertura.
 
 ## Reforço em runtime ([[Fluxo - Inicialização]])
 ```gdscript

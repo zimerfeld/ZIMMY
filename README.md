@@ -63,7 +63,8 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 
 > **Posição na tela:** na primeira execução o Zimmy abre **centralizado**. Depois,
 > sempre que você o arrasta a posição é gravada em `user://settings.json` e ele
-> reabre no **último lugar** onde ficou.
+> reabre no **último lugar** onde ficou. Esse mesmo arquivo também guarda a **última
+> escolha de pet e acessório**, restaurada automaticamente ao reabrir.
 
 ### Menu de contexto
 
@@ -204,6 +205,9 @@ descartado e o Zimmy pergunta de novo. Reutilize esse fluxo em qualquer automaç
 - **Persistência**: pets salvos ficam em `user://pets.json` e voltam a aparecer no
   dropdown na próxima execução. (No Windows, `user://` fica em
   `%APPDATA%\Godot\app_userdata\Zimmy Pet\`.)
+- **A escolha ativa é lembrada**: o pet selecionado é gravado em `user://settings.json`
+  e, ao reabrir o Zimmy, ele volta carregado e **pré-selecionado** (✓) no dropdown
+  "Escolher pet".
 
 ## Acessórios
 
@@ -219,7 +223,9 @@ descartado e o Zimmy pergunta de novo. Reutilize esse fluxo em qualquer automaç
   junto e vice-versa. Assim dá para combinar qualquer pet com qualquer acessório
   salvo.
 - **Persistência**: acessórios salvos ficam em `user://accessories.json` (separado de
-  `pets.json`).
+  `pets.json`). A **escolha ativa** de acessório (e o estado de **👓 Mostrar
+  acessórios**) também é gravada em `user://settings.json` e restaurada na próxima
+  abertura, voltando **pré-selecionada** (✓) no dropdown "Escolher acessório".
 
 ## Como o overlay funciona
 

@@ -260,6 +260,7 @@ func _ready() -> void:
 	current_acc = _default_acc()
 	_load_pets_from_disk()
 	_load_accessories_from_disk()
+	_load_selection()   # restaura a última escolha de pet/acessório (após carregar os salvos)
 
 	# Posição: usa a última posição salva; na primeira vez, centraliza o pet na tela.
 	get_window().size = Vector2i(win_w, win_h)
@@ -882,6 +883,7 @@ func _on_pick_pet(id: int) -> void:
 		current_pet_name = String(pet_menu_ids[id])
 		say("%s ✨" % pet_menu_ids[id])
 	_refresh_pets_menu_checks()
+	_save_settings()   # persiste a escolha para a próxima abertura
 	queue_redraw()
 	_relayout()
 
@@ -899,6 +901,7 @@ func _on_pick_acc(id: int) -> void:
 		current_acc_name = String(acc_menu_ids[id])
 		say("%s 🎀" % acc_menu_ids[id])
 	_refresh_acc_menu_checks()
+	_save_settings()   # persiste a escolha para a próxima abertura
 	queue_redraw()
 
 func _set_random_pet(on: bool) -> void:
@@ -933,6 +936,7 @@ func _stop_random_all() -> void:
 func _set_show_accessories(on: bool) -> void:
 	show_accessories = on
 	menu.set_item_checked(menu.get_item_index(MI_SHOW_ACC), on)
+	_save_settings()   # persiste o estado de exibição de acessórios
 	queue_redraw()
 
 func _open_save_dialog(mode: String) -> void:
@@ -1028,11 +1032,16 @@ func _read_json(path: String):
 	f.close()
 	return JSON.parse_string(txt)
 
-## Salva o ponto-âncora (centro-inferior do pet) para reabrir no mesmo lugar.
-func _save_window_pos() -> void:
+## Salva o ponto-âncora (centro-inferior do pet) + a escolha atual de pet e
+## acessório, para reabrir o programa no mesmo lugar e com a mesma seleção.
+func _save_settings() -> void:
 	var f := FileAccess.open(SETTINGS_FILE, FileAccess.WRITE)
 	if f:
-		f.store_string(JSON.stringify({"anchor_x": anchor.x, "anchor_y": anchor.y}, "  "))
+		f.store_string(JSON.stringify({
+			"anchor_x": anchor.x, "anchor_y": anchor.y,
+			"pet": current_pet_name, "acc": current_acc_name,
+			"show_acc": show_accessories,
+		}, "  "))
 		f.close()
 
 ## Carrega a âncora salva. Retorna true se havia uma posição gravada.
@@ -1042,6 +1051,32 @@ func _load_window_pos() -> bool:
 		anchor = Vector2i(int(parsed["anchor_x"]), int(parsed["anchor_y"]))
 		return true
 	return false
+
+## Restaura a última escolha de pet/acessório (e a exibição de acessórios)
+## salva em settings.json. Deve rodar após carregar os salvos do disco e antes
+## de montar o menu, para os checks (✓) refletirem a opção pré-selecionada.
+func _load_selection() -> void:
+	var parsed = _read_json(SETTINGS_FILE)
+	if not (parsed is Dictionary):
+		return
+	if parsed.has("show_acc"):
+		show_accessories = bool(parsed["show_acc"])
+	if parsed.has("pet"):
+		var pn := String(parsed["pet"])
+		if pn == "Default":
+			current = _default_cfg()
+			current_pet_name = "Default"
+		elif saved_pets.has(pn):
+			current = (saved_pets[pn] as Dictionary).duplicate(true)
+			current_pet_name = pn
+	if parsed.has("acc"):
+		var an := String(parsed["acc"])
+		if an == "Nenhum":
+			current_acc = _default_acc()
+			current_acc_name = "Nenhum"
+		elif saved_accessories.has(an):
+			current_acc = (saved_accessories[an] as Dictionary).duplicate(true)
+			current_acc_name = an
 
 # ------------------------------------------------------------------ loop
 func _process(delta: float) -> void:
@@ -1469,7 +1504,7 @@ func _input(event: InputEvent) -> void:
 				if not moved:
 					_react()   # clique sem arrastar = carinho rápido
 				else:
-					_save_window_pos()   # guarda a nova posição
+					_save_settings()   # guarda a nova posição
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 			_rebuild_automations_menu()   # capta scripts adicionados sem reiniciar
 			menu.position = DisplayServer.mouse_get_position()

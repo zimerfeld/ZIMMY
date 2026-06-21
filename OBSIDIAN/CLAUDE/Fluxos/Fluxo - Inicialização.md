@@ -1,6 +1,6 @@
 ---
 tags: [fluxo, ciclo-de-vida, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 🟢 Fluxo - Inicialização (`_ready`)
@@ -10,7 +10,9 @@ atualizado: 2026-06-20
 1. **Transparência/overlay** — `gui_embed_subwindows=false`, `transparent_bg`,
    `FLAG_TRANSPARENT`, clear color zero. Ver [[Sistema - Janela Overlay]].
 2. **Configs iniciais** — `current = _default_cfg()`, `current_acc = _default_acc()`.
-3. **Carrega disco** — `_load_pets_from_disk()`, `_load_accessories_from_disk()`
+3. **Carrega disco** — `_load_pets_from_disk()`, `_load_accessories_from_disk()` e
+   `_load_selection()` (restaura a escolha ativa de pet/acessório salva em
+   `settings.json`, antes de montar o menu p/ os checks ✓ baterem)
    ([[Sistema - Persistência]]).
 4. **Posição** — `get_window().size = (win_w, win_h)`; se `_load_window_pos()` achar
    `settings.json`, usa a âncora salva; senão **centraliza o corpo do pet** na tela.

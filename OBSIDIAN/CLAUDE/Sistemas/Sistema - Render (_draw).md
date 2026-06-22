@@ -45,10 +45,11 @@ camadas traseiras e do topo se posicionarem em relação ao corpo.
 - `_draw_mouth`, `_draw_eyelashes`, `_draw_antenna`, `_draw_bow`.
 - **Esqueleto extra (pet)**: `_draw_tail`, `_draw_horns`, `_draw_hair`, `_draw_feet`,
   `_draw_arms`, `_draw_wings`, `_draw_belly_mark`, `_draw_whiskers`, `_draw_freckles`,
-  `_draw_eyebrows`, `_draw_pupils`.
+  `_draw_eyebrows`, `_draw_pupils`, `_draw_body_pattern` (focinho é elipse inline).
 - **Acessórios extras**: `_draw_sash`, `_draw_collar`, `_draw_necklace`, `_draw_tie`,
   `_draw_badge`, `_draw_headphones`, `_draw_flower`, `_draw_earrings`, `_draw_monocle`,
-  `_draw_mustache`, `_draw_mask`, `_draw_cheek_sticker` (além de `_draw_bow`).
+  `_draw_mustache`, `_draw_mask`, `_draw_cheek_sticker`, `_draw_belt`, `_draw_backpack`
+  (além de `_draw_bow`).
 
 > Sincronizar com [[tools - make_icon.py]] (réplica do desenho p/ o ícone).
 Cores/elementos vêm de [[Sistema - Pets]] e [[Sistema - Acessórios]].

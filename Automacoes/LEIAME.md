@@ -13,11 +13,41 @@ Cada automação é um script GDScript com:
 
 - (opcional) `const AUTOMATION_NAME := "Nome no menu"` — o texto exibido no submenu.
   Se omitido, o nome é derivado do arquivo (`minha_automacao.gd` → "Minha Automacao").
+- (opcional) `const AUTOMATION_NAME_EN := "Menu name"` — nome **em inglês**, usado quando
+  o idioma do app é English (US). Sem ele, cai no `AUTOMATION_NAME` (pt) nos dois idiomas.
 - (opcional) `const SCHEDULE := "..."` — frequência para o Zimmy rodar a automação
   **sozinho**, sem você precisar clicar (ver **Agendamento** abaixo).
 - um método `run(zimmy)` — chamado quando o item é escolhido (ou no disparo agendado).
-  `zimmy` é o nó principal (`zimmy.gd`), dando acesso a `say()`, `feed()`, `pet()`,
-  `play()`, `hop()`, `current`, `current_acc`, e ao estado (`hunger`, `happy`), etc.
+  `zimmy` é o nó principal (`zimmy.gd`), dando acesso a `notify()`, `say()`, `feed()`,
+  `pet()`, `play()`, `hop()`, `current`, `current_acc`, e ao estado (`hunger`, `happy`), etc.
+
+### Mensagens: use `notify()` (fila com 5s)
+
+Para falar a partir de uma automação/e-mail, use **`zimmy.notify(texto)`**: as mensagens
+entram numa **fila**, aparecem **uma de cada vez** e ficam **visíveis por ~5 segundos**
+antes de sumir (a próxima é solta no mesmo ritmo), p/ não se sobreporem quando várias
+disparam juntas (ex.: várias cotações). A 1ª aparece já; as seguintes esperam o intervalo.
+(`zimmy.say(texto)` ainda existe e mostra **na hora**, sumindo em 2,5s, sem fila — use só
+se quiser ignorar o espaçamento.)
+
+### Textos bilíngues (i18n)
+
+O app tem idioma **pt-BR / en-US** (menu ▸ 🌐 Idioma). Para falas bilíngues, use os
+helpers do `zimmy` (sem precisar de tabela própria):
+
+- `zimmy.lang_text(pt, en)` — devolve um dos dois textos conforme o idioma atual.
+- `zimmy.lang` — `"pt"` ou `"en"` (ex.: para escolher de duas listas de frases).
+- `zimmy.fmt_num(v, casas)` / `zimmy.fmt_pct(v)` / `zimmy.fmt_money_brl(v, casas)` —
+  número/percentual/valor com **separador decimal** do idioma (vírgula no pt, ponto no en).
+- `zimmy.fmt_quote_date("AAAA-MM-DD HH:MM:SS")` — data no formato do idioma
+  (`DD/MM/AAAA` no pt, `MM/DD/YYYY` no en).
+
+```gdscript
+func run(zimmy) -> void:
+    zimmy.notify(zimmy.lang_text("olá! 👋", "hi! 👋"))
+    # valores/datas localizados (ex.: cotações):
+    zimmy.notify("USD/BRL: %s — %s" % [zimmy.fmt_money_brl(5.1234, 4), zimmy.fmt_quote_date("2026-06-21 09:30:00")])
+```
 
 ## Agendamento (frequência / recorrência)
 
@@ -32,7 +62,7 @@ const SCHEDULE := "20s"          # a cada 20 segundos
 func run(zimmy) -> void:
     if zimmy.hunger > 55.0:
         zimmy.hunger = max(zimmy.hunger - 25.0, 0.0)
-        zimmy.say("auto-refeição 🦴")
+        zimmy.notify("auto-refeição 🦴")
 ```
 
 Formatos aceitos em `SCHEDULE`:
@@ -92,7 +122,7 @@ extends RefCounted
 const AUTOMATION_NAME := "Dar oi"
 
 func run(zimmy) -> void:
-    zimmy.say("oi! 👋")
+    zimmy.notify("oi! 👋")
     zimmy.hop()
 ```
 

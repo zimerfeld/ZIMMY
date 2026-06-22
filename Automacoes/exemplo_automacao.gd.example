@@ -9,6 +9,6 @@ const AUTOMATION_NAME := "Exemplo: festa 🎉"
 
 # Chamado ao escolher a automação no menu. `zimmy` é o nó principal (zimmy.gd).
 func run(zimmy) -> void:
-	zimmy.say("automação rodando! 🎉")
+	zimmy.notify("automação rodando! 🎉")
 	zimmy.play()
 	zimmy.hop(420.0)

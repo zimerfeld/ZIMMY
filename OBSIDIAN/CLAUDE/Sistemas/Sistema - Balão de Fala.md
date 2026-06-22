@@ -1,6 +1,6 @@
 ---
 tags: [sistema, fala, ui, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 💬 Sistema - Balão de Fala
@@ -10,8 +10,13 @@ padrão do Godot** (renderiza acentos e emojis coloridos no renderer Compatibili
 um `SystemFont` faria o texto sumir).
 
 ## API
-- `say(t)` (`zimmy.gd:904`) — define o texto, agenda limpeza (`speech_clear=2.5s`) e
-  chama `_relayout()`.
+- `say(msg, hold := 2.5)` — define o texto, agenda a limpeza (`speech_clear = hold`) e
+  chama `_relayout()`. Mostra **na hora** (interações do pet, seleção, salvar/erros).
+- `notify(msg)` — **fila de avisos** para automações/e-mails: enfileira em `notify_queue`
+  e o [[Fluxo - Loop (_process)]] solta a próxima a cada `NOTIFY_GAP = 5s` (`notify_cd`),
+  chamando `say(msg, NOTIFY_HOLD)` — a mensagem fica visível **5s** (`NOTIFY_HOLD`) antes
+  de sumir. Evita que várias mensagens (ex.: várias cotações) se sobreponham. A 1ª
+  aparece já; as seguintes esperam 5s.
 - No [[Fluxo - Loop (_process)]], ao expirar `speech_clear` o texto é limpo e a janela
   encolhe.
 
@@ -24,8 +29,9 @@ um `SystemFont` faria o texto sumir).
 
 ## Quem fala
 Saudação inicial; ações (`feed/pet/play/_react`); geração/seleção de pets e
-acessórios; salvar/erros; e as reclamações de mau humor
-([[Sistema - Interação e Mau Humor]], lista `MOOD_NEG`).
+acessórios; salvar/erros; reclamações de mau humor
+([[Sistema - Interação e Mau Humor]], lista `mood_neg`); e as **automações/e-mails** (via
+`notify()`, com espaçamento de 5s).
 
 ## Espelha no rosto
 `say()` também deduz a emoção do emoji e o rosto a reflete enquanto a fala dura —

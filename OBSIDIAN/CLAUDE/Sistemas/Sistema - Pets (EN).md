@@ -16,24 +16,28 @@ eyelashes, `mouth_style="smile"`.
 
 ## Random — `_random_cfg()`
 Aims for **balanced aesthetics and cheerful colors**, keeping the "Zimmy" style:
+- **Critters** — ~55% of rolls become a recognizable animal (`critter` ∈ {cat, dog,
+  bunny, bear, frog, fox, mouse, pig}). `_apply_critter(cfg, kind)` overrides the **shape**
+  keys (ear/mouth/whiskers/tail/proportions) and clears fancy adornments; the **color
+  stays random**. The other ~45% remain free combinatorial creatures.
 - **Colors** — base hue (`hue`); the accent colors (ear/antenna/nose) come from a
   **harmony scheme** that is rolled: `analogous`/`complementary`/`triadic`/`monochrome`
   (`accent_hue`). Saturation/brightness in vibrant-yet-soft ranges (`body_s` 0.42–0.68,
   `body_v` 0.86–0.98) → avoids muddy/dark tones. Belly = same desaturated and
   light hue (cohesive contrast); cheek = warm translucent pink.
-- **Geometry** — `body_shape` ∈ {`round`(2×), `tall`, `wide`, `pear`}: `_draw()`
-  stretches/flattens the silhouette and, in `pear`, draws an extra lower bulge (teardrop body).
+- **Geometry** — `body_shape` ∈ {`round`(2×), `tall`, `wide`, `pear`, `chubby`, `slim`}:
+  `_draw()` stretches/flattens the silhouette and, in `pear`, draws an extra lower bulge.
 - **Proportions** in ranges (`randf_range`).
-- **Shapes/elements** (probabilities): `has_ears` 85%, `ear_shape` round/pointy,
+- **Shapes/elements** (probabilities): `has_ears` 85%, `ear_shape` round/pointy/floppy,
   `has_antennae` 40%, `has_cheeks` 70%, `has_nose` 60%, `has_eyelashes` 50%,
-  `mouth_style` ∈ {smile, cat, open, line}.
-- **Extra "skeleton" categories** (≈12, rolled **independently**, with
+  `mouth_style` ∈ {smile, cat, open, line, tongue, fang}.
+- **Extra "skeleton" categories** (≈14, rolled **independently**, with
   `none` weighted higher so it does not get overloaded): `tail` (curl/puff/stub), `horn`
   (unicorn/devil/antlers + `horn_color`), `hair_tuft` (tuft/cowlick/mohawk),
-  `eye_shape` (oval/tall/sleepy), `pupil_style` (big/cat/sparkle), `eyebrow`
+  `eye_shape` (oval/tall/sleepy), `pupil_style` (big/cat/sparkle/heart), `eyebrow`
   (flat/raised/serious), `feet` (paws), `arms` (nubs), `belly_mark` (spot/heart),
-  `whiskers` (short/long), `wings` (small), `freckles`. Each has its own
-  `_draw_*` helper; see [[Sistema - Render (_draw) (EN)]].
+  `whiskers` (short/long), `wings` (small), `freckles`, `body_pattern` (spots/stripes),
+  `muzzle`. Each has its own `_draw_*` helper; see [[Sistema - Render (_draw) (EN)]].
 
 ## State
 - `current` — the pet displayed now.

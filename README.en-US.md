@@ -1,5 +1,11 @@
 # Zimmy Pet 🧡
 
+<p align="center">
+  <img src="icon.png" alt="Zimmy — the default pet" width="180">
+</p>
+
+> The default pet (the procedural face from `_draw()`, the same drawing used for the icon).
+
 Desktop pet overlay, made in Godot 4.6.
 A transparent, borderless, always-on-top window that floats over the desktop.
 The pet is drawn in a logical space of **200×200** and displayed at **75%** (≈150 px,
@@ -73,19 +79,23 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 > screen edges**. If no side fits, it is fitted within the visible area.
 
 - **🦴 Feed / 🤚 Pet / 🎾 Play** — interactions that change mood/hunger.
-- **🎲 Random pets** (check) — toggles continuous generation **of the pet**: every ~9 s
+- **🐶 Random pets** (check) — toggles continuous generation **of the pet**: every ~10 s
   Zimmy turns into a random pet. Besides colors, it varies the **shapes** and which
   **elements** make him up (round or pointy ears, antennas, nose, eyelashes, cheeks,
-  and the mouth style).
+  and the mouth style). Each new pet gets a **welcome phrase and a suggested name** —
+  that name pre-fills the text box (selected) when you Save or Rename it. Names are
+  **combinatorial** (noun + adjective, ~900 combos per language), so they rarely repeat.
 - **🎲 Random accessories** (check) — independent from the previous one: toggles
-  continuous generation **of the accessories** (every ~9 s it draws a
+  continuous generation **of the accessories** (every ~10 s it draws a
   hat/glasses/bow/scarf). Turning it on also automatically turns on the accessory
-  display.
+  display. Each new accessory gets a **congratulations phrase and a suggested name**
+  that pre-fills the text box when you Save or Rename it (also **combinatorial**, ~900
+  combos per language).
 - **👓 Show accessories** (check) — toggles the display of the accessory layer (hat,
   glasses, bow, scarf), independently of the pet.
 - **💾 Save Pet...** — opens a dialog to name and save **only the pet** shown. Opening
-  the dialog **freezes pet generation** (unchecks "🎲 Random pets") so that exactly
-  what is on screen is saved; on **confirm**, the "🎲 Random pets" checkbox stays
+  the dialog **freezes pet generation** (unchecks "🐶 Random pets") so that exactly
+  what is on screen is saved; on **confirm**, the "🐶 Random pets" checkbox stays
   unchecked. Accessory generation is not affected. **If the displayed pet is already a
   saved pet, this item becomes
   "💾 Rename Pet..."** (same icon): the dialog opens with the current name pre-filled
@@ -153,11 +163,19 @@ Each automation is a GDScript with:
 - (optional) `const AUTOMATION_NAME := "Name in the menu"` — text shown in the submenu.
   Without it, the name is derived from the file (`minha_automacao.gd` → "Minha
   Automacao").
+- (optional) `const AUTOMATION_NAME_EN := "Menu name"` — English name, used when the app
+  language is English (US); falls back to `AUTOMATION_NAME` otherwise. For bilingual pet
+  speech use `zimmy.lang_text(pt, en)` and `zimmy.lang`; for localized numbers/dates use
+  `zimmy.fmt_num` / `fmt_pct` / `fmt_money_brl` / `fmt_quote_date` (the currency
+  automations use these, so values and dates follow the chosen language).
 - (optional) `const SCHEDULE := "..."` — frequency for Zimmy to run the automation on
   its own (see **Scheduler** below).
 - a `run(zimmy)` method — called when choosing the item (or on the scheduled trigger).
-  `zimmy` is the main node, giving access to `say()`, `feed()`, `pet()`, `play()`,
-  `hop()`, `current`, and to the state (`hunger`, `happy`), etc.
+  `zimmy` is the main node, giving access to `notify()`, `say()`, `feed()`, `pet()`,
+  `play()`, `hop()`, `current`, and to the state (`hunger`, `happy`), etc. Automation/
+  e-mail messages should use **`zimmy.notify(text)`**: they are **queued, shown one at a
+  time and stay visible ~5 s** so they don't overwrite each other (`say()` shows
+  immediately and clears in 2.5 s, no queue).
 
 Scripts that `extends RefCounted` are discarded after `run()`; those that `extends Node`
 are added as children of Zimmy and **persist** (useful for continuous automations via
@@ -211,7 +229,9 @@ every 5 min.
 
 - **Gmail**: enable 2-step verification and generate an *App Password* at
   [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords); check
-  that **IMAP is enabled** (Gmail ▸ Settings ▸ Forwarding and POP/IMAP).
+  that **IMAP is enabled** (Gmail ▸ Settings ▸ Forwarding and POP/IMAP). Google shows the
+  App Password in 4 groups of 4 — you can paste it **with or without the spaces** (Zimmy
+  strips them). Use the **App Password**, not your normal Google password.
 - **Outlook/Hotmail**: generate an *App password* at
   [account.microsoft.com/security](https://account.microsoft.com/security). **Corporate
   Microsoft 365** accounts usually have IMAP/basic **disabled** by the admin — then it
@@ -220,9 +240,12 @@ every 5 min.
 **Credentials**: when you **turn on** a provider in the menu, Zimmy asks for *e-mail* +
 *App Password*. They are saved **per automation** in `user://cred_<key>.json` (e.g.
 `cred_email_gmail.json`) — **outside the repository** and covered by `.gitignore`
-(`cred_*.json`). They are only written/updated **after a valid login**; if the password
-changes and the login fails, the file is discarded and Zimmy asks again. Reuse this flow
-in any automation with `zimmy.with_credentials(key, title, cb)` +
+(`cred_*.json`). The file is **encrypted** (AES, via `FileAccess.open_encrypted_with_pass`)
+with a key derived from an app salt + the machine ID (`OS.get_unique_id`), so it is not
+plain text and does not work on another computer. They are only written/updated **after a
+valid login**; if the password changes and the login fails, the file is discarded and Zimmy
+asks again. Old plain-text credential files are migrated (re-encrypted) on read. Reuse this
+flow in any automation with `zimmy.with_credentials(key, title, cb)` +
 `zimmy.confirm_credentials(key, data)`.
 
 ## Pets
@@ -237,19 +260,22 @@ in any automation with `zimmy.with_credentials(key, title, cb)` +
   and the saved ones.
 - **Random generation**: `_random_cfg()` aims for a **balanced aesthetic and cheerful
   colors**:
+  - **Critter archetypes** — about **55%** of random pets come out as a recognizable
+    **little animal**: `cat`, `dog`, `bunny`, `bear`, `frog`, `fox`, `mouse` or `pig`
+    (`critter` key). The animal is set by **shape** (ears/mouth/whiskers/tail/proportions)
+    — the **color stays random** (a purple cat is valid and cute). The other ~45% remain
+    free-form abstract creatures.
   - **Geometry** — it draws the **body silhouette** (`body_shape`: `round`/`tall`/
-    `wide`/`pear` — standing egg, cute shorty or teardrop body), the **ear shape**
-    (round/pointy), the **mouth style** (`smile`/`cat`/`open`/`line`), the
-    **proportions** and the **presence of elements** (antennas, nose, eyelashes,
-    cheeks).
-  - **Extra "skeleton" categories** (each one drawn **independently**, to break away
-    from the Default): **tail** (`curl`/`puff`/`stub`), **horn**
-    (`unicorn`/`devil`/`antlers`, with its own color), **tuft** (`tuft`/`cowlick`/
-    `mohawk`), **eye shape** (`oval`/`tall`/`sleepy`), **pupil** (`big`/`cat`/`sparkle`),
-    **eyebrow** (`flat`/`raised`/`serious`), **paws**, **little arms**, **belly mark**
-    (`spot`/`heart`), **whiskers** (`short`/`long`), **wings** and **freckles**. Most
-    have `none` with a higher weight, so the pets vary a lot without getting
-    overloaded.
+    `wide`/`pear`/`chubby`/`slim`), the **ear shape** (round/pointy/floppy), the
+    **mouth style** (`smile`/`cat`/`open`/`line`/`tongue`/`fang`), the **proportions**
+    and the **presence of elements** (antennas, nose, eyelashes, cheeks).
+  - **Extra "skeleton" categories** (each drawn **independently**): **tail**
+    (`curl`/`puff`/`stub`), **horn** (`unicorn`/`devil`/`antlers`), **tuft**
+    (`tuft`/`cowlick`/`mohawk`), **eye shape** (`oval`/`tall`/`sleepy`), **pupil**
+    (`big`/`cat`/`sparkle`/`heart`), **eyebrow** (`flat`/`raised`/`serious`), **paws**,
+    **little arms**, **belly mark** (`spot`/`heart`), **whiskers** (`short`/`long`),
+    **wings**, **freckles**, **body pattern** (`spots`/`stripes`) and **muzzle**. Most
+    have `none` with a higher weight, so the pets vary a lot without getting overloaded.
   - **Color** — it starts from a base hue and derives the highlight colors via a
     **harmony scheme** (analogous / complementary / triadic / mono), with saturation and
     brightness in **vibrant-yet-soft** ranges (cheerful theme, avoiding dirty/dark tones)
@@ -268,14 +294,13 @@ in any automation with `zimmy.with_credentials(key, title, cb)` +
 - The accessories are a **layer independent of the pet**, drawn on top by
   `_draw_accessories()` and described by `_default_acc()`/`_random_acc()`. Each category
   is **drawn independently** (each with its own color):
-  - **Originals**: hat (`beanie`/`tophat`/`crown`/`cap`), glasses
-    (`round`/`square`/`star`), bow (head/neck) and scarf.
-  - **Extra categories** (~a dozen): necklace (`pearls`/`pendant`), earrings
-    (`studs`/`hoops`), collar (`plain`/`bell`), headphones, monocle, mustache
-    (`curly`/`thin`), little flower, brooch (`star`/`heart`), tie (`necktie`/`bowtie`),
-    diagonal sash (`sash`), mask (`medical`/`ninja`) and cheek sticker
-    (`star`/`heart`). Most have `none` with a higher weight, to vary without
-    overdoing it.
+  - **Originals**: hat (`beanie`/`tophat`/`crown`/`cap`/`wizard`), glasses
+    (`round`/`square`/`star`/`heart`/`sunglasses`), bow (head/neck) and scarf.
+  - **Extra categories**: necklace (`pearls`/`pendant`), earrings (`studs`/`hoops`),
+    collar (`plain`/`bell`), headphones, monocle, mustache (`curly`/`thin`), little
+    flower, brooch (`star`/`heart`), tie (`necktie`/`bowtie`), diagonal sash, mask
+    (`medical`/`ninja`), cheek sticker (`star`/`heart`), belt (`plain`/`buckle`) and
+    backpack. Most have `none` with a higher weight, to vary without overdoing it.
 - The **random generation** of accessories has its own checkbox (**🎲 Random
   accessories**), separate from pet generation. The **display** is controlled by
   **👓 Show accessories** (on by default). Since the Default wears nothing, the display

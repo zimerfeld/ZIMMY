@@ -91,6 +91,13 @@ wraps `HTTPRequest` → JSON) and `OS.execute/create_process`. Examples: `auto_a
 `lembrete_pomodoro`, `comemoracao_hora_cheia`, `cotacao_usd/eur/gbp/jpy/cny` (AwesomeAPI,
 the "currency submenu"), `desligar_pc`/`cancelar_desligamento` (`shutdown`), `alarme`.
 
+**i18n in automations**: the menu name is bilingual — `_automation_name_from` uses
+`AUTOMATION_NAME_EN` when `lang == "en"` (otherwise `AUTOMATION_NAME`). Speech uses the
+helpers `zimmy.lang_text(pt, en)` / `zimmy.lang`; currency values and dates use
+`zimmy.fmt_num`/`fmt_pct`/`fmt_money_brl`/`fmt_quote_date` (decimal separator and date
+format per language). `_apply_menu_labels()` calls `_rebuild_automations_menu()`, so the
+names switch language immediately. Contract in `Automacoes/LEIAME.md`.
+
 ## 📧 E-mails submenu (groups, badges, credentials)
 Optional consts read in the scan: `MENU_GROUP` (routes to a dedicated submenu — `email` →
 `email_menu`), `ICON_COLOR` (icon on the left via `add_icon_check_item` + `_provider_icon`,

@@ -4,10 +4,11 @@
 extends RefCounted
 
 const AUTOMATION_NAME := "Alarme 08:00 ⏰"
+const AUTOMATION_NAME_EN := "Alarm 08:00 ⏰"
 const SCHEDULE := "daily@08:00"
 
 func run(zimmy) -> void:
-	zimmy.say("⏰ ALARME — 08:00! ⏰")
+	zimmy.notify(zimmy.lang_text("⏰ ALARME — 08:00! ⏰", "⏰ ALARM — 08:00! ⏰"))
 	zimmy.hop(480.0)
 	# Bipe do sistema (não bloqueia a janela). Remova esta linha para alarme só visual.
 	OS.create_process("powershell", ["-WindowStyle", "Hidden", "-c", "[console]::beep(880,400);[console]::beep(660,400);[console]::beep(988,500)"])

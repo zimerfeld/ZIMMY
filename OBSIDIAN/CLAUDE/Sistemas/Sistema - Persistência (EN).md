@@ -15,7 +15,7 @@ Three JSON files in `user://` (on Windows:
 | `accessories.json` | `ACC_FILE` | `{ name: accessory_config }` |
 | `settings.json` | `SETTINGS_FILE` | `{ anchor_x, anchor_y, pet, acc, show_acc }` (last position **+ active pet/accessory choice**) |
 | `schedules.json` | `SCHEDULES_FILE` | `{ automation_path: true }` (scheduled, turned on) |
-| `cred_<key>.json` | `CRED_PREFIX` | `{ user, pass }` per automation (e-mail). **Gitignored**, never commit |
+| `cred_<key>.json` | `CRED_PREFIX` | `{ user, pass }` per automation (e-mail), **encrypted** (AES). **Gitignored**, never commit |
 
 ## Color serialization
 - `_cfg_to_json(cfg)` — converts each `Color` into `[r,g,b,a]`; the rest passes through.
@@ -41,8 +41,11 @@ Three JSON files in `user://` (on Windows:
 - `_save_schedules` / `_load_schedules` — scheduled automations turned on
   (`automation_enabled`); see [[Sistema - Menu de Contexto (EN)]].
 - `load_credentials` / `save_credentials` / `forget_credentials` — automation
-  credentials in `user://cred_<key>.json` (one file per automation, gitignored). Written
-  only after validation; see [[Sistema - Menu de Contexto (EN)]].
+  credentials in `user://cred_<key>.json` (one file per automation, gitignored).
+  **Encrypted** with `FileAccess.open_encrypted_with_pass`; the key comes from
+  `_cred_key()` = `CRED_SALT` + `OS.get_unique_id()` (not plain text, and not valid on
+  another machine). `load_credentials` **migrates** old plain-text files (re-encrypts on
+  read). Written only after validation; see [[Sistema - Menu de Contexto (EN)]].
 
 Writes triggered on: saving a pet/accessory ([[Fluxo - Salvar e Carregar (EN)]]), dropping
 the pet after dragging, and **choosing a pet/accessory or toggling 👓 Show accessories**

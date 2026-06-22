@@ -14,7 +14,7 @@ Três arquivos JSON em `user://` (no Windows:
 | `accessories.json` | `ACC_FILE` | `{ nome: config_acessório }` |
 | `settings.json` | `SETTINGS_FILE` | `{ anchor_x, anchor_y, pet, acc, show_acc }` (última posição **+ escolha ativa de pet/acessório**) |
 | `schedules.json` | `SCHEDULES_FILE` | `{ caminho_automação: true }` (agendadas ligadas) |
-| `cred_<key>.json` | `CRED_PREFIX` | `{ user, pass }` por automação (e-mail). **Gitignored**, nunca versionar |
+| `cred_<key>.json` | `CRED_PREFIX` | `{ user, pass }` por automação (e-mail), **criptografado** (AES). **Gitignored**, nunca versionar |
 
 ## Serialização de cores
 - `_cfg_to_json(cfg)` — converte cada `Color` em `[r,g,b,a]`; o resto passa direto.
@@ -40,8 +40,11 @@ Três arquivos JSON em `user://` (no Windows:
 - `_save_schedules` / `_load_schedules` — automações agendadas ligadas
   (`automation_enabled`); ver [[Sistema - Menu de Contexto]].
 - `load_credentials` / `save_credentials` / `forget_credentials` — credenciais de
-  automação em `user://cred_<key>.json` (um arquivo por automação, gitignored). Gravadas
-  só após validação; ver [[Sistema - Menu de Contexto]].
+  automação em `user://cred_<key>.json` (um arquivo por automação, gitignored).
+  **Criptografadas** com `FileAccess.open_encrypted_with_pass`; a chave vem de
+  `_cred_key()` = `CRED_SALT` + `OS.get_unique_id()` (não fica em texto puro nem vale em
+  outra máquina). `load_credentials` **migra** arquivos antigos em texto puro
+  (recriptografa na leitura). Gravadas só após validação; ver [[Sistema - Menu de Contexto]].
 
 Gravações disparadas em: salvar pet/acessório ([[Fluxo - Salvar e Carregar]]), soltar
 o pet após arrastar, e **escolher um pet/acessório ou alternar 👓 Mostrar acessórios**

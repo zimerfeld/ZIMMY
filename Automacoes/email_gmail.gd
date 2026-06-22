@@ -19,15 +19,18 @@ const ICON_COLOR := "ea4335"     # vermelho Gmail (ícone à esquerda do item)
 const IMAP_HOST := "imap.gmail.com"
 
 func run(zimmy) -> void:
-	zimmy.with_credentials(CRED_KEY, "Entrar no Gmail (use uma App Password)", func(creds):
+	var title = zimmy.lang_text("Entrar no Gmail (use uma App Password)",
+		"Sign in to Gmail (use an App Password)")
+	zimmy.with_credentials(CRED_KEY, title, func(creds):
 		zimmy.imap_unread(IMAP_HOST, 993, creds["user"], creds["pass"], func(ok, count):
 			if ok:
 				zimmy.confirm_credentials(CRED_KEY, creds)   # salva se novo/alterado
 				zimmy.set_automation_badge(BADGE_KEY, str(count))
-				zimmy.say("📧 Gmail: %d não lidos" % count)
+				zimmy.notify(zimmy.lang_text("📧 Gmail: %d não lidos", "📧 Gmail: %d unread") % count)
 			else:
 				zimmy.forget_credentials(CRED_KEY)           # inválida → re-pergunta na próxima
 				zimmy.set_automation_badge(BADGE_KEY, "!")
-				zimmy.say("📧 Gmail: login falhou 🔒 (use uma App Password)")
+				zimmy.notify(zimmy.lang_text("📧 Gmail: login falhou 🔒 (use uma App Password)",
+					"📧 Gmail: login failed 🔒 (use an App Password)"))
 		)
 	)

@@ -13,10 +13,12 @@ Pets and accessories are saved/loaded **independently**. See
 1. Menu "💾 Salvar Pet..." or "🎀 Salvar Acessório..." → `_open_save_dialog(mode, "save")`.
 2. `_open_save_dialog` **freezes only the generation of the type being saved** (`_set_random_pet`
    or `_set_random_acc` `(false)`), adjusts the title/placeholder according to `save_mode`,
-   centers and opens the dialog.
+   **pre-fills** the box with the generated item's suggested name
+   (`suggested_pet_name`/`suggested_acc_name`, selected for easy replacement), centers and
+   opens the dialog. See [[Fluxo - Geração Aleatória (EN)]].
 3. Confirm → `_on_save_confirmed`:
    - validates the name (rejects empty, `Default`, `Selecione...`, `Nenhum`);
-   - `pet`: **`_set_random_pet(false)`** (unchecks "🎲 Gerar pets"),
+   - `pet`: **`_set_random_pet(false)`** (unchecks "🐶 Gerar pets"),
      `saved_pets[nm] = current.duplicate(true)`, `current_pet_name = nm` (becomes the active one →
      the item changes to "Renomear") → `_save_pets_to_disk` → `_rebuild_pets_menu` →
      `_save_settings`;

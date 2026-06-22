@@ -23,15 +23,16 @@ Elements/shape (base):
 - `has_cheeks` (bool)
 - `has_nose` (bool)
 - `has_eyelashes` (bool)
-- `mouth_style` (`smile` | `cat` | `open` | `line`)
-- `body_shape` (`round` | `tall` | `wide` | `pear`)
+- `mouth_style` (`smile` | `cat` | `open` | `line` | `tongue` | `fang`)
+- `body_shape` (`round` | `tall` | `wide` | `pear` | `chubby` | `slim`)
+- `ear_shape` (`round` | `pointy` | `floppy`)
 
 Extra geometric "skeleton" categories (all `none` when absent):
 - `tail` (`none` | `curl` | `puff` | `stub`)
 - `horn` (`none` | `unicorn` | `devil` | `antlers`) + `horn_color`
 - `hair_tuft` (`none` | `tuft` | `cowlick` | `mohawk`)
 - `eye_shape` (`round` | `oval` | `tall` | `sleepy`)
-- `pupil_style` (`round` | `big` | `cat` | `sparkle`)
+- `pupil_style` (`round` | `big` | `cat` | `sparkle` | `heart`)
 - `eyebrow` (`none` | `flat` | `raised` | `serious`)
 - `feet` (`none` | `paws`)
 - `arms` (`none` | `nubs`)
@@ -39,6 +40,10 @@ Extra geometric "skeleton" categories (all `none` when absent):
 - `whiskers` (`none` | `short` | `long`)
 - `wings` (`none` | `small`)
 - `freckles` (`none` | `freckles`)
+- `body_pattern` (`none` | `spots` | `stripes`)
+- `muzzle` (`none` | `round`)
+- `critter` (`none` | `cat` | `dog` | `bunny` | `bear` | `frog` | `fox` | `mouse` | `pig`) —
+  animal archetype; `_apply_critter()` sets the shape keys, the color stays random
 
 > The **Default** (`_default_cfg()`) pins these keys to the original face; the random
 > generator (`_random_cfg()`) rolls them. `_json_to_cfg()` starts from the default, so old/partial
@@ -48,11 +53,11 @@ Extra geometric "skeleton" categories (all `none` when absent):
 Colors (`ACC_COLOR_KEYS`): `hat_color`, `glasses_color`, `bow_color`, `scarf_color`,
 `necklace_color`, `earring_color`, `collar_color`, `headphone_color`, `monocle_color`,
 `mustache_color`, `flower_color`, `badge_color`, `tie_color`, `sash_color`,
-`mask_color`, `sticker_color`.
+`mask_color`, `sticker_color`, `belt_color`, `backpack_color`.
 
 Original types:
-- `hat`: `none` | `beanie` | `tophat` | `crown` | `cap`
-- `glasses`: `none` | `round` | `square` | `star`
+- `hat`: `none` | `beanie` | `tophat` | `crown` | `cap` | `wizard`
+- `glasses`: `none` | `round` | `square` | `star` | `heart` | `sunglasses`
 - `bow`: `none` | `head` | `neck`
 - `scarf`: `none` | `present`
 
@@ -69,6 +74,8 @@ Extra geometric categories (all `none` when absent):
 - `sash` (`present`)
 - `mask` (`medical` | `ninja`)
 - `cheek_sticker` (`star` | `heart`)
+- `belt` (`plain` | `buckle`)
+- `backpack` (`present`)
 
 ## Settings (`user://settings.json`)
 `{ "anchor_x": int, "anchor_y": int, "pet": str, "acc": str, "show_acc": bool,
@@ -82,5 +89,5 @@ pet/accessory, the accessory display state and the **UI language**. See
 
 ## Notable constants ([[zimmy.gd (EN)]])
 `PET_BOX=200`, `PET_SCALE=0.75`, `PET_DRAW=150`, `HOP_HEADROOM=80`,
-`MAX_W=640`, `RANDOM_PERIOD=9.0`, `ACTION_COOLDOWN=1.0`, `MAX_REPEAT=3`,
+`MAX_W=640`, `RANDOM_PERIOD=10.0`, `ACTION_COOLDOWN=1.0`, `MAX_REPEAT=3`,
 `COMPLAIN_COOLDOWN=1.5`.

@@ -14,7 +14,7 @@ Endpoints acionados pelo menu de contexto. Ids `MI_*` despachados em `_on_menu(i
 | 0 | `MI_FEED` | 🦴 Alimentar | `feed()` |
 | 1 | `MI_PET` | 🤚 Carinho | `pet()` |
 | 2 | `MI_PLAY` | 🎾 Brincar | `play()` |
-| 3 | `MI_RANDOM` | 🎲 Gerar pets | `_set_random_pet(!on)` |
+| 3 | `MI_RANDOM` | 🐶 Gerar pets | `_set_random_pet(!on)` |
 | 10 | `MI_RANDOM_ACC` | 🎲 Gerar acessórios | `_set_random_acc(!on)` |
 | 4 | `MI_SHOW_ACC` | 👓 Mostrar acessórios | `_set_show_accessories(!on)` |
 | 5 | `MI_SAVE_PET` | 💾 Salvar/Renomear Pet... | `_open_save_dialog("pet", save\|rename)` |

@@ -19,15 +19,18 @@ const ICON_COLOR := "0078d4"     # azul Outlook
 const IMAP_HOST := "outlook.office365.com"
 
 func run(zimmy) -> void:
-	zimmy.with_credentials(CRED_KEY, "Entrar no Outlook (use uma App Password)", func(creds):
+	var title = zimmy.lang_text("Entrar no Outlook (use uma App Password)",
+		"Sign in to Outlook (use an App Password)")
+	zimmy.with_credentials(CRED_KEY, title, func(creds):
 		zimmy.imap_unread(IMAP_HOST, 993, creds["user"], creds["pass"], func(ok, count):
 			if ok:
 				zimmy.confirm_credentials(CRED_KEY, creds)
 				zimmy.set_automation_badge(BADGE_KEY, str(count))
-				zimmy.say("📧 Outlook: %d não lidos" % count)
+				zimmy.notify(zimmy.lang_text("📧 Outlook: %d não lidos", "📧 Outlook: %d unread") % count)
 			else:
 				zimmy.forget_credentials(CRED_KEY)
 				zimmy.set_automation_badge(BADGE_KEY, "!")
-				zimmy.say("📧 Outlook: login falhou 🔒 (use uma App Password)")
+				zimmy.notify(zimmy.lang_text("📧 Outlook: login falhou 🔒 (use uma App Password)",
+					"📧 Outlook: login failed 🔒 (use an App Password)"))
 		)
 	)

@@ -23,7 +23,7 @@ pet** (`!intersects`). Sem encaixe perfeito, clampa o candidato da direita às b
 ```
 🦴 Alimentar (0)   🤚 Carinho (1)   🎾 Brincar (2)
 ──
-🎲 Gerar pets (3, check)
+🐶 Gerar pets (3, check)
 🎲 Gerar acessórios (10, check)
 👓 Mostrar acessórios (4, check, default on)
 ──
@@ -88,6 +88,13 @@ via `_fire_automation()`; estado ligado/desligado persiste em `user://schedules.
 encapsula `HTTPRequest` → JSON) e `OS.execute/create_process`. Exemplos: `auto_alimentar`,
 `lembrete_pomodoro`, `comemoracao_hora_cheia`, `cotacao_usd/eur/gbp/jpy/cny` (AwesomeAPI,
 o "submenu de moedas"), `desligar_pc`/`cancelar_desligamento` (`shutdown`), `alarme`.
+
+**i18n nas automações**: o nome no menu é bilíngue — `_automation_name_from` usa
+`AUTOMATION_NAME_EN` quando `lang == "en"` (senão `AUTOMATION_NAME`). As falas usam os
+helpers `zimmy.lang_text(pt, en)` / `zimmy.lang`; valores e datas das cotações usam
+`zimmy.fmt_num`/`fmt_pct`/`fmt_money_brl`/`fmt_quote_date` (separador decimal e formato de
+data por idioma). `_apply_menu_labels()` chama `_rebuild_automations_menu()`, então os
+nomes trocam de idioma na hora. Contrato em `Automacoes/LEIAME.md`.
 
 ## Submenu 📧 E-mails (grupos, badges, credenciais)
 Consts opcionais lidas no scan: `MENU_GROUP` (roteia p/ um submenu dedicado — `email` →

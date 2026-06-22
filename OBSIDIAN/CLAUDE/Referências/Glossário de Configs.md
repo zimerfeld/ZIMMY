@@ -23,14 +23,16 @@ Elementos/forma (base):
 - `has_nose` (bool)
 - `has_eyelashes` (bool)
 - `mouth_style` (`smile` | `cat` | `open` | `line`)
-- `body_shape` (`round` | `tall` | `wide` | `pear`)
+- `body_shape` (`round` | `tall` | `wide` | `pear` | `chubby` | `slim`)
+- `ear_shape` (`round` | `pointy` | `floppy`)
+- `mouth_style` (`smile` | `cat` | `open` | `line` | `tongue` | `fang`)
 
 Categorias geométricas extras do "esqueleto" (todas com `none` quando ausentes):
 - `tail` (`none` | `curl` | `puff` | `stub`)
 - `horn` (`none` | `unicorn` | `devil` | `antlers`) + `horn_color`
 - `hair_tuft` (`none` | `tuft` | `cowlick` | `mohawk`)
 - `eye_shape` (`round` | `oval` | `tall` | `sleepy`)
-- `pupil_style` (`round` | `big` | `cat` | `sparkle`)
+- `pupil_style` (`round` | `big` | `cat` | `sparkle` | `heart`)
 - `eyebrow` (`none` | `flat` | `raised` | `serious`)
 - `feet` (`none` | `paws`)
 - `arms` (`none` | `nubs`)
@@ -38,6 +40,10 @@ Categorias geométricas extras do "esqueleto" (todas com `none` quando ausentes)
 - `whiskers` (`none` | `short` | `long`)
 - `wings` (`none` | `small`)
 - `freckles` (`none` | `freckles`)
+- `body_pattern` (`none` | `spots` | `stripes`)
+- `muzzle` (`none` | `round`)
+- `critter` (`none` | `cat` | `dog` | `bunny` | `bear` | `frog` | `fox` | `mouse` | `pig`) —
+  arquétipo de bicho; `_apply_critter()` define as chaves de forma, a cor segue aleatória
 
 > O **Default** (`_default_cfg()`) fixa essas chaves na carinha original; o aleatório
 > (`_random_cfg()`) as sorteia. `_json_to_cfg()` parte do default, então arquivos
@@ -47,11 +53,11 @@ Categorias geométricas extras do "esqueleto" (todas com `none` quando ausentes)
 Cores (`ACC_COLOR_KEYS`): `hat_color`, `glasses_color`, `bow_color`, `scarf_color`,
 `necklace_color`, `earring_color`, `collar_color`, `headphone_color`, `monocle_color`,
 `mustache_color`, `flower_color`, `badge_color`, `tie_color`, `sash_color`,
-`mask_color`, `sticker_color`.
+`mask_color`, `sticker_color`, `belt_color`, `backpack_color`.
 
 Tipos originais:
-- `hat`: `none` | `beanie` | `tophat` | `crown` | `cap`
-- `glasses`: `none` | `round` | `square` | `star`
+- `hat`: `none` | `beanie` | `tophat` | `crown` | `cap` | `wizard`
+- `glasses`: `none` | `round` | `square` | `star` | `heart` | `sunglasses`
 - `bow`: `none` | `head` | `neck`
 - `scarf`: `none` | `present`
 
@@ -68,6 +74,8 @@ Categorias geométricas extras (todas com `none` quando ausentes):
 - `sash` (`present`)
 - `mask` (`medical` | `ninja`)
 - `cheek_sticker` (`star` | `heart`)
+- `belt` (`plain` | `buckle`)
+- `backpack` (`present`)
 
 ## Settings (`user://settings.json`)
 `{ "anchor_x": int, "anchor_y": int, "pet": str, "acc": str, "show_acc": bool,
@@ -81,5 +89,5 @@ Tabelas `const` com `{ "pt": ..., "en": ... }` por chave. `t(key)` devolve o tex
 
 ## Constantes notáveis ([[zimmy.gd]])
 `PET_BOX=200`, `PET_SCALE=0.75`, `PET_DRAW=150`, `HOP_HEADROOM=80`,
-`MAX_W=640`, `RANDOM_PERIOD=9.0`, `ACTION_COOLDOWN=1.0`, `MAX_REPEAT=3`,
+`MAX_W=640`, `RANDOM_PERIOD=10.0`, `ACTION_COOLDOWN=1.0`, `MAX_REPEAT=3`,
 `COMPLAIN_COOLDOWN=1.5`.

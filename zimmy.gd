@@ -89,21 +89,37 @@ var random_pet_on := false
 var random_acc_on := false
 var random_timer := 0.0     # temporizador único compartilhado por pets e acessórios
 var show_accessories := true
+var show_status := false    # exibir as barrinhas de necessidade (padrão: desligado; persistido)
 
 # --- estado ---
 var happy := 70.0
 var hunger := 40.0
 
+# --- necessidades (barras Alimentar/Carinho/Brincar): 0..100, começam cheias a cada
+# abertura (não são persistidas). Caem 1 ponto a cada STAT_DECAY_PERIOD sem a ação. ---
+const STAT_MAX := 100.0
+const STAT_DECAY_PERIOD := 1800.0          # 30 min em segundos: -1 ponto por ciclo
+const COL_FEED := Color("ffffff")          # branco (Alimentar)
+const COL_PET := Color("f1c40f")           # amarelo (Carinho)
+const COL_PLAY := Color("e84365")          # rosa avermelhado (Brincar)
+const STATUS_FOOTER := 58.0                # altura (px) reservada abaixo do pet p/ as barras (quando Status ON)
+var stat_feed := STAT_MAX
+var stat_pet := STAT_MAX
+var stat_play := STAT_MAX
+var stat_decay_timer := 0.0
+
 # --- limite de interação: 1 ação/clique por segundo e a mesma ação no máx. 3x seguidas ---
 const ACTION_COOLDOWN := 1.0
 const MAX_REPEAT := 3
 const COMPLAIN_COOLDOWN := 1.5    # respiro entre reclamações (evita spam de fala)
+const REPEAT_RESET := 30.0        # após Ns sem repetir, a trava de 3x libera e reconta
 # Frases de mau humor quando insistem na mesma ação: repulsa / raiva / tristeza /
 # indiferença / descaso.
 var action_cd := 0.0
 var last_action := ""
 var action_repeats := 0
 var complain_cd := 0.0
+var repeat_reset_cd := 0.0        # conta p/ liberar a trava de repetições (REPEAT_RESET)
 
 # --- fila de avisos (automações/e-mails) ---
 const NOTIFY_GAP := 5.0     # segundos entre mensagens vindas de automações/e-mails
@@ -172,6 +188,7 @@ const MI_EMAIL := 12
 const MI_DEL_PET := 13
 const MI_DEL_ACC := 14
 const MI_LANG := 15
+const MI_STATUS := 16
 const LANG_PT := 1   # ids dos itens do submenu de idioma
 const LANG_EN := 2
 
@@ -187,6 +204,7 @@ const STRINGS := {
 	"mi_random":     {"pt": "🐶 Gerar pets",         "en": "🐶 Random pets"},
 	"mi_random_acc": {"pt": "🎲 Gerar acessórios",   "en": "🎲 Random accessories"},
 	"mi_show_acc":   {"pt": "👓 Mostrar acessórios", "en": "👓 Show accessories"},
+	"mi_status":     {"pt": "📊 Status",             "en": "📊 Status"},
 	"mi_save_pet":   {"pt": "💾 Salvar Pet...",      "en": "💾 Save Pet..."},
 	"mi_rename_pet": {"pt": "💾 Renomear Pet...",    "en": "💾 Rename Pet..."},
 	"mi_choose_pet": {"pt": "📂 Escolher pet",       "en": "📂 Choose pet"},
@@ -682,6 +700,8 @@ func _build_menu() -> void:
 	lang_menu.id_pressed.connect(_on_pick_language)
 
 	menu = PopupMenu.new()
+	menu.add_check_item(t("mi_status"), MI_STATUS)   # mesmo grupo de Alimentar/Carinho/Brincar
+	menu.set_item_checked(menu.get_item_index(MI_STATUS), show_status)
 	menu.add_item(t("mi_feed"), MI_FEED)
 	menu.add_item(t("mi_pet"), MI_PET)
 	menu.add_item(t("mi_play"), MI_PLAY)
@@ -735,6 +755,7 @@ func _apply_menu_labels() -> void:
 	menu.set_item_text(menu.get_item_index(MI_RANDOM), t("mi_random"))
 	menu.set_item_text(menu.get_item_index(MI_RANDOM_ACC), t("mi_random_acc"))
 	menu.set_item_text(menu.get_item_index(MI_SHOW_ACC), t("mi_show_acc"))
+	menu.set_item_text(menu.get_item_index(MI_STATUS), t("mi_status"))
 	menu.set_item_text(menu.get_item_index(MI_CHOOSE_PET), t("mi_choose_pet"))
 	menu.set_item_text(menu.get_item_index(MI_DEL_PET), t("mi_del_pet"))
 	menu.set_item_text(menu.get_item_index(MI_CHOOSE_ACC), t("mi_choose_acc"))
@@ -1364,6 +1385,7 @@ func _on_menu(id: int) -> void:
 		MI_RANDOM: _set_random_pet(not random_pet_on)
 		MI_RANDOM_ACC: _set_random_acc(not random_acc_on)
 		MI_SHOW_ACC: _set_show_accessories(not show_accessories)
+		MI_STATUS: _set_show_status(not show_status)
 		MI_SAVE_PET: _open_save_dialog("pet", "rename" if saved_pets.has(current_pet_name) else "save")
 		MI_SAVE_ACC: _open_save_dialog("acc", "rename" if saved_accessories.has(current_acc_name) else "save")
 		MI_QUIT: get_tree().quit()
@@ -1509,6 +1531,13 @@ func _set_show_accessories(on: bool) -> void:
 	show_accessories = on
 	menu.set_item_checked(menu.get_item_index(MI_SHOW_ACC), on)
 	_save_settings()   # persiste o estado de exibição de acessórios
+	queue_redraw()
+
+func _set_show_status(on: bool) -> void:
+	show_status = on
+	menu.set_item_checked(menu.get_item_index(MI_STATUS), on)
+	_save_settings()   # persiste o estado de exibição das barras
+	_relayout()        # adiciona/remove o rodapé das barras
 	queue_redraw()
 
 func _open_save_dialog(mode: String, action := "save") -> void:
@@ -1715,7 +1744,7 @@ func _save_settings() -> void:
 		f.store_string(JSON.stringify({
 			"anchor_x": anchor.x, "anchor_y": anchor.y,
 			"pet": current_pet_name, "acc": current_acc_name,
-			"show_acc": show_accessories, "lang": lang,
+			"show_acc": show_accessories, "lang": lang, "status": show_status,
 		}, "  "))
 		f.close()
 
@@ -1738,6 +1767,8 @@ func _load_selection() -> void:
 		lang = "en" if String(parsed["lang"]) == "en" else "pt"
 	if parsed.has("show_acc"):
 		show_accessories = bool(parsed["show_acc"])
+	if parsed.has("status"):
+		show_status = bool(parsed["status"])
 	if parsed.has("pet"):
 		var pn := String(parsed["pet"])
 		if pn == "Default":
@@ -1764,6 +1795,25 @@ func _process(delta: float) -> void:
 		action_cd -= delta
 	if complain_cd > 0.0:
 		complain_cd -= delta
+
+	# Trava de repetições: após REPEAT_RESET (30s) sem nova ação aceita, zera a
+	# contagem para a mesma ação voltar a funcionar (e recontar até 3).
+	if repeat_reset_cd > 0.0:
+		repeat_reset_cd -= delta
+		if repeat_reset_cd <= 0.0:
+			action_repeats = 0
+			last_action = ""
+
+	# Necessidades: a cada STAT_DECAY_PERIOD (30 min) cada barra perde 1 ponto. Quando
+	# as TRÊS chegam a zero, o Zimmy fecha a janela e encerra o processo.
+	stat_decay_timer += delta
+	if stat_decay_timer >= STAT_DECAY_PERIOD:
+		stat_decay_timer = 0.0
+		stat_feed = maxf(stat_feed - 1.0, 0.0)
+		stat_pet = maxf(stat_pet - 1.0, 0.0)
+		stat_play = maxf(stat_play - 1.0, 0.0)
+		if stat_feed <= 0.0 and stat_pet <= 0.0 and stat_play <= 0.0:
+			get_tree().quit()
 
 	# Fila de avisos de automações/e-mails: solta a próxima a cada NOTIFY_GAP e a
 	# mantém visível por NOTIFY_HOLD (5s) antes de sumir.
@@ -1854,7 +1904,11 @@ func _relayout() -> void:
 		win_w = PET_DRAW
 		speech.visible = false
 
-	win_h = int(top_space + float(PET_DRAW))
+	# Rodapé extra abaixo do pet para as barras de status (só quando ligado). O pet
+	# continua ancorado pelo seu centro-inferior; o rodapé "cresce para baixo".
+	var pet_bottom := top_space + float(PET_DRAW)
+	var footer := STATUS_FOOTER if show_status else 0.0
+	win_h = int(pet_bottom + footer)
 	pet_x = (float(win_w) - float(PET_DRAW)) * 0.5
 	pet_y = top_space
 
@@ -1863,7 +1917,9 @@ func _relayout() -> void:
 	speech.size = Vector2(float(win_w) - 2.0 * SPEECH_PAD_X, band)
 
 	get_window().size = Vector2i(win_w, win_h)
-	var pos := anchor - Vector2i(int(win_w / 2.0), win_h)
+	# `anchor` = centro-inferior do PET (não inclui o rodapé), p/ o pet não pular ao
+	# ligar/desligar o Status.
+	var pos := anchor - Vector2i(int(win_w / 2.0), int(pet_bottom))
 	pos.x = clampi(pos.x, scr.position.x, scr.position.x + scr.size.x - win_w)
 	pos.y = clampi(pos.y, scr.position.y, scr.position.y + scr.size.y - win_h)
 	get_window().position = pos
@@ -1994,11 +2050,11 @@ func _draw() -> void:
 	if c.get("whiskers", "none") != "none":
 		_draw_whiskers(c.get("whiskers"), o)
 
-	# Olhos / boca. Se há fala com emoji emotivo, o rosto espelha a emoção;
-	# senão, usa o rosto padrão (olhos seguindo o cursor + boca do config).
+	# Olhos / boca. Prioridade: fala com emoji emotivo > necessidade zerada > rosto padrão
+	# (olhos seguindo o cursor + boca do config).
 	var lx := 100.0 - eye_dx
 	var rx := 100.0 + eye_dx
-	var expr := expression if speech.text != "" else "neutral"
+	var expr := expression if speech.text != "" else _need_expression()
 	if expr != "neutral":
 		_draw_expression(expr, lx, rx, eye_y, eye_w, eye_h, o)
 	else:
@@ -2033,6 +2089,41 @@ func _draw() -> void:
 	if show_accessories:
 		_draw_accessories(o, eye_dx, eye_y, eye_w)
 
+	# Barras de necessidade (no rodapé — fixas, não acompanham o pulo). Só com Status ligado.
+	if show_status:
+		_draw_stat_bars()
+
+## Barras de necessidade (Alimentar/Carinho/Brincar) no **rodapé** abaixo do pet, em
+## pixels reais (transform identidade — não escala com PET_SCALE nem com o pulo). Só a
+## parte colorida representa a % (0..100), sem números. Ícone do menu à esquerda de cada
+## barra (🦴/🤚/🎾, ~2× o tamanho anterior), via fonte padrão (renderiza emojis coloridos).
+func _draw_stat_bars() -> void:
+	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)   # px reais, no rodapé
+	var font := speech.get_theme_font("font")
+	var top := pet_y + float(PET_DRAW) + 5.0             # início do rodapé (abaixo do pet)
+	var icon_fs := 17                                    # ~2× o ícone anterior
+	var row_h := 16.0
+	var bh := 8.0                                        # barra um pouco mais alta
+	# Largura amarrada ao PET (não à janela): o conjunto ícone+barra ocupa a largura do
+	# pet (PET_DRAW) e fica centralizado sob ele — não estica com o balão de fala.
+	var icon_w := 18.0
+	var gap := 4.0
+	var icon_x := pet_x                                  # alinhado à borda esquerda do pet
+	var bx := pet_x + icon_w + gap
+	var bw := float(PET_DRAW) - icon_w - gap            # barra preenche o resto da largura do pet
+	var rows := [[stat_feed, COL_FEED, "🦴"], [stat_pet, COL_PET, "🤚"], [stat_play, COL_PLAY, "🎾"]]
+	for i in rows.size():
+		var r = rows[i]
+		var val: float = clampf(r[0], 0.0, 100.0)
+		var col: Color = r[1]
+		var icon: String = r[2]
+		var ry := top + float(i) * row_h
+		var bar_y := ry + (row_h - bh) * 0.5
+		draw_string(font, Vector2(icon_x, ry + row_h - 3.0), icon, HORIZONTAL_ALIGNMENT_LEFT, -1.0, icon_fs)
+		draw_rect(Rect2(Vector2(bx, bar_y), Vector2(bw, bh)), Color(0, 0, 0, 0.18))   # trilho
+		if val > 0.0:
+			draw_rect(Rect2(Vector2(bx, bar_y), Vector2(bw * val / 100.0, bh)), col)  # preenchimento
+
 # --------------------------------------------------- boca / partes do rosto
 func _draw_mouth(style: String, o: Vector2) -> void:
 	match style:
@@ -2057,6 +2148,17 @@ func _draw_mouth(style: String, o: Vector2) -> void:
 			var ctrl_y := 124.0 if happy > 60.0 else (116.0 if happy > 30.0 else 108.0)
 			var mouth := _quad(Vector2(90, 112) + o, Vector2(100, ctrl_y) + o, Vector2(110, 112) + o, 14)
 			draw_polyline(mouth, INK, 2.5, true)
+
+## Rosto de "necessidade" quando uma barra zera (sem fala). Prioridade: fome > carente
+## > entediado. "neutral" = nenhuma zerada (rosto padrão segue o cursor).
+func _need_expression() -> String:
+	if stat_feed <= 0.0:
+		return "hungry"
+	if stat_pet <= 0.0:
+		return "needy"
+	if stat_play <= 0.0:
+		return "bored"
+	return "neutral"
 
 ## Desenha olhos + boca refletindo a emoção (espelha o emoji da fala).
 func _draw_expression(expr: String, lx: float, rx: float, eye_y: float, eye_w: float, eye_h: float, o: Vector2) -> void:
@@ -2117,6 +2219,33 @@ func _draw_expression(expr: String, lx: float, rx: float, eye_y: float, eye_w: f
 			draw_arc(lc, eye_w, 0.1, PI - 0.1, 12, INK, 2.2, true)
 			draw_arc(rc, eye_w, 0.1, PI - 0.1, 12, INK, 2.2, true)
 			draw_line(Vector2(96, 116) + o, Vector2(104, 116) + o, INK, 2.2, true)
+		"hungry":   # Alimentar = 0: cara de fome + boca aberta (com línguinha)
+			draw_line(lc + Vector2(-eye_w - 1.0, -2.0), lc + Vector2(eye_w, -eye_h), INK, 2.0, true)
+			draw_line(rc + Vector2(eye_w + 1.0, -2.0), rc + Vector2(-eye_w, -eye_h), INK, 2.0, true)
+			_ellipse(lc, Vector2(eye_w, eye_h), Color.WHITE)
+			_ellipse(rc, Vector2(eye_w, eye_h), Color.WHITE)
+			draw_circle(lc + Vector2(0.0, eye_h * 0.4), 4.0, INK)
+			draw_circle(rc + Vector2(0.0, eye_h * 0.4), 4.0, INK)
+			_ellipse(Vector2(100, 119) + o, Vector2(8, 8), INK)                  # boca bem aberta
+			_ellipse(Vector2(100, 123) + o, Vector2(4.5, 4.0), Color(0.85, 0.4, 0.45))  # língua
+		"needy":   # Carinho = 0: cara de necessitado + lágrimas (chorando)
+			draw_line(lc + Vector2(-eye_w - 1.0, -2.0), lc + Vector2(eye_w, -eye_h - 1.0), INK, 2.2, true)
+			draw_line(rc + Vector2(eye_w + 1.0, -2.0), rc + Vector2(-eye_w, -eye_h - 1.0), INK, 2.2, true)
+			_ellipse(lc, Vector2(eye_w, eye_h), Color.WHITE)
+			_ellipse(rc, Vector2(eye_w, eye_h), Color.WHITE)
+			draw_circle(lc + Vector2(0.0, eye_h * 0.4), 4.2, INK)
+			draw_circle(rc + Vector2(0.0, eye_h * 0.4), 4.2, INK)
+			var tear := Color(0.45, 0.7, 0.98, 0.9)                              # lágrimas (as duas)
+			_ellipse(lc + Vector2(-2.0, eye_h + 6.0), Vector2(2.6, 4.4), tear)
+			_ellipse(rc + Vector2(2.0, eye_h + 6.0), Vector2(2.6, 4.4), tear)
+			var nm := _quad(Vector2(91, 117) + o, Vector2(100, 109) + o, Vector2(109, 117) + o, 14)  # boca triste
+			draw_polyline(nm, INK, 2.4, true)
+		"bored":   # Brincar = 0: cara de chateado + olhos fechados (—) + boca reta
+			draw_line(lc + Vector2(-eye_w, 0.0), lc + Vector2(eye_w, 0.0), INK, 2.4, true)
+			draw_line(rc + Vector2(-eye_w, 0.0), rc + Vector2(eye_w, 0.0), INK, 2.4, true)
+			draw_line(lc + Vector2(-eye_w - 1.0, -eye_h - 2.0), lc + Vector2(eye_w, -eye_h - 1.0), INK, 1.8, true)  # sobrancelha caída
+			draw_line(rc + Vector2(eye_w + 1.0, -eye_h - 2.0), rc + Vector2(-eye_w, -eye_h - 1.0), INK, 1.8, true)
+			draw_line(Vector2(92, 117) + o, Vector2(108, 117) + o, INK, 2.4, true)
 
 func _draw_eyelashes(c: Vector2, ew: float, eh: float, dir: float) -> void:
 	# 3 traços curtos no canto externo-superior do olho.
@@ -2603,11 +2732,14 @@ func _input(event: InputEvent) -> void:
 		pos.x = clampi(pos.x, scr.position.x, scr.position.x + scr.size.x - win_w)
 		pos.y = clampi(pos.y, scr.position.y, scr.position.y + scr.size.y - win_h)
 		get_window().position = pos
-		anchor = pos + Vector2i(int(win_w / 2.0), win_h)
+		# anchor = centro-inferior do PET (desconta o rodapé das barras, se houver).
+		var footer := int(STATUS_FOOTER) if show_status else 0
+		anchor = pos + Vector2i(int(win_w / 2.0), win_h - footer)
 
 # ------------------------------------------------------------------ ações
 ## Libera uma interação respeitando dois limites: no máximo uma por segundo e a
-## mesma ação no máximo 3 vezes seguidas (uma ação diferente zera a contagem).
+## mesma ação no máximo 3 vezes seguidas (uma ação diferente zera a contagem). A trava
+## de 3x também **libera sozinha após REPEAT_RESET (30s)** sem repetir (ver _process).
 ## Se o usuário insistir na MESMA ação em menos de 1s, o pet reclama (mau humor).
 func _can_act(action: String) -> bool:
 	var same := action == last_action
@@ -2623,6 +2755,7 @@ func _can_act(action: String) -> bool:
 		last_action = action
 		action_repeats = 1
 	action_cd = ACTION_COOLDOWN
+	repeat_reset_cd = REPEAT_RESET # cada ação aceita reinicia a janela de 30s
 	return true
 
 ## Pet demonstra repulsa/raiva/tristeza/indiferença e perde um pouco de humor.
@@ -2637,6 +2770,7 @@ func _complain() -> void:
 func feed() -> void:
 	if not _can_act("feed"):
 		return
+	stat_feed = STAT_MAX          # enche a barra de Alimentar
 	hunger = clampf(hunger - 25.0, 0.0, 100.0)
 	happy = clampf(happy + 8.0, 0.0, 100.0)
 	say(ta("feed").pick_random())
@@ -2645,6 +2779,7 @@ func feed() -> void:
 func pet() -> void:
 	if not _can_act("pet"):
 		return
+	stat_pet = STAT_MAX           # enche a barra de Carinho
 	happy = clampf(happy + 15.0, 0.0, 100.0)
 	say(ta("pet_react").pick_random())
 	hop(220.0)
@@ -2652,6 +2787,7 @@ func pet() -> void:
 func play() -> void:
 	if not _can_act("play"):
 		return
+	stat_play = STAT_MAX          # enche a barra de Brincar
 	happy = clampf(happy + 12.0, 0.0, 100.0)
 	hunger = clampf(hunger + 10.0, 0.0, 100.0)
 	say(ta("play").pick_random())

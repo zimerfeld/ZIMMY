@@ -23,7 +23,8 @@ candidate to the edges.
 
 ## Items and ids (`MI_*`) — see [[Entrada - Itens do Menu (EN)]]
 ```
-🦴 Feed (0)   🤚 Pet (1)   🎾 Play (2)
+📊 Status (16, check, OFF default, persisted) → shows/hides the bars
+🦴 Feed (0)   🤚 Pet (1)   🎾 Play (2)   ← same group (no separator)
 ──
 🎲 Generate pets (3, check)
 🎲 Generate accessories (10, check)

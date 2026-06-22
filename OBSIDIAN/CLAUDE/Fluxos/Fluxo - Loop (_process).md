@@ -18,6 +18,11 @@ atualizado: 2026-06-20
 7. **Agendador de automações** — `_tick_schedules(delta)` dispara as automações
    agendadas ligadas conforme a frequência ([[Sistema - Menu de Contexto]]).
 8. **Necessidades** — `hunger` sobe; se >70, `happy` cai.
-9. **Limpa a fala** — ao expirar `speech_clear`, limpa e `_relayout()`
-   ([[Sistema - Balão de Fala]]).
-10. **`queue_redraw()`** — agenda o [[Sistema - Render (_draw)]].
+9. **Barras de necessidade** — `stat_decay_timer`; a cada `STAT_DECAY_PERIOD=1800s`
+   (30 min) cada barra (`stat_feed`/`stat_pet`/`stat_play`) cai 1; com as três em 0,
+   `get_tree().quit()` ([[Sistema - Necessidades]]).
+10. **Trava de repetições** — `repeat_reset_cd` (libera a trava de 3x após 30s; ver
+    [[Sistema - Interação e Mau Humor]]).
+11. **Limpa a fala** — ao expirar `speech_clear`, limpa e `_relayout()`
+    ([[Sistema - Balão de Fala]]).
+12. **`queue_redraw()`** — agenda o [[Sistema - Render (_draw)]].

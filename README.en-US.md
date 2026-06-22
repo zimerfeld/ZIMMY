@@ -4,6 +4,20 @@
   <img src="icon.png" alt="Zimmy — the default pet" width="180">
 </p>
 
+<p align="center">
+  <a href="https://github.com/sponsors/zimerfeld"><img src="https://img.shields.io/badge/Sponsor-zimerfeld-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsor"></a>
+  &nbsp;&nbsp;
+  <a href="https://ko-fi.com/C0D621FCGD"><img src="https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FF5E2B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/zimerfeld/ZIMMY/stargazers"><img src="https://img.shields.io/github/stars/zimerfeld/ZIMMY?style=for-the-badge&logo=github" alt="GitHub stars"></a>
+  &nbsp;
+  <a href="https://github.com/zimerfeld/ZIMMY/releases"><img src="https://img.shields.io/github/downloads/zimerfeld/ZIMMY/total?style=for-the-badge&logo=github&label=Downloads" alt="GitHub downloads"></a>
+</p>
+
+> Zimmy is built and maintained in my free time. If this little desktop pet makes you smile, a sponsorship helps keep it updated. 💜
+
 > The default pet (the procedural face from `_draw()`, the same drawing used for the icon).
 
 Desktop pet overlay, made in Godot 4.6.
@@ -78,6 +92,8 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 > right → left → below → above), so as to **not cover the pet** and **not go past the
 > screen edges**. If no side fits, it is fitted within the visible area.
 
+- **📊 Status** (check) — toggles the **status bars** below the pet (Feed/Pet/Play). It is
+  **off by default**; the choice is **persisted** in `user://settings.json` (`status` key).
 - **🦴 Feed / 🤚 Pet / 🎾 Play** — interactions that change mood/hunger.
 - **🐶 Random pets** (check) — toggles continuous generation **of the pet**: every ~10 s
   Zimmy turns into a random pet. Besides colors, it varies the **shapes** and which
@@ -140,6 +156,19 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   the pet's speech) between **Português (Brasil)** and **English (US)**. The switch is
   immediate and the option stays marked (✓). See **Language** below.
 - **Quit**.
+
+## Needs (status bars)
+
+Three **colored bars** below the pet show the **Feed / Pet / Play** needs (white / yellow
+/ pink), each with its **menu icon on the left** (🦴 / 🤚 / 🎾) and from 0 to 100% — just
+the colored fill, no numbers. They are shown only when **📊 Status** is on (off by
+default, persisted). The values start **full (100%)** on every launch and are **not**
+persisted.
+
+Each bar **drops 1 point every 30 minutes**; doing the matching action (Feed/Pet/Play)
+refills its bar to 100%. When a bar hits **0**, the pet shows a face: **Feed = hungry,
+mouth open**; **Pet = needy, crying**; **Play = bored, eyes closed**. When **all three**
+reach 0, Zimmy **closes its own window and ends the process**.
 
 ## Language
 

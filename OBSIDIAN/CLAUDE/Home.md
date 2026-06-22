@@ -1,7 +1,7 @@
 ---
 tags: [moc, zimmy-pet]
 aliases: [Início, MOC, Mapa]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 🧡 Zimmy Pet — Cofre de Neurônios
@@ -13,6 +13,12 @@ atualizado: 2026-06-20
 Desktop pet overlay: uma janela transparente, sem bordas e sempre no topo, com uma
 carinha procedural (a "Zimmy") que respira, pisca, pula, segue o cursor e reage a
 interações. Tudo é desenhado em código (`_draw()`), sem sprites.
+
+## 💜 Financiamento / Patrocínio
+Canais de doação configurados no repositório (badges no topo do README + botão **Sponsor**):
+- **GitHub Sponsors:** [zimerfeld](https://github.com/sponsors/zimerfeld) · **Ko-fi:** [C0D621FCGD ☕](https://ko-fi.com/C0D621FCGD)
+- **`.github/FUNDING.yml`:** criado com `github: zimerfeld` e `ko_fi: C0D621FCGD`.
+- **Prova social no README:** badges de **stars** e **downloads de releases** do GitHub (`shields.io/github/stars` e `/downloads/.../total`) + frase curta de "por que doar" (mantido no tempo livre). Como o projeto não vai pro NuGet, a métrica pública é o GitHub (não há badge de pacote).
 
 ## 🧠 Como usar este cofre
 Veja [[_Memória do Claude]] para a convenção de notas, links e atualização.
@@ -26,6 +32,7 @@ Veja [[_Memória do Claude]] para a convenção de notas, links e atualização.
 - [[Sistema - Expressões Faciais]] — rosto espelha o emoji falado
 - [[Sistema - Balão de Fala]] — `say()` + `_relayout()`
 - [[Sistema - Interação e Mau Humor]] — cooldown, limite de repetição, reclamações
+- [[Sistema - Necessidades]] — barras Alimentar/Carinho/Brincar, decaimento, fechamento
 - [[Sistema - Persistência]] — `user://` JSON (pets, acessórios, posição)
 - [[Sistema - Menu de Contexto]] — PopupMenu, submenus, diálogos
 

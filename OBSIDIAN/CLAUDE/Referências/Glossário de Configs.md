@@ -79,8 +79,9 @@ Categorias geométricas extras (todas com `none` quando ausentes):
 
 ## Settings (`user://settings.json`)
 `{ "anchor_x": int, "anchor_y": int, "pet": str, "acc": str, "show_acc": bool,
-"lang": "pt"|"en" }` — âncora (centro-inferior) da última posição **+ escolha ativa** de
-pet/acessório, estado de exibição de acessórios e **idioma da UI**. Ver
+"lang": "pt"|"en", "status": bool }` — âncora (centro-inferior) da última posição
+**+ escolha ativa** de pet/acessório, exibição de acessórios, **idioma da UI** e
+exibição das **barras de status** (`status`, OFF por padrão). Ver
 [[Sistema - Persistência]].
 
 ## i18n (`STRINGS` / `STRING_LISTS`)

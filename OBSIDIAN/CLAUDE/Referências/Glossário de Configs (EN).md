@@ -79,8 +79,9 @@ Extra geometric categories (all `none` when absent):
 
 ## Settings (`user://settings.json`)
 `{ "anchor_x": int, "anchor_y": int, "pet": str, "acc": str, "show_acc": bool,
-"lang": "pt"|"en" }` — anchor (bottom-center) of the last position **plus the active choice** of
-pet/accessory, the accessory display state and the **UI language**. See
+"lang": "pt"|"en", "status": bool }` — anchor (bottom-center) of the last position
+**plus the active choice** of pet/accessory, accessory display, the **UI language** and the
+**status bars** display (`status`, OFF by default). See
 [[Sistema - Persistência (EN)]].
 
 ## i18n (`STRINGS` / `STRING_LISTS`)

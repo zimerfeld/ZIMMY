@@ -21,7 +21,8 @@ pet** (`!intersects`). Sem encaixe perfeito, clampa o candidato da direita às b
 
 ## Itens e ids (`MI_*`) — ver [[Entrada - Itens do Menu]]
 ```
-🦴 Alimentar (0)   🤚 Carinho (1)   🎾 Brincar (2)
+📊 Status (16, check, OFF padrão, persistido) → mostra/oculta as barras
+🦴 Alimentar (0)   🤚 Carinho (1)   🎾 Brincar (2)   ← mesmo grupo (sem separador)
 ──
 🐶 Gerar pets (3, check)
 🎲 Gerar acessórios (10, check)

@@ -1,7 +1,7 @@
 ---
 tags: [moc, zimmy-pet]
 aliases: [Início, MOC, Mapa]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 lang: en
 ---
 
@@ -15,6 +15,12 @@ Desktop pet overlay: a transparent, borderless, always-on-top window with a
 procedural face (the "Zimmy") that breathes, blinks, hops, follows the cursor and reacts to
 interactions. Everything is drawn in code (`_draw()`), with no sprites.
 
+## 💜 Funding / Sponsorship
+Donation channels configured in the repository (badges at the top of the README + **Sponsor** button):
+- **GitHub Sponsors:** [zimerfeld](https://github.com/sponsors/zimerfeld) · **Ko-fi:** [C0D621FCGD ☕](https://ko-fi.com/C0D621FCGD)
+- **`.github/FUNDING.yml`:** created with `github: zimerfeld` and `ko_fi: C0D621FCGD`.
+- **Social proof in the README:** GitHub **stars** and release **downloads** badges (`shields.io/github/stars` and `/downloads/.../total`) + a short "why donate" line (maintained in free time). The project is not published on NuGet, so the public metric is GitHub (no package badge).
+
 ## 🧠 How to use this vault
 See [[_Memória do Claude (EN)]] for the convention on notes, links and updates.
 
@@ -27,6 +33,7 @@ See [[_Memória do Claude (EN)]] for the convention on notes, links and updates.
 - [[Sistema - Expressões Faciais (EN)]] — face mirrors the spoken emoji
 - [[Sistema - Balão de Fala (EN)]] — `say()` + `_relayout()`
 - [[Sistema - Interação e Mau Humor (EN)]] — cooldown, repeat limit, complaints
+- [[Sistema - Necessidades (EN)]] — Feed/Pet/Play bars, decay, shutdown
 - [[Sistema - Persistência (EN)]] — `user://` JSON (pets, accessories, position)
 - [[Sistema - Menu de Contexto (EN)]] — PopupMenu, submenus, dialogs
 

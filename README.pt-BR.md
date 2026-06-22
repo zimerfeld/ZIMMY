@@ -4,6 +4,20 @@
   <img src="icon.png" alt="Zimmy — o pet Default" width="180">
 </p>
 
+<p align="center">
+  <a href="https://github.com/sponsors/zimerfeld"><img src="https://img.shields.io/badge/Sponsor-zimerfeld-EA4AAA?style=for-the-badge&logo=githubsponsors&logoColor=white" alt="GitHub Sponsor"></a>
+  &nbsp;&nbsp;
+  <a href="https://ko-fi.com/C0D621FCGD"><img src="https://img.shields.io/badge/Ko--fi-Buy%20me%20a%20coffee-FF5E2B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Ko-fi"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/zimerfeld/ZIMMY/stargazers"><img src="https://img.shields.io/github/stars/zimerfeld/ZIMMY?style=for-the-badge&logo=github" alt="GitHub stars"></a>
+  &nbsp;
+  <a href="https://github.com/zimerfeld/ZIMMY/releases"><img src="https://img.shields.io/github/downloads/zimerfeld/ZIMMY/total?style=for-the-badge&logo=github&label=Downloads" alt="GitHub downloads"></a>
+</p>
+
+> O Zimmy é construído e mantido no meu tempo livre. Se este petzinho de desktop te arranca um sorriso, um patrocínio ajuda a mantê-lo atualizado. 💜
+
 > O pet Default (a carinha procedural do `_draw()`, o mesmo desenho usado no ícone).
 
 Desktop pet overlay, feito em Godot 4.6.
@@ -78,6 +92,9 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 > esquerda → abaixo → acima), de forma a **não cobrir o pet** e **não ultrapassar as
 > bordas da tela**. Se nenhum lado couber, ele é encaixado dentro da área visível.
 
+- **📊 Status** (check) — liga/desliga as **barras de status** abaixo do pet
+  (Alimentar/Carinho/Brincar). Vem **desligado** por padrão; a escolha é **persistida** em
+  `user://settings.json` (chave `status`).
 - **🦴 Alimentar / 🤚 Carinho / 🎾 Brincar** — interações que mudam humor/fome.
 - **🐶 Gerar pets** (check) — liga/desliga a geração contínua **do pet**: a cada ~10 s o
   Zimmy vira um pet aleatório. Além das cores, varia as **formas** e quais
@@ -139,6 +156,20 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   as falas do pet) entre **Português (Brasil)** e **English (US)**. A troca é imediata e
   a opção fica marcada (✓). Ver **Idioma** abaixo.
 - **Sair**.
+
+## Necessidades (barras de status)
+
+Três **barrinhas coloridas** abaixo do pet mostram as necessidades de **Alimentar /
+Carinho / Brincar** (branco / amarelo / rosa), cada uma com o **ícone do menu à esquerda**
+(🦴 / 🤚 / 🎾) e de 0 a 100% — só o preenchimento colorido, sem números. Só aparecem com
+**📊 Status** ligado (desligado por padrão, persistido). Os valores começam **cheios
+(100%)** a cada abertura e **não** são persistidos.
+
+Cada barra **perde 1 ponto a cada 30 minutos**; fazer a ação correspondente
+(Alimentar/Carinho/Brincar) reabastece a barra para 100%. Quando uma barra chega a **0**,
+o pet faz uma cara: **Alimentar = fome, boca aberta**; **Carinho = necessitado, chorando**;
+**Brincar = chateado, olhos fechados**. Quando **as três** chegam a 0, o Zimmy **fecha a
+própria janela e encerra o processo**.
 
 ## Idioma
 

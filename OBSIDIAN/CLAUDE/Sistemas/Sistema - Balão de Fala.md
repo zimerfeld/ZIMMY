@@ -28,8 +28,9 @@ um `SystemFont` faria o texto sumir).
 - Constantes: `SPEECH_PAD_X=18`, `SPEECH_PAD_Y=7`, `SPEECH_GAP=4`.
 
 ## Quem fala
-Saudação inicial; ações (`feed/pet/play/_react`); geração/seleção de pets e
-acessórios; salvar/erros; reclamações de mau humor
+Saudação inicial (`t("hello") % nome` — usa o **nome do pet salvo ativo**
+`current_pet_name`, ou "Zimmy" se for Default/aleatório); ações (`feed/pet/play/_react`);
+geração/seleção de pets e acessórios; salvar/erros; reclamações de mau humor
 ([[Sistema - Interação e Mau Humor]], lista `mood_neg`); e as **automações/e-mails** (via
 `notify()`, com espaçamento de 5s).
 

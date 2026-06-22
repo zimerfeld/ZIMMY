@@ -29,8 +29,9 @@ renderer — a `SystemFont` would make the text disappear).
 - Constants: `SPEECH_PAD_X=18`, `SPEECH_PAD_Y=7`, `SPEECH_GAP=4`.
 
 ## Who speaks
-Initial greeting; actions (`feed/pet/play/_react`); pet and accessory
-generation/selection; saving/errors; bad-mood complaints
+Initial greeting (`t("hello") % name` — uses the **active saved pet name**
+`current_pet_name`, or "Zimmy" if Default/random); actions (`feed/pet/play/_react`); pet
+and accessory generation/selection; saving/errors; bad-mood complaints
 ([[Sistema - Interação e Mau Humor (EN)]], list `mood_neg`); and the **automations/
 e-mails** (via `notify()`, spaced 5s apart).
 

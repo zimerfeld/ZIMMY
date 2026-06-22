@@ -12,10 +12,12 @@ Pets e acessórios são salvos/carregados **independentemente**. Ver
 1. Menu "💾 Salvar Pet..." ou "🎀 Salvar Acessório..." → `_open_save_dialog(mode, "save")`.
 2. `_open_save_dialog` **congela só a geração do tipo sendo salvo** (`_set_random_pet`
    ou `_set_random_acc` `(false)`), ajusta título/placeholder conforme `save_mode`,
-   centraliza e abre o diálogo.
+   **pré-preenche** a caixa com o nome sugerido do item gerado
+   (`suggested_pet_name`/`suggested_acc_name`, selecionado p/ trocar fácil), centraliza e
+   abre o diálogo. Ver [[Fluxo - Geração Aleatória]].
 3. Confirmar → `_on_save_confirmed`:
    - valida nome (rejeita vazio, `Default`, `Selecione...`, `Nenhum`);
-   - `pet`: **`_set_random_pet(false)`** (desmarca "🎲 Gerar pets"),
+   - `pet`: **`_set_random_pet(false)`** (desmarca "🐶 Gerar pets"),
      `saved_pets[nm] = current.duplicate(true)`, `current_pet_name = nm` (vira o ativo →
      item passa a "Renomear") → `_save_pets_to_disk` → `_rebuild_pets_menu` →
      `_save_settings`;

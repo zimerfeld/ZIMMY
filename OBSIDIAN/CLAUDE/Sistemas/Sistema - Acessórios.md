@@ -11,19 +11,21 @@ pet com qualquer acessório.
 
 ## Tipos (esquema em [[Glossário de Configs]])
 Originais:
-- `hat`: none | beanie | tophat | crown | cap
-- `glasses`: none | round | square | star
+- `hat`: none | beanie | tophat | crown | cap | wizard
+- `glasses`: none | round | square | star | heart | sunglasses
 - `bow`: none | head | neck
 - `scarf`: none | present
 
-Categorias extras (≈12, sorteadas **de forma independente**, cada uma com cor própria):
+Categorias extras (≈14, sorteadas **de forma independente**, cada uma com cor própria):
 - `necklace` (pearls/pendant), `earrings` (studs/hoops), `collar` (plain/bell),
   `headphones` (present), `monocle` (present), `mustache` (curly/thin),
   `flower` (present), `badge` (star/heart), `tie` (necktie/bowtie), `sash` (present),
-  `mask` (medical/ninja), `cheek_sticker` (star/heart).
+  `mask` (medical/ninja), `cheek_sticker` (star/heart), `belt` (plain/buckle),
+  `backpack` (present).
 - Cores em `ACC_COLOR_KEYS`: as 4 originais + `necklace_color`, `earring_color`,
   `collar_color`, `headphone_color`, `monocle_color`, `mustache_color`, `flower_color`,
-  `badge_color`, `tie_color`, `sash_color`, `mask_color`, `sticker_color`.
+  `badge_color`, `tie_color`, `sash_color`, `mask_color`, `sticker_color`, `belt_color`,
+  `backpack_color`.
 
 ## Funções
 - `_default_acc()` — tudo `none` (o Default não veste nada).

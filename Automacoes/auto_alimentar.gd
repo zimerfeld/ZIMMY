@@ -10,6 +10,7 @@
 extends RefCounted
 
 const AUTOMATION_NAME := "Auto-alimentar 🦴"
+const AUTOMATION_NAME_EN := "Auto-feed 🦴"
 const SCHEDULE := "20s"          # com que frequência checar a fome
 
 func run(zimmy) -> void:
@@ -17,5 +18,5 @@ func run(zimmy) -> void:
 	if zimmy.hunger > 55.0:
 		zimmy.hunger = max(zimmy.hunger - 25.0, 0.0)
 		zimmy.happy = min(zimmy.happy + 6.0, 100.0)
-		zimmy.say("auto-refeição 🦴😋")
+		zimmy.notify(zimmy.lang_text("auto-refeição 🦴😋", "auto-snack 🦴😋"))
 		zimmy.hop()

@@ -43,13 +43,13 @@ const ACC_FILE := "user://accessories.json"
 const SETTINGS_FILE := "user://settings.json"   # guarda a última posição na tela
 const SCHEDULES_FILE := "user://schedules.json" # quais automações agendadas estão ligadas
 const AUTOMACOES_DIR := "res://Automacoes/"   # scripts de automação (drop-in) — ver Automacoes/LEIAME.md
-const RANDOM_PERIOD := 9.0  # segundos entre pets aleatórios (quando ligado)
+const RANDOM_PERIOD := 10.0  # segundos entre gerações aleatórias de pets/acessórios (quando ligado)
 const PET_COLOR_KEYS := ["body_color", "belly_color", "ear_color", "cheek_color",
 	"antenna_color", "nose_color", "horn_color"]
 const ACC_COLOR_KEYS := ["hat_color", "glasses_color", "bow_color", "scarf_color",
 	"necklace_color", "earring_color", "collar_color", "headphone_color",
 	"monocle_color", "mustache_color", "flower_color", "badge_color", "tie_color",
-	"sash_color", "mask_color", "sticker_color"]
+	"sash_color", "mask_color", "sticker_color", "belt_color", "backpack_color"]
 
 var current: Dictionary = {}        # config do pet exibido agora
 var current_acc: Dictionary = {}    # config do acessório exibido agora
@@ -76,6 +76,7 @@ var automation_item_menu: Dictionary = {} # id do item -> PopupMenu onde ele est
 var _icon_cache: Dictionary = {}         # hex -> ImageTexture (ícones de provedor)
 # --- credenciais (diálogo + estado) ---
 const CRED_PREFIX := "user://cred_"      # arquivo por automação: user://cred_<key>.json (gitignored)
+const CRED_SALT := "zimmy-cred-v1"       # salt p/ derivar a chave de criptografia das credenciais
 var cred_dialog: ConfirmationDialog
 var cred_user_edit: LineEdit
 var cred_pass_edit: LineEdit
@@ -86,8 +87,7 @@ var cred_pending_cb := Callable()        # callback a chamar com {user, pass} ao
 var cred_prompt_suppressed: Dictionary = {} # chaves cujo prompt o usuário cancelou (não insistir)
 var random_pet_on := false
 var random_acc_on := false
-var random_pet_timer := 0.0
-var random_acc_timer := 0.0
+var random_timer := 0.0     # temporizador único compartilhado por pets e acessórios
 var show_accessories := true
 
 # --- estado ---
@@ -104,6 +104,12 @@ var action_cd := 0.0
 var last_action := ""
 var action_repeats := 0
 var complain_cd := 0.0
+
+# --- fila de avisos (automações/e-mails) ---
+const NOTIFY_GAP := 5.0     # segundos entre mensagens vindas de automações/e-mails
+const NOTIFY_HOLD := 5.0    # segundos que a mensagem de automação/e-mail fica visível
+var notify_queue: Array[String] = []
+var notify_cd := 0.0
 
 # --- animação ---
 var bob := 0.0          # respiração (seno)
@@ -143,6 +149,8 @@ var save_dialog: ConfirmationDialog
 var name_edit: LineEdit
 var save_mode := "pet"      # "pet" ou "acc" — o que o diálogo de salvar grava
 var save_action := "save"   # "save" (novo) ou "rename" (renomear um item já salvo)
+var suggested_pet_name := ""    # nome sugerido p/ o pet gerado (pré-preenche o diálogo)
+var suggested_acc_name := ""    # nome sugerido p/ o acessório gerado
 var delete_dialog: ConfirmationDialog
 var delete_mode := "pet"    # "pet" ou "acc" — o que o diálogo de exclusão remove
 var delete_name := ""       # nome do item pendente de exclusão
@@ -176,7 +184,7 @@ const STRINGS := {
 	"mi_feed":       {"pt": "🦴 Alimentar",          "en": "🦴 Feed"},
 	"mi_pet":        {"pt": "🤚 Carinho",            "en": "🤚 Pet"},
 	"mi_play":       {"pt": "🎾 Brincar",            "en": "🎾 Play"},
-	"mi_random":     {"pt": "🎲 Gerar pets",         "en": "🎲 Random pets"},
+	"mi_random":     {"pt": "🐶 Gerar pets",         "en": "🐶 Random pets"},
 	"mi_random_acc": {"pt": "🎲 Gerar acessórios",   "en": "🎲 Random accessories"},
 	"mi_show_acc":   {"pt": "👓 Mostrar acessórios", "en": "👓 Show accessories"},
 	"mi_save_pet":   {"pt": "💾 Salvar Pet...",      "en": "💾 Save Pet..."},
@@ -233,6 +241,9 @@ const STRINGS := {
 	"acc_deleted":    {"pt": "acessório excluído: %s 🗑️","en": "accessory deleted: %s 🗑️"},
 	"new_pet":        {"pt": "novo pet! 🎲",         "en": "new pet! 🎲"},
 	"new_acc":        {"pt": "novos acessórios! 🎲", "en": "new accessories! 🎲"},
+	"welcome_pet":    {"pt": "bem-vindo, %s! 🎉",    "en": "welcome, %s! 🎉"},
+	"congrats_acc":   {"pt": "parabéns pelo novo visual, %s! 🎉",
+		"en": "congrats on the new look, %s! 🎉"},
 	"name_invalid":   {"pt": "nome inválido 🙈",     "en": "invalid name 🙈"},
 	"pet_saved":      {"pt": "pet salvo: %s 💾",     "en": "pet saved: %s 💾"},
 	"acc_saved":      {"pt": "acessório salvo: %s 🎀","en": "accessory saved: %s 🎀"},
@@ -279,6 +290,51 @@ const STRING_LISTS := {
 		"pt": ["yupiii! 🎾", "de novo!", "tô voando! 🚀"],
 		"en": ["yippee! 🎾", "again!", "I'm flying! 🚀"],
 	},
+	# --- bancos para nomes COMBINATÓRIOS (substantivo + adjetivo) ---
+	# Os adjetivos pt são propositalmente invariáveis em gênero (terminam em -e/-l/-z/
+	# -ante/-ar...), p/ combinar com qualquer substantivo sem erro de concordância.
+	# Ordem montada em _suggest_name: pt = "Substantivo Adjetivo"; en = "Adjective Noun".
+	# 30×30 ≈ 900 combinações por categoria/idioma.
+	"pet_nouns": {
+		"pt": ["Mel", "Nuvem", "Biscoito", "Pipoca", "Estrela", "Trovão", "Amora", "Faísca",
+			"Brisa", "Cacau", "Lua", "Pingo", "Algodão", "Cometa", "Caramelo", "Trufa", "Pudim",
+			"Brigadeiro", "Confete", "Pétala", "Floco", "Raio", "Botão", "Bolacha", "Abóbora",
+			"Pêssego", "Avelã", "Geleia", "Néctar", "Sol"],
+		"en": ["Honey", "Cloud", "Cookie", "Popcorn", "Star", "Thunder", "Berry", "Pebble",
+			"Spark", "Breeze", "Cocoa", "Luna", "Pip", "Mochi", "Waffle", "Maple", "Pumpkin",
+			"Biscuit", "Noodle", "Marble", "Pixel", "Comet", "Nugget", "Button", "Pickle",
+			"Muffin", "Sprout", "Bean", "Peach", "Dot"],
+	},
+	"pet_adjs": {
+		"pt": ["Alegre", "Doce", "Saltitante", "Brilhante", "Radiante", "Veloz", "Feliz",
+			"Gentil", "Nobre", "Forte", "Elegante", "Vibrante", "Cintilante", "Reluzente",
+			"Valente", "Estelar", "Lunar", "Solar", "Celeste", "Sutil", "Ágil", "Jovial",
+			"Leal", "Audaz", "Sagaz", "Faiscante", "Fascinante", "Genial", "Fugaz", "Astral"],
+		"en": ["Fluffy", "Cheeky", "Sleepy", "Bouncy", "Sunny", "Cozy", "Tiny", "Brave",
+			"Merry", "Snuggly", "Dreamy", "Peppy", "Jolly", "Spunky", "Witty", "Cuddly",
+			"Zippy", "Goofy", "Plucky", "Dapper", "Breezy", "Sparky", "Mellow", "Bubbly",
+			"Chirpy", "Frisky", "Nimble", "Quirky", "Wobbly", "Perky"],
+	},
+	"acc_nouns": {
+		"pt": ["Charme", "Gala", "Visual", "Estilo", "Brilho", "Pose", "Toque", "Glamour",
+			"Luxo", "Pompa", "Encanto", "Acabamento", "Traje", "Conjunto", "Aura", "Realce",
+			"Detalhe", "Requinte", "Esplendor", "Fulgor", "Lustre", "Adorno", "Verniz", "Porte",
+			"Capricho", "Garbo", "Apuro", "Esmero", "Trato", "Floreio"],
+		"en": ["Charm", "Gala", "Look", "Style", "Flair", "Shine", "Pose", "Vibe", "Glow",
+			"Touch", "Trim", "Accent", "Ensemble", "Outfit", "Getup", "Garb", "Attire",
+			"Finish", "Sheen", "Luster", "Motif", "Combo", "Set", "Aura", "Drip", "Fit",
+			"Statement", "Edit", "Polish", "Grace"],
+	},
+	"acc_adjs": {
+		"pt": ["Elegante", "Radiante", "Brilhante", "Real", "Estelar", "Vibrante", "Cintilante",
+			"Reluzente", "Nobre", "Sutil", "Chique", "Singular", "Faiscante", "Fascinante",
+			"Jovial", "Celeste", "Astral", "Solar", "Lunar", "Imperial", "Sideral", "Floral",
+			"Polar", "Especial", "Triunfal", "Magistral", "Colossal", "Genial", "Fenomenal", "Original"],
+		"en": ["Stylish", "Fancy", "Dapper", "Elegant", "Chic", "Deluxe", "Royal", "Shiny",
+			"Sleek", "Classy", "Glam", "Posh", "Snazzy", "Swanky", "Dashing", "Polished",
+			"Refined", "Vivid", "Bold", "Festive", "Regal", "Trendy", "Glossy", "Charming",
+			"Suave", "Slick", "Spiffy", "Ritzy", "Plush", "Lavish"],
+	},
 }
 
 ## Texto traduzido para o idioma atual (cai no pt, depois na própria chave, se faltar).
@@ -290,6 +346,45 @@ func t(key: String) -> String:
 func ta(key: String) -> Array:
 	var e: Dictionary = STRING_LISTS.get(key, {})
 	return e.get(lang, e.get("pt", []))
+
+# --- helpers de idioma/locale para as automações (Automacoes/*.gd) ---
+## Escolhe entre dois textos conforme o idioma atual. As automações usam isto para
+## falas bilíngues sem precisar de tabela própria: zimmy.lang_text("pt...", "en...").
+func lang_text(pt_text: String, en_text: String) -> String:
+	return en_text if lang == "en" else pt_text
+
+## Formata um número com N casas, usando o separador decimal do idioma
+## (vírgula no pt-BR, ponto no en-US).
+func fmt_num(v: float, decimals := 2) -> String:
+	var s := String.num(v, decimals)
+	return s.replace(".", ",") if lang == "pt" else s
+
+## Formata uma variação percentual com sinal (+/-) e separador localizado.
+func fmt_pct(v: float) -> String:
+	var s := ("+" if v >= 0.0 else "") + String.num(v, 2)
+	if lang == "pt":
+		s = s.replace(".", ",")
+	return s + "%"
+
+## Valor em reais formatado (símbolo R$ + número localizado).
+func fmt_money_brl(v: float, decimals := 4) -> String:
+	return "R$ " + fmt_num(v, decimals)
+
+## Reformata a data "AAAA-MM-DD HH:MM:SS" da API para o formato do idioma:
+## pt-BR -> "DD/MM/AAAA HH:MM"; en-US -> "MM/DD/YYYY HH:MM". Vazio se não parsear.
+func fmt_quote_date(create_date: String) -> String:
+	var parts := create_date.strip_edges().split(" ")
+	if parts.size() < 2:
+		return create_date
+	var ymd := parts[0].split("-")
+	var hms := parts[1].split(":")
+	if ymd.size() < 3 or hms.size() < 2:
+		return create_date
+	var y := ymd[0]; var mo := ymd[1]; var da := ymd[2]
+	var hh := hms[0]; var mi := hms[1]
+	if lang == "en":
+		return "%s/%s/%s %s:%s" % [mo, da, y, hh, mi]
+	return "%s/%s/%s %s:%s" % [da, mo, y, hh, mi]
 
 # ------------------------------------------------------------------ config de pet
 ## Config do pet padrão (a carinha original do Zimmy). Sempre disponível.
@@ -323,6 +418,9 @@ func _default_cfg() -> Dictionary:
 		"whiskers": "none",
 		"wings": "none",
 		"freckles": "none",
+		"body_pattern": "none",
+		"muzzle": "none",
+		"critter": "none",
 	}
 
 ## Gera um pet aleatório com estética equilibrada e cores alegres.
@@ -356,7 +454,7 @@ func _random_cfg() -> Dictionary:
 	cheek.a = 0.55
 	# Nariz: destaque suave, legível sobre a barriga clara.
 	var nose := Color.from_hsv(accent_hue, randf_range(0.4, 0.6), randf_range(0.45, 0.65))
-	return {
+	var cfg := {
 		"body_color": body, "belly_color": belly, "ear_color": ear, "cheek_color": cheek,
 		"ear_dx": randf_range(28.0, 40.0), "ear_y": randf_range(68.0, 80.0),
 		"ear_w": randf_range(10.0, 18.0), "ear_h": randf_range(20.0, 32.0),
@@ -364,23 +462,23 @@ func _random_cfg() -> Dictionary:
 		"eye_w": randf_range(8.0, 12.0), "eye_h": randf_range(9.0, 14.0),
 		"body_w": randf_range(52.0, 62.0), "body_h": randf_range(50.0, 58.0),
 		"belly_w": randf_range(34.0, 44.0), "belly_h": randf_range(30.0, 38.0),
-		"body_shape": ["round", "round", "tall", "wide", "pear"].pick_random(),
+		"body_shape": ["round", "round", "tall", "wide", "pear", "chubby", "slim"].pick_random(),
 		"has_ears": randf() < 0.85,
-		"ear_shape": ["round", "pointy"].pick_random(),
+		"ear_shape": ["round", "pointy", "floppy"].pick_random(),
 		"has_antennae": randf() < 0.4,
 		"antenna_color": ear,
 		"has_cheeks": randf() < 0.7,
 		"has_nose": randf() < 0.6,
 		"nose_color": nose,
 		"has_eyelashes": randf() < 0.5,
-		"mouth_style": ["smile", "cat", "open", "line"].pick_random(),
+		"mouth_style": ["smile", "cat", "open", "line", "tongue", "fang"].pick_random(),
 		# --- categorias geométricas adicionais (sorteadas de forma independente) ---
 		"tail": ["none", "none", "curl", "puff", "stub"].pick_random(),
 		"horn": ["none", "none", "none", "unicorn", "devil", "antlers"].pick_random(),
 		"horn_color": Color.from_hsv(fposmod(hue + 0.12, 1.0), randf_range(0.2, 0.5), randf_range(0.9, 1.0)),
 		"hair_tuft": ["none", "none", "tuft", "cowlick", "mohawk"].pick_random(),
 		"eye_shape": ["round", "round", "oval", "tall", "sleepy"].pick_random(),
-		"pupil_style": ["round", "round", "big", "cat", "sparkle"].pick_random(),
+		"pupil_style": ["round", "round", "big", "cat", "sparkle", "heart"].pick_random(),
 		"eyebrow": ["none", "none", "none", "flat", "raised", "serious"].pick_random(),
 		"feet": ["none", "paws"].pick_random(),
 		"arms": ["none", "nubs"].pick_random(),
@@ -388,7 +486,68 @@ func _random_cfg() -> Dictionary:
 		"whiskers": ["none", "none", "short", "long"].pick_random(),
 		"wings": ["none", "none", "none", "small"].pick_random(),
 		"freckles": ["none", "freckles"].pick_random(),
+		"body_pattern": ["none", "none", "none", "spots", "stripes"].pick_random(),
+		"muzzle": ["none", "none", "round"].pick_random(),
+		"critter": "none",
 	}
+	# ~55% das vezes o pet vira um "bichinho" reconhecível (gato/cachorro/coelho/...);
+	# o resto continua sendo a criatura abstrata combinatória.
+	if randf() < 0.55:
+		var kind: String = CRITTERS.pick_random()
+		cfg["critter"] = kind
+		_apply_critter(cfg, kind)
+	return cfg
+
+## Arquétipos de bichinhos: bichos reconhecíveis por orelha/boca/bigode/cauda/proporção.
+## A cor segue o sorteio normal (um gato roxo é válido e fofo); só a FORMA define o bicho.
+const CRITTERS := ["cat", "dog", "bunny", "bear", "frog", "fox", "mouse", "pig"]
+
+## Ajusta as chaves geométricas de `cfg` para parecer o bicho `kind` (modifica in-place).
+func _apply_critter(cfg: Dictionary, kind: String) -> void:
+	# Base limpa: tira os adereços "fantasia" para o bicho ler claro.
+	cfg["has_antennae"] = false
+	cfg["horn"] = "none"
+	cfg["hair_tuft"] = "none"
+	cfg["wings"] = "none"
+	cfg["eyebrow"] = "none"
+	cfg["has_ears"] = true
+	cfg["has_cheeks"] = true
+	match kind:
+		"cat":
+			cfg["ear_shape"] = "pointy"; cfg["ear_w"] = 13.0; cfg["ear_h"] = 28.0; cfg["ear_dx"] = 30.0
+			cfg["mouth_style"] = "cat"; cfg["has_nose"] = true; cfg["whiskers"] = "long"
+			cfg["pupil_style"] = "cat"; cfg["tail"] = "curl"
+			cfg["body_shape"] = ["round", "slim"].pick_random()
+		"dog":
+			cfg["ear_shape"] = "floppy"; cfg["ear_w"] = 14.0; cfg["ear_h"] = 26.0; cfg["ear_dx"] = 34.0
+			cfg["mouth_style"] = "tongue"; cfg["has_nose"] = true; cfg["muzzle"] = "round"
+			cfg["tail"] = ["puff", "stub"].pick_random(); cfg["whiskers"] = "none"
+			cfg["body_shape"] = ["round", "chubby"].pick_random()
+		"bunny":
+			cfg["ear_shape"] = "pointy"; cfg["ear_w"] = 9.0; cfg["ear_h"] = 40.0; cfg["ear_dx"] = 18.0
+			cfg["mouth_style"] = "fang"; cfg["has_nose"] = true; cfg["tail"] = "puff"
+			cfg["whiskers"] = "short"; cfg["body_shape"] = "round"
+		"bear":
+			cfg["ear_shape"] = "round"; cfg["ear_w"] = 11.0; cfg["ear_h"] = 11.0; cfg["ear_dx"] = 30.0
+			cfg["mouth_style"] = "smile"; cfg["has_nose"] = true; cfg["muzzle"] = "round"
+			cfg["feet"] = "paws"; cfg["body_shape"] = "chubby"; cfg["tail"] = "none"
+		"frog":
+			cfg["has_ears"] = false; cfg["mouth_style"] = "line"; cfg["has_nose"] = false
+			cfg["eye_dx"] = 22.0; cfg["eye_w"] = 12.0; cfg["eye_h"] = 13.0; cfg["eye_y"] = 86.0
+			cfg["pupil_style"] = "big"; cfg["feet"] = "paws"; cfg["body_shape"] = "wide"
+			cfg["whiskers"] = "none"; cfg["tail"] = "none"
+		"fox":
+			cfg["ear_shape"] = "pointy"; cfg["ear_w"] = 12.0; cfg["ear_h"] = 26.0; cfg["ear_dx"] = 32.0
+			cfg["mouth_style"] = "cat"; cfg["has_nose"] = true; cfg["tail"] = ["puff", "curl"].pick_random()
+			cfg["body_shape"] = "slim"
+		"mouse":
+			cfg["ear_shape"] = "round"; cfg["ear_w"] = 16.0; cfg["ear_h"] = 16.0; cfg["ear_dx"] = 34.0
+			cfg["mouth_style"] = "line"; cfg["has_nose"] = true; cfg["whiskers"] = "long"
+			cfg["tail"] = "stub"; cfg["body_shape"] = ["round", "slim"].pick_random()
+		_:  # "pig"
+			cfg["ear_shape"] = "pointy"; cfg["ear_w"] = 9.0; cfg["ear_h"] = 14.0; cfg["ear_dx"] = 28.0
+			cfg["mouth_style"] = "line"; cfg["has_nose"] = true; cfg["muzzle"] = "round"
+			cfg["tail"] = "curl"; cfg["body_shape"] = "chubby"; cfg["whiskers"] = "none"
 
 # ------------------------------------------------------------------ config de acessório
 ## Acessório "vazio" (nada vestido) — é o padrão do Default.
@@ -411,15 +570,17 @@ func _default_acc() -> Dictionary:
 		"sash": "none", "sash_color": Color("c0392b"),
 		"mask": "none", "mask_color": Color("ecf0f1"),
 		"cheek_sticker": "none", "sticker_color": Color("e84393"),
+		"belt": "none", "belt_color": Color("6d4c41"),
+		"backpack": "none", "backpack_color": Color("2e7d32"),
 	}
 
 ## Gera acessórios aleatórios. Além dos 4 originais (chapéu/óculos/laço/cachecol),
 ## sorteia ~uma dúzia de categorias geométricas independentes (cada uma com cor própria).
 func _random_acc() -> Dictionary:
 	return {
-		"hat": ["none", "beanie", "tophat", "crown", "cap"].pick_random(),
+		"hat": ["none", "beanie", "tophat", "crown", "cap", "wizard"].pick_random(),
 		"hat_color": Color.from_hsv(randf(), randf_range(0.5, 0.9), randf_range(0.7, 0.95)),
-		"glasses": ["none", "round", "square", "star"].pick_random(),
+		"glasses": ["none", "round", "square", "star", "heart", "sunglasses"].pick_random(),
 		"glasses_color": Color.from_hsv(randf(), randf_range(0.2, 0.6), randf_range(0.15, 0.45)),
 		"bow": ["none", "head", "neck"].pick_random(),
 		"bow_color": Color.from_hsv(randf(), randf_range(0.5, 0.9), randf_range(0.8, 1.0)),
@@ -450,6 +611,10 @@ func _random_acc() -> Dictionary:
 		"mask_color": Color.from_hsv(randf(), randf_range(0.05, 0.35), randf_range(0.75, 0.98)),
 		"cheek_sticker": ["none", "none", "star", "heart"].pick_random(),
 		"sticker_color": Color.from_hsv(randf(), randf_range(0.5, 0.9), randf_range(0.85, 1.0)),
+		"belt": ["none", "none", "plain", "buckle"].pick_random(),
+		"belt_color": Color.from_hsv(randf(), randf_range(0.3, 0.7), randf_range(0.3, 0.6)),
+		"backpack": ["none", "none", "none", "present"].pick_random(),
+		"backpack_color": Color.from_hsv(randf(), randf_range(0.4, 0.8), randf_range(0.5, 0.85)),
 	}
 
 func _ready() -> void:
@@ -581,6 +746,7 @@ func _apply_menu_labels() -> void:
 	_refresh_save_labels()                 # MI_SAVE_PET/ACC (Salvar vs Renomear)
 	_rebuild_pets_menu()                   # sentinelas "Selecione..."/"Padrão"
 	_rebuild_acc_menu()                    # sentinelas "Selecione..."/"Nenhum"
+	_rebuild_automations_menu()            # nomes das automações no idioma atual
 
 ## (Re)constrói o dropdown de pets: "Selecione..." (0) e "Default" (1) no topo.
 func _rebuild_pets_menu() -> void:
@@ -772,6 +938,9 @@ func _scan_automations() -> Array:
 func _automation_name_from(gd, filename: String) -> String:
 	if gd is GDScript:
 		var consts: Dictionary = (gd as GDScript).get_script_constant_map()
+		# Nome bilíngue: usa AUTOMATION_NAME_EN no inglês, se a automação declarar.
+		if lang == "en" and consts.has("AUTOMATION_NAME_EN"):
+			return str(consts["AUTOMATION_NAME_EN"])
 		if consts.has("AUTOMATION_NAME"):
 			return str(consts["AUTOMATION_NAME"])
 	return filename.trim_suffix(".gd").capitalize()
@@ -966,16 +1135,42 @@ func set_automation_badge(key: String, text: String) -> void:
 func _cred_path(key: String) -> String:
 	return CRED_PREFIX + key + ".json"
 
-## Lê as credenciais salvas de `key` (ou {} se não houver / inválidas).
+## Chave de criptografia das credenciais, derivada do salt do app + ID único da
+## máquina (OS.get_unique_id). Assim o arquivo não fica em texto puro e não vale em
+## outro computador. Não é um segredo perfeito (o salt está no código), mas evita a
+## leitura casual da App Password no disco.
+func _cred_key() -> String:
+	var uid := OS.get_unique_id()
+	if uid == "":
+		uid = "zimmy-fallback"
+	return CRED_SALT + ":" + uid
+
+## Lê as credenciais salvas de `key` (ou {} se não houver / inválidas). Lê o arquivo
+## **criptografado**; se encontrar um arquivo antigo em texto puro, migra-o (re-grava
+## criptografado) para não deixar a senha em claro.
 func load_credentials(key: String) -> Dictionary:
-	var parsed = _read_json(_cred_path(key))
-	if parsed is Dictionary and parsed.has("user") and parsed.has("pass"):
-		return {"user": str(parsed["user"]), "pass": str(parsed["pass"])}
+	var path := _cred_path(key)
+	if not FileAccess.file_exists(path):
+		return {}
+	var f := FileAccess.open_encrypted_with_pass(path, FileAccess.READ, _cred_key())
+	if f:
+		var txt := f.get_as_text()
+		f.close()
+		var parsed = JSON.parse_string(txt)
+		if parsed is Dictionary and parsed.has("user") and parsed.has("pass"):
+			return {"user": str(parsed["user"]), "pass": str(parsed["pass"])}
+	# Migração: arquivo antigo em texto puro → recriptografa.
+	var legacy = _read_json(path)
+	if legacy is Dictionary and legacy.has("user") and legacy.has("pass"):
+		var creds := {"user": str(legacy["user"]), "pass": str(legacy["pass"])}
+		save_credentials(key, creds)
+		return creds
 	return {}
 
-## Grava as credenciais de `key` em disco (arquivo separado por automação).
+## Grava as credenciais de `key` em disco, **criptografadas** (AES via
+## open_encrypted_with_pass), em arquivo separado por automação.
 func save_credentials(key: String, data: Dictionary) -> void:
-	var f := FileAccess.open(_cred_path(key), FileAccess.WRITE)
+	var f := FileAccess.open_encrypted_with_pass(_cred_path(key), FileAccess.WRITE, _cred_key())
 	if f:
 		f.store_string(JSON.stringify({"user": data.get("user", ""), "pass": data.get("pass", "")}, "  "))
 		f.close()
@@ -1079,8 +1274,12 @@ func imap_unread(host: String, port: int, user: String, password: String, cb: Ca
 		await get_tree().process_frame
 	if tls.get_status() != StreamPeerTLS.STATUS_CONNECTED:
 		cb.call(false, 0); return
+	# App Passwords (Gmail/Outlook) são exibidas em 4 grupos de 4 ("abcd efgh ijkl mnop"),
+	# mas o valor real são os 16 caracteres SEM espaços — colar com espaços faz o LOGIN
+	# falhar. Remove espaços/tabs para aceitar a senha colada como o site mostra.
+	var pass_clean := password.replace(" ", "").replace("\t", "")
 	await _imap_read_until(tls, "")                       # saudação "* OK ..."
-	_imap_send(tls, 'a1 LOGIN "%s" "%s"' % [_imap_escape(user), _imap_escape(password)])
+	_imap_send(tls, 'a1 LOGIN "%s" "%s"' % [_imap_escape(user), _imap_escape(pass_clean)])
 	var login_resp: String = await _imap_read_until(tls, "a1 ")
 	if not login_resp.to_upper().contains("A1 OK"):
 		_imap_send(tls, "a3 LOGOUT")
@@ -1181,6 +1380,7 @@ func _on_pick_pet(id: int) -> void:
 		current = (saved_pets[pet_menu_ids[id]] as Dictionary).duplicate(true)
 		current_pet_name = String(pet_menu_ids[id])
 		say("%s ✨" % pet_menu_ids[id])
+	suggested_pet_name = ""        # escolha explícita: sem sugestão de nome gerado
 	_refresh_pets_menu_checks()
 	_save_settings()   # persiste a escolha para a próxima abertura
 	queue_redraw()
@@ -1199,6 +1399,7 @@ func _on_pick_acc(id: int) -> void:
 		current_acc = (saved_accessories[acc_menu_ids[id]] as Dictionary).duplicate(true)
 		current_acc_name = String(acc_menu_ids[id])
 		say("%s 🎀" % acc_menu_ids[id])
+	suggested_acc_name = ""        # escolha explícita: sem sugestão de nome gerado
 	_refresh_acc_menu_checks()
 	_save_settings()   # persiste a escolha para a próxima abertura
 	queue_redraw()
@@ -1258,26 +1459,51 @@ func _on_delete_confirmed() -> void:
 func _set_random_pet(on: bool) -> void:
 	random_pet_on = on
 	menu.set_item_checked(menu.get_item_index(MI_RANDOM), on)
-	random_pet_timer = 0.0
+	random_timer = 0.0            # mesmo temporizador de pets e acessórios
 	if on:
-		current = _random_cfg()
-		current_pet_name = ""          # pet aleatório não corresponde a nenhuma opção salva
-		_refresh_pets_menu_checks()
-		say(t("new_pet"))
-		queue_redraw()
-		_relayout()
+		_generate_pet()
 
 func _set_random_acc(on: bool) -> void:
 	random_acc_on = on
 	menu.set_item_checked(menu.get_item_index(MI_RANDOM_ACC), on)
-	random_acc_timer = 0.0
+	random_timer = 0.0            # mesmo temporizador de pets e acessórios
 	if on:
-		current_acc = _random_acc()
-		current_acc_name = ""          # acessório aleatório não corresponde a nenhuma opção salva
-		_refresh_acc_menu_checks()
 		_set_show_accessories(true)   # gerar acessórios também liga a exibição
-		say(t("new_acc"))
-		queue_redraw()
+		_generate_acc()
+
+## Gera um pet aleatório, sorteia um nome sugestivo e dá as boas-vindas com ele.
+## O nome fica guardado p/ pré-preencher o diálogo de salvar.
+func _generate_pet() -> void:
+	current = _random_cfg()
+	current_pet_name = ""              # pet aleatório não corresponde a nenhuma opção salva
+	suggested_pet_name = _suggest_name("pet")
+	_refresh_pets_menu_checks()
+	say(t("welcome_pet") % suggested_pet_name)
+	queue_redraw()
+	_relayout()
+
+## Gera um acessório aleatório, sorteia um nome sugestivo e parabeniza com ele.
+func _generate_acc() -> void:
+	current_acc = _random_acc()
+	current_acc_name = ""             # acessório aleatório não corresponde a nenhuma opção salva
+	suggested_acc_name = _suggest_name("acc")
+	_refresh_acc_menu_checks()
+	say(t("congrats_acc") % suggested_acc_name)
+	queue_redraw()
+
+## Monta um nome sugestivo combinando substantivo + adjetivo dos bancos do idioma
+## (`<kind>_nouns` / `<kind>_adjs`, kind = "pet"/"acc"). ~900 combinações por categoria,
+## então quase nunca repete. Ordem: pt = "Substantivo Adjetivo"; en = "Adjective Noun".
+func _suggest_name(kind: String) -> String:
+	var nouns := ta(kind + "_nouns")
+	if nouns.is_empty():
+		return ""
+	var noun := String(nouns.pick_random())
+	var adjs := ta(kind + "_adjs")
+	if adjs.is_empty():
+		return noun
+	var adj := String(adjs.pick_random())
+	return ("%s %s" % [adj, noun]) if lang == "en" else ("%s %s" % [noun, adj])
 
 func _set_show_accessories(on: bool) -> void:
 	show_accessories = on
@@ -1308,7 +1534,11 @@ func _open_save_dialog(mode: String, action := "save") -> void:
 		save_dialog.get_label().text = t("name_pet_label") if is_pet else t("name_acc_label")
 		save_dialog.ok_button_text = t("btn_save")
 		name_edit.placeholder_text = t("ph_pet") if is_pet else t("ph_acc")
-		name_edit.text = ""
+		# Pré-preenche o nome sugerido do item gerado (selecionado, fácil de trocar).
+		var sug := suggested_pet_name if is_pet else suggested_acc_name
+		name_edit.text = sug
+		if sug != "":
+			name_edit.select_all()
 	var scr := DisplayServer.screen_get_usable_rect()
 	save_dialog.size = Vector2i(320, 150)
 	save_dialog.position = scr.position + (scr.size - save_dialog.size) / 2
@@ -1535,6 +1765,14 @@ func _process(delta: float) -> void:
 	if complain_cd > 0.0:
 		complain_cd -= delta
 
+	# Fila de avisos de automações/e-mails: solta a próxima a cada NOTIFY_GAP e a
+	# mantém visível por NOTIFY_HOLD (5s) antes de sumir.
+	if notify_cd > 0.0:
+		notify_cd -= delta
+	if notify_cd <= 0.0 and not notify_queue.is_empty():
+		say(notify_queue.pop_front(), NOTIFY_HOLD)
+		notify_cd = NOTIFY_GAP
+
 	# Pulinho com "gravidade".
 	y_off += vy * delta
 	vy += 900.0 * delta
@@ -1557,21 +1795,16 @@ func _process(delta: float) -> void:
 	var d := Vector2(gm - center)
 	pupil_off = d.limit_length(120.0) / 120.0 * 3.5
 
-	# Geração aleatória contínua (pet e acessórios são independentes).
-	if random_pet_on:
-		random_pet_timer += delta
-		if random_pet_timer >= RANDOM_PERIOD:
-			random_pet_timer = 0.0
-			current = _random_cfg()
-			say(t("new_pet"))
-			_relayout()
-	if random_acc_on:
-		random_acc_timer += delta
-		if random_acc_timer >= RANDOM_PERIOD:
-			random_acc_timer = 0.0
-			current_acc = _random_acc()
-			say(t("new_acc"))
-			_relayout()
+	# Geração aleatória contínua: um único temporizador para pets e acessórios — quando
+	# ambos estão ligados, trocam JUNTOS no mesmo tique de RANDOM_PERIOD.
+	if random_pet_on or random_acc_on:
+		random_timer += delta
+		if random_timer >= RANDOM_PERIOD:
+			random_timer = 0.0
+			if random_pet_on:
+				_generate_pet()
+			if random_acc_on:
+				_generate_acc()
 
 	# Automações agendadas (auto-alimentar, lembretes, comemorações...).
 	if not schedule_defs.is_empty():
@@ -1666,10 +1899,12 @@ func _draw() -> void:
 	var bh_mul := 1.0
 	var by := 0.0
 	match c.get("body_shape", "round"):
-		"tall": bw_mul = 0.9;  bh_mul = 1.2;  by = -3.0   # ovinho em pé
-		"wide": bw_mul = 1.16; bh_mul = 0.86; by = 3.0    # baixinho fofo
-		"pear": bw_mul = 0.96; bh_mul = 1.02; by = 0.0    # gota (bojo embaixo)
-		_:      pass                                       # round (padrão)
+		"tall":   bw_mul = 0.9;  bh_mul = 1.2;  by = -3.0  # ovinho em pé
+		"wide":   bw_mul = 1.16; bh_mul = 0.86; by = 3.0   # baixinho fofo
+		"pear":   bw_mul = 0.96; bh_mul = 1.02; by = 0.0   # gota (bojo embaixo)
+		"chubby": bw_mul = 1.25; bh_mul = 0.95; by = 2.0   # gorduchinho
+		"slim":   bw_mul = 0.8;  bh_mul = 1.12; by = -2.0  # esguio
+		_:        pass                                      # round (padrão)
 	var bw := body_w * bw_mul
 	var bh := body_h * bh_mul * (1.0 + br)
 	var head_top := 108.0 + by - bh                        # topo do "crânio"
@@ -1690,18 +1925,22 @@ func _draw() -> void:
 		_draw_antenna(Vector2(100.0 - 12.0, ear_y - 2.0) + o, Vector2(100.0 - 26.0, ear_y - 30.0) + o, antenna_color)
 		_draw_antenna(Vector2(100.0 + 12.0, ear_y - 2.0) + o, Vector2(100.0 + 26.0, ear_y - 30.0) + o, antenna_color)
 
-	# Orelhas (redondas ou pontudas), se houver.
+	# Orelhas (redondas, pontudas ou caídas), se houver.
 	if c.get("has_ears", true):
-		if c.get("ear_shape", "round") == "pointy":
-			_triangle(Vector2(100.0 - ear_dx - ear_w, ear_y + ear_h) + o,
-				Vector2(100.0 - ear_dx + ear_w, ear_y + ear_h) + o,
-				Vector2(100.0 - ear_dx, ear_y - ear_h) + o, ear_color)
-			_triangle(Vector2(100.0 + ear_dx - ear_w, ear_y + ear_h) + o,
-				Vector2(100.0 + ear_dx + ear_w, ear_y + ear_h) + o,
-				Vector2(100.0 + ear_dx, ear_y - ear_h) + o, ear_color)
-		else:
-			_ellipse(Vector2(100.0 - ear_dx, ear_y) + o, Vector2(ear_w, ear_h), ear_color)
-			_ellipse(Vector2(100.0 + ear_dx, ear_y) + o, Vector2(ear_w, ear_h), ear_color)
+		match c.get("ear_shape", "round"):
+			"pointy":
+				_triangle(Vector2(100.0 - ear_dx - ear_w, ear_y + ear_h) + o,
+					Vector2(100.0 - ear_dx + ear_w, ear_y + ear_h) + o,
+					Vector2(100.0 - ear_dx, ear_y - ear_h) + o, ear_color)
+				_triangle(Vector2(100.0 + ear_dx - ear_w, ear_y + ear_h) + o,
+					Vector2(100.0 + ear_dx + ear_w, ear_y + ear_h) + o,
+					Vector2(100.0 + ear_dx, ear_y - ear_h) + o, ear_color)
+			"floppy":   # orelhas caídas (elipses alongadas, deslocadas p/ baixo e p/ fora)
+				_ellipse(Vector2(100.0 - ear_dx - 2.0, ear_y + ear_h * 0.5) + o, Vector2(ear_w * 0.8, ear_h * 1.15), ear_color)
+				_ellipse(Vector2(100.0 + ear_dx + 2.0, ear_y + ear_h * 0.5) + o, Vector2(ear_w * 0.8, ear_h * 1.15), ear_color)
+			_:          # round
+				_ellipse(Vector2(100.0 - ear_dx, ear_y) + o, Vector2(ear_w, ear_h), ear_color)
+				_ellipse(Vector2(100.0 + ear_dx, ear_y) + o, Vector2(ear_w, ear_h), ear_color)
 
 	# Patas (atrás da base do corpo, p/ o corpo cobrir o topo delas).
 	if c.get("feet", "none") != "none":
@@ -1713,6 +1952,14 @@ func _draw() -> void:
 		_ellipse(Vector2(100, 122 + by) + o, Vector2(bw * 1.18, bh * 0.6), body_color)  # bojo inferior
 	_ellipse(Vector2(100, 108 + by) + o, Vector2(bw, bh), body_color)
 	_ellipse(Vector2(100, 118 + by * 0.5) + o, Vector2(belly_w * bw_mul, belly_h * bh_mul * (1.0 + br)), belly_color)
+
+	# Padrão no corpo (manchas ou listras), por cima do corpo e por baixo do rosto.
+	if c.get("body_pattern", "none") != "none":
+		_draw_body_pattern(c.get("body_pattern"), o, bw, bh, by, ear_color)
+
+	# Focinho: um remendo mais claro ao redor da boca/nariz.
+	if c.get("muzzle", "none") != "none":
+		_ellipse(Vector2(100, 117) + o, Vector2(16, 11), belly_color.lightened(0.08))
 
 	# Bracinhos nas laterais do corpo.
 	if c.get("arms", "none") != "none":
@@ -1799,6 +2046,13 @@ func _draw_mouth(style: String, o: Vector2) -> void:
 			var r := _quad(Vector2(100, 113) + o, Vector2(104, 118) + o, Vector2(108, 110) + o, 8)
 			draw_polyline(l, INK, 2.2, true)
 			draw_polyline(r, INK, 2.2, true)
+		"tongue":   # sorrisinho com línguinha saindo
+			var sm := _quad(Vector2(91, 113) + o, Vector2(100, 121) + o, Vector2(109, 113) + o, 12)
+			draw_polyline(sm, INK, 2.4, true)
+			_ellipse(Vector2(100, 120) + o, Vector2(4.5, 3.5), Color(0.9, 0.4, 0.45))
+		"fang":     # boca reta com uma presinha
+			draw_line(Vector2(92, 115) + o, Vector2(108, 115) + o, INK, 2.4, true)
+			_triangle(Vector2(98, 115) + o, Vector2(102, 115) + o, Vector2(100, 121) + o, Color.WHITE)
 		_:  # "smile" — reflete a felicidade
 			var ctrl_y := 124.0 if happy > 60.0 else (116.0 if happy > 30.0 else 108.0)
 			var mouth := _quad(Vector2(90, 112) + o, Vector2(100, ctrl_y) + o, Vector2(110, 112) + o, 14)
@@ -1979,6 +2233,21 @@ func _draw_freckles(o: Vector2, col: Color) -> void:
 		for k in 3:
 			draw_circle(Vector2(100.0 + s * (16.0 + float(k) * 4.0), 112.0 + float(k % 2) * 3.0) + o, 1.4, col)
 
+## Padrão no corpo: manchas (spots) ou listras (stripes), recortadas no contorno do corpo.
+func _draw_body_pattern(style: String, o: Vector2, bw: float, bh: float, by: float, col: Color) -> void:
+	var cy := 108.0 + by
+	var pc := Color(col.r, col.g, col.b, 0.5)   # translúcido p/ não "pesar" sobre o corpo
+	if style == "stripes":
+		for i in 3:
+			var yy := cy - bh * 0.35 + float(i) * (bh * 0.42)
+			var hw := bw * sqrt(max(0.0, 1.0 - pow((yy - cy) / bh, 2.0))) * 0.9
+			draw_line(Vector2(100.0 - hw, yy) + o, Vector2(100.0 + hw, yy) + o, pc, 4.0, true)
+	else:  # "spots"
+		var spots := [Vector2(-0.45, -0.2), Vector2(0.4, 0.05), Vector2(-0.15, 0.4),
+			Vector2(0.2, -0.45), Vector2(-0.5, 0.3)]
+		for sp in spots:
+			draw_circle(Vector2(100.0 + sp.x * bw, cy + sp.y * bh) + o, bw * 0.13, pc)
+
 ## Sobrancelhas (rosto neutro): retas, levantadas ou sérias (\  /).
 func _draw_eyebrows(style: String, lx: float, rx: float, eye_y: float, eh: float, o: Vector2) -> void:
 	var top := eye_y - eh - 5.0
@@ -2010,6 +2279,12 @@ func _draw_pupils(lc: Vector2, rc: Vector2, style: String) -> void:
 			for ec in [lc, rc]:
 				draw_circle(ec + Vector2(2.0, 2.0) + p, 5.5, INK)
 				_star(ec + Vector2(3.5, -1.5) + p, 2.8, 1.1, 4, Color.WHITE)
+		"heart":
+			for ec in [lc, rc]:
+				var hc: Vector2 = ec + Vector2(2.0, 2.0) + p
+				draw_circle(hc + Vector2(-2.2, -1.4), 2.6, INK)
+				draw_circle(hc + Vector2(2.2, -1.4), 2.6, INK)
+				_triangle(hc + Vector2(-4.2, -0.2), hc + Vector2(4.2, -0.2), hc + Vector2(0.0, 4.6), INK)
 		_:  # "round"
 			draw_circle(lc + Vector2(2.0, 2.0) + p, 5.5, INK)
 			draw_circle(rc + Vector2(2.0, 2.0) + p, 5.5, INK)
@@ -2049,6 +2324,10 @@ func _draw_accessories(o: Vector2, eye_dx: float, eye_y: float, eye_w: float) ->
 		"cap":
 			_dome(Vector2(100, 80) + o, Vector2(28, 22), hat_col)
 			_ellipse(Vector2(82, 82) + o, Vector2(26, 6), hat_col.darkened(0.1))
+		"wizard":   # chapéu de bruxo: cone alto + aba + estrelinha
+			_ellipse(Vector2(100, 78) + o, Vector2(32, 7), hat_col.darkened(0.1))
+			_triangle(Vector2(78, 78) + o, Vector2(122, 78) + o, Vector2(100, 30) + o, hat_col)
+			_star(Vector2(100, 58) + o, 4.0, 1.7, 5, hat_col.lightened(0.45))
 
 	# Óculos (alinhados aos olhos).
 	var gl_col: Color = a.get("glasses_color", Color("2c3e50"))
@@ -2068,6 +2347,17 @@ func _draw_accessories(o: Vector2, eye_dx: float, eye_y: float, eye_w: float) ->
 		"star":
 			_star(lc, gr + 1.0, (gr + 1.0) * 0.45, 5, gl_col)
 			_star(rc, gr + 1.0, (gr + 1.0) * 0.45, 5, gl_col)
+		"heart":   # lentes em coração
+			for gc in [lc, rc]:
+				draw_circle(gc + Vector2(-gr * 0.45, -gr * 0.3), gr * 0.55, gl_col)
+				draw_circle(gc + Vector2(gr * 0.45, -gr * 0.3), gr * 0.55, gl_col)
+				_triangle(gc + Vector2(-gr * 0.9, 0.0), gc + Vector2(gr * 0.9, 0.0), gc + Vector2(0.0, gr * 1.1), gl_col)
+			draw_line(lc + Vector2(gr, 0), rc - Vector2(gr, 0), gl_col, 2.0, true)
+		"sunglasses":   # lentes escuras preenchidas + ponte
+			var sz := Vector2(gr * 2.1, gr * 1.7)
+			draw_rect(Rect2(lc - sz * 0.5, sz), gl_col)
+			draw_rect(Rect2(rc - sz * 0.5, sz), gl_col)
+			draw_line(lc + Vector2(gr, -2.0), rc - Vector2(gr, 2.0), gl_col, 2.0, true)
 
 	# Laço (na cabeça ou no pescoço).
 	var bow_col: Color = a.get("bow_color", Color("e84393"))
@@ -2102,6 +2392,10 @@ func _draw_accessories(o: Vector2, eye_dx: float, eye_y: float, eye_w: float) ->
 		_draw_mask(a.get("mask"), o, a.get("mask_color", Color("ecf0f1")))
 	if a.get("cheek_sticker", "none") != "none":
 		_draw_cheek_sticker(a.get("cheek_sticker"), o, a.get("sticker_color", Color("e84393")))
+	if a.get("backpack", "none") != "none":
+		_draw_backpack(o, a.get("backpack_color", Color("2e7d32")))
+	if a.get("belt", "none") != "none":
+		_draw_belt(a.get("belt"), o, a.get("belt_color", Color("6d4c41")))
 
 # ---------------------------------------- acessórios geométricos adicionais
 ## Faixa diagonal atravessando o corpo.
@@ -2218,6 +2512,20 @@ func _draw_cheek_sticker(style: String, o: Vector2, col: Color) -> void:
 			_triangle(c + Vector2(-3, 0), c + Vector2(3, 0), c + Vector2(0, 3.5), col)
 		else:  # "star"
 			_star(c, 3.2, 1.3, 5, col)
+
+## Cinto na parte baixa do corpo (liso ou com fivela).
+func _draw_belt(style: String, o: Vector2, col: Color) -> void:
+	draw_rect(Rect2(Vector2(72, 144) + o, Vector2(56, 7)), col)
+	if style == "buckle":
+		draw_rect(Rect2(Vector2(95, 143) + o, Vector2(10, 9)), col.lightened(0.4))
+		draw_rect(Rect2(Vector2(98, 146) + o, Vector2(4, 3)), col.darkened(0.2))
+
+## Mochila: duas alças cruzando o peito (a bolsa fica "atrás", então só as alças aparecem).
+func _draw_backpack(o: Vector2, col: Color) -> void:
+	draw_line(Vector2(86, 104) + o, Vector2(94, 150) + o, col, 5.0, true)
+	draw_line(Vector2(114, 104) + o, Vector2(106, 150) + o, col, 5.0, true)
+	_ellipse(Vector2(94, 150) + o, Vector2(3.5, 3.5), col.darkened(0.15))
+	_ellipse(Vector2(106, 150) + o, Vector2(3.5, 3.5), col.darkened(0.15))
 
 func _draw_bow(center: Vector2, col: Color) -> void:
 	var s := 9.0
@@ -2359,11 +2667,17 @@ func _react() -> void:
 func hop(force := 320.0) -> void:
 	vy = -force
 
-func say(msg: String) -> void:
+func say(msg: String, hold := 2.5) -> void:
 	speech.text = msg
 	expression = _expression_from_text(msg)
-	speech_clear = 2.5
+	speech_clear = hold        # quanto tempo o balão fica visível antes de sumir
 	_relayout()
+
+## Mensagem vinda de uma automação/e-mail: entra numa fila e é exibida com um
+## intervalo de NOTIFY_GAP (5s) entre uma e a próxima, p/ não se sobreporem.
+## A 1ª aparece já; as seguintes esperam o intervalo (ver _process).
+func notify(msg: String) -> void:
+	notify_queue.append(msg)
 
 ## Deduz a emoção do rosto a partir dos emojis da fala (prioridade pela ordem).
 func _expression_from_text(msg: String) -> String:

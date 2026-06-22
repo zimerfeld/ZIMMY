@@ -2,13 +2,17 @@
 extends RefCounted
 
 const AUTOMATION_NAME := "Cotação CNY 🇨🇳"
+const AUTOMATION_NAME_EN := "CNY rate 🇨🇳"
 
 func run(zimmy) -> void:
-	zimmy.say("buscando CNY... 🌐")
+	zimmy.notify(zimmy.lang_text("buscando CNY... 🌐", "fetching CNY... 🌐"))
 	zimmy.http_get_json("https://economia.awesomeapi.com.br/last/CNY-BRL", func(ok, data):
 		if ok and data is Dictionary and data.has("CNYBRL"):
 			var d = data["CNYBRL"]
-			zimmy.say("🇨🇳 CNY/BRL: R$ %.4f  (%+.2f%%)" % [float(d["bid"]), float(d["pctChange"])])
+			var val = zimmy.fmt_money_brl(float(d["bid"]), 4)
+			var pct = zimmy.fmt_pct(float(d["pctChange"]))
+			var dt = zimmy.fmt_quote_date(str(d.get("create_date", "")))
+			zimmy.notify("🇨🇳 CNY/BRL: %s (%s) — %s" % [val, pct, dt])
 		else:
-			zimmy.say("falha na cotação CNY 🌐")
+			zimmy.notify(zimmy.lang_text("falha na cotação CNY 🌐", "CNY quote failed 🌐"))
 	)

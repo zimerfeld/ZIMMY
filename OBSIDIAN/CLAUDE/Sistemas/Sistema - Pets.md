@@ -15,24 +15,28 @@ cílios, `mouth_style="smile"`.
 
 ## Aleatório — `_random_cfg()`
 Busca **estética equilibrada e cores alegres**, mantendo o estilo "Zimmy":
+- **Bichinhos** — ~55% das gerações viram um bicho reconhecível (`critter` ∈ {cat, dog,
+  bunny, bear, frog, fox, mouse, pig}). `_apply_critter(cfg, kind)` sobrescreve as chaves
+  de **forma** (orelha/boca/bigode/cauda/proporções) e limpa adereços fantasia; a **cor
+  continua aleatória**. Os outros ~45% seguem combinatórios livres.
 - **Cores** — matiz base (`hue`); as cores de destaque (orelha/antena/nariz) vêm de um
   **esquema de harmonia** sorteado: `analogous`/`complementary`/`triadic`/`monochrome`
   (`accent_hue`). Saturação/brilho em faixas vibrantes-porém-suaves (`body_s` 0.42–0.68,
   `body_v` 0.86–0.98) → evita tons sujos/escuros. Barriga = mesmo matiz dessaturado e
   claro (contraste coeso); bochecha = rosado quente translúcido.
-- **Geometria** — `body_shape` ∈ {`round`(2×), `tall`, `wide`, `pear`}: o `_draw()`
-  estica/achata a silhueta e, no `pear`, desenha um bojo inferior extra (corpo em gota).
+- **Geometria** — `body_shape` ∈ {`round`(2×), `tall`, `wide`, `pear`, `chubby`, `slim`}:
+  o `_draw()` estica/achata a silhueta e, no `pear`, desenha um bojo inferior extra.
 - **Proporções** em faixas (`randf_range`).
-- **Formas/elementos** (probabilidades): `has_ears` 85%, `ear_shape` round/pointy,
+- **Formas/elementos** (probabilidades): `has_ears` 85%, `ear_shape` round/pointy/floppy,
   `has_antennae` 40%, `has_cheeks` 70%, `has_nose` 60%, `has_eyelashes` 50%,
-  `mouth_style` ∈ {smile, cat, open, line}.
-- **Categorias extras do "esqueleto"** (≈12, sorteadas **de forma independente**, com
+  `mouth_style` ∈ {smile, cat, open, line, tongue, fang}.
+- **Categorias extras do "esqueleto"** (≈14, sorteadas **de forma independente**, com
   `none` de peso maior p/ não sobrecarregar): `tail` (curl/puff/stub), `horn`
   (unicorn/devil/antlers + `horn_color`), `hair_tuft` (tuft/cowlick/mohawk),
-  `eye_shape` (oval/tall/sleepy), `pupil_style` (big/cat/sparkle), `eyebrow`
+  `eye_shape` (oval/tall/sleepy), `pupil_style` (big/cat/sparkle/heart), `eyebrow`
   (flat/raised/serious), `feet` (paws), `arms` (nubs), `belly_mark` (spot/heart),
-  `whiskers` (short/long), `wings` (small), `freckles`. Cada uma tem um helper
-  `_draw_*` próprio; ver [[Sistema - Render (_draw)]].
+  `whiskers` (short/long), `wings` (small), `freckles`, `body_pattern` (spots/stripes),
+  `muzzle`. Cada uma tem um helper `_draw_*` próprio; ver [[Sistema - Render (_draw)]].
 
 ## Estado
 - `current` — pet exibido agora.

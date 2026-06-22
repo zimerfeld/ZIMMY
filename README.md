@@ -1,5 +1,12 @@
 # Zimmy Pet 🧡
 
+<p align="center">
+  <img src="icon.png" alt="Zimmy — the default pet / o pet Default" width="180">
+</p>
+
+> The default pet (the procedural face from `_draw()`, the same drawing used for the icon).
+> O pet Default (a carinha procedural do `_draw()`, o mesmo desenho usado no ícone).
+
 Desktop pet overlay, made in Godot 4.6.
 Desktop pet overlay, feito em Godot 4.6.
 
@@ -105,36 +112,45 @@ Column headers / Cabeçalhos: Action / Ação · Result / Resultado.
 
 - **🦴 Feed / 🤚 Pet / 🎾 Play** — interactions that change mood/hunger.
 - **🦴 Feed / 🤚 Pet / 🎾 Play** — interações que mudam humor/fome.
-- **🎲 Random pets** (check) — toggles continuous generation **of the pet**: every ~9 s
+- **🐶 Random pets** (check) — toggles continuous generation **of the pet**: every ~10 s
   Zimmy turns into a random pet. Besides colors, it varies the **shapes** and which
   **elements** make him up (round or pointy ears, antennas, nose, eyelashes, cheeks,
-  and the mouth style).
-- **🎲 Random pets** (check) — liga/desliga a geração contínua **do pet**: a cada ~9 s o
+  and the mouth style). Each new pet gets a **welcome phrase and a suggested name** —
+  that name pre-fills the text box (selected) when you Save or Rename it. Names are
+  **combinatorial** (noun + adjective, ~900 combos per language), so they rarely repeat.
+- **🐶 Random pets** (check) — liga/desliga a geração contínua **do pet**: a cada ~10 s o
   Zimmy vira um pet aleatório. Além das cores, varia as **formas** e quais
   **elementos** o compõem (orelhas redondas ou pontudas, antenas, nariz, cílios,
-  bochechas e o estilo da boca).
+  bochechas e o estilo da boca). Cada novo pet ganha uma **frase de boas-vindas e um
+  nome sugestivo** — esse nome já vem **pré-preenchido** (selecionado) na caixa de texto
+  ao Salvar ou Renomear. Os nomes são **combinatórios** (substantivo + adjetivo, ~900
+  combinações por idioma), então quase nunca repetem.
 - **🎲 Random accessories** (check) — independent from the previous one: toggles
-  continuous generation **of the accessories** (every ~9 s it draws a
+  continuous generation **of the accessories** (every ~10 s it draws a
   hat/glasses/bow/scarf). Turning it on also automatically turns on the accessory
-  display.
+  display. Each new accessory gets a **congratulations phrase and a suggested name**
+  that pre-fills the text box when you Save or Rename it (also **combinatorial**, ~900
+  combos per language).
 - **🎲 Random accessories** (check) — independente do anterior: liga/desliga a geração
-  contínua **dos acessórios** (a cada ~9 s sorteia chapéu/óculos/laço/cachecol). Ligar
-  também liga automaticamente a exibição de acessórios.
+  contínua **dos acessórios** (a cada ~10 s sorteia chapéu/óculos/laço/cachecol). Ligar
+  também liga automaticamente a exibição de acessórios. Cada novo acessório ganha uma
+  **frase de parabenização e um nome sugestivo** que pré-preenche a caixa de texto ao
+  Salvar ou Renomear (também **combinatório**, ~900 combinações por idioma).
 - **👓 Show accessories** (check) — toggles the display of the accessory layer (hat,
   glasses, bow, scarf), independently of the pet.
 - **👓 Show accessories** (check) — liga/desliga a exibição da camada de
   acessórios (chapéu, óculos, laço, cachecol), independentemente do pet.
 - **💾 Save Pet...** — opens a dialog to name and save **only the pet** shown. Opening
-  the dialog **freezes pet generation** (unchecks "🎲 Random pets") so that exactly
-  what is on screen is saved; on **confirm**, the "🎲 Random pets" checkbox stays
+  the dialog **freezes pet generation** (unchecks "🐶 Random pets") so that exactly
+  what is on screen is saved; on **confirm**, the "🐶 Random pets" checkbox stays
   unchecked. Accessory generation is not affected. **If the displayed pet is already a
   saved pet, this item becomes
   "💾 Rename Pet..."** (same icon): the dialog opens with the current name pre-filled
   and, on confirm, the pet is **renamed** — the change is written to `pets.json` and the
   "Choose pet" dropdown is updated right away.
 - **💾 Salvar Pet…** — abre um diálogo para nomear e salvar **só o pet** exibido.
-  Abrir o diálogo **congela a geração de pets** (desmarca "🎲 Gerar pets") para que se
-  salve exatamente o que está na tela; ao **confirmar**, a checkbox "🎲 Gerar pets"
+  Abrir o diálogo **congela a geração de pets** (desmarca "🐶 Gerar pets") para que se
+  salve exatamente o que está na tela; ao **confirmar**, a checkbox "🐶 Gerar pets"
   fica desmarcada. A geração de acessórios não é afetada. **Se o pet exibido já é um
   pet salvo, este item vira
   "💾 Renomear Pet…"** (mesmo ícone): o diálogo abre com o nome atual pré-preenchido e,
@@ -253,16 +269,32 @@ Cada automação é um GDScript com:
   Automacao").
 - (opcional) `const AUTOMATION_NAME := "Nome no menu"` — texto exibido no submenu. Sem
   ele, o nome é derivado do arquivo (`minha_automacao.gd` → "Minha Automacao").
+- (optional) `const AUTOMATION_NAME_EN := "Menu name"` — English name, used when the app
+  language is English (US); falls back to `AUTOMATION_NAME` otherwise. For bilingual pet
+  speech use `zimmy.lang_text(pt, en)` and `zimmy.lang`; for localized numbers/dates use
+  `zimmy.fmt_num` / `fmt_pct` / `fmt_money_brl` / `fmt_quote_date` (the currency
+  automations use these, so values and dates follow the chosen language).
+- (opcional) `const AUTOMATION_NAME_EN := "Menu name"` — nome em inglês, usado quando o
+  idioma do app é English (US); sem ele, cai no `AUTOMATION_NAME`. Para falas bilíngues
+  use `zimmy.lang_text(pt, en)` e `zimmy.lang`; para números/datas localizados use
+  `zimmy.fmt_num` / `fmt_pct` / `fmt_money_brl` / `fmt_quote_date` (as automações de
+  cotação usam esses helpers, então valores e datas seguem o idioma escolhido).
 - (optional) `const SCHEDULE := "..."` — frequency for Zimmy to run the automation on
   its own (see **Scheduler** below).
 - (opcional) `const SCHEDULE := "..."` — frequência para o Zimmy rodar a automação
   sozinho (ver **Agendador** abaixo).
 - a `run(zimmy)` method — called when choosing the item (or on the scheduled trigger).
-  `zimmy` is the main node, giving access to `say()`, `feed()`, `pet()`, `play()`,
-  `hop()`, `current`, and to the state (`hunger`, `happy`), etc.
+  `zimmy` is the main node, giving access to `notify()`, `say()`, `feed()`, `pet()`,
+  `play()`, `hop()`, `current`, and to the state (`hunger`, `happy`), etc. Automation/
+  e-mail messages should use **`zimmy.notify(text)`**: they are **queued, shown one at a
+  time and stay visible ~5 s** so they don't overwrite each other (`say()` shows
+  immediately and clears in 2.5 s, no queue).
 - um método `run(zimmy)` — chamado ao escolher o item (ou no disparo agendado). `zimmy`
-  é o nó principal, dando acesso a `say()`, `feed()`, `pet()`, `play()`, `hop()`,
-  `current`, e ao estado (`hunger`, `happy`), etc.
+  é o nó principal, dando acesso a `notify()`, `say()`, `feed()`, `pet()`, `play()`,
+  `hop()`, `current`, e ao estado (`hunger`, `happy`), etc. As mensagens de automação/
+  e-mail devem usar **`zimmy.notify(texto)`**: entram numa **fila, aparecem uma de cada
+  vez e ficam visíveis ~5 s** para não se sobreporem (`say()` mostra na hora e some em
+  2,5 s, sem fila).
 
 Scripts that `extends RefCounted` are discarded after `run()`; those that `extends Node`
 are added as children of Zimmy and **persist** (useful for continuous automations via
@@ -342,10 +374,14 @@ busca a contagem por **IMAP sobre TLS** (`zimmy.imap_unread(...)`) a cada 5 min.
 
 - **Gmail**: enable 2-step verification and generate an *App Password* at
   [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords); check
-  that **IMAP is enabled** (Gmail ▸ Settings ▸ Forwarding and POP/IMAP).
+  that **IMAP is enabled** (Gmail ▸ Settings ▸ Forwarding and POP/IMAP). Google shows the
+  App Password in 4 groups of 4 — you can paste it **with or without the spaces** (Zimmy
+  strips them). Use the **App Password**, not your normal Google password.
 - **Gmail**: ative a verificação em 2 etapas e gere uma *Senha de app* em
   [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords); confira
-  que o **IMAP está ativado** (Gmail ▸ Configurações ▸ Encaminhamento e POP/IMAP).
+  que o **IMAP está ativado** (Gmail ▸ Configurações ▸ Encaminhamento e POP/IMAP). O Google
+  mostra a senha em 4 grupos de 4 — pode colar **com ou sem os espaços** (o Zimmy remove).
+  Use a **Senha de app**, não a sua senha normal do Google.
 - **Outlook/Hotmail**: generate an *App password* at
   [account.microsoft.com/security](https://account.microsoft.com/security). **Corporate
   Microsoft 365** accounts usually have IMAP/basic **disabled** by the admin — then it
@@ -358,16 +394,22 @@ busca a contagem por **IMAP sobre TLS** (`zimmy.imap_unread(...)`) a cada 5 min.
 **Credentials**: when you **turn on** a provider in the menu, Zimmy asks for *e-mail* +
 *App Password*. They are saved **per automation** in `user://cred_<key>.json` (e.g.
 `cred_email_gmail.json`) — **outside the repository** and covered by `.gitignore`
-(`cred_*.json`). They are only written/updated **after a valid login**; if the password
-changes and the login fails, the file is discarded and Zimmy asks again. Reuse this flow
-in any automation with `zimmy.with_credentials(key, title, cb)` +
+(`cred_*.json`). The file is **encrypted** (AES, via `FileAccess.open_encrypted_with_pass`)
+with a key derived from an app salt + the machine ID (`OS.get_unique_id`), so it is not
+plain text and does not work on another computer. They are only written/updated **after a
+valid login**; if the password changes and the login fails, the file is discarded and
+Zimmy asks again. Old plain-text credential files are migrated (re-encrypted) on read.
+Reuse this flow in any automation with `zimmy.with_credentials(key, title, cb)` +
 `zimmy.confirm_credentials(key, data)`.
 **Credenciais**: ao **ligar** um provedor no menu, o Zimmy pede *e-mail* + *App Password*.
 Elas são salvas **por automação** em `user://cred_<chave>.json` (ex.: `cred_email_gmail.json`)
-— **fora do repositório** e cobertas pelo `.gitignore` (`cred_*.json`). Só são gravadas/
-atualizadas **após um login válido**; se a senha mudar e o login falhar, o arquivo é
-descartado e o Zimmy pergunta de novo. Reutilize esse fluxo em qualquer automação com
-`zimmy.with_credentials(key, titulo, cb)` + `zimmy.confirm_credentials(key, dados)`.
+— **fora do repositório** e cobertas pelo `.gitignore` (`cred_*.json`). O arquivo é
+**criptografado** (AES, via `FileAccess.open_encrypted_with_pass`) com uma chave derivada
+de um salt do app + o ID da máquina (`OS.get_unique_id`), então não fica em texto puro nem
+vale em outro computador. Só são gravadas/atualizadas **após um login válido**; se a senha
+mudar e o login falhar, o arquivo é descartado e o Zimmy pergunta de novo. Arquivos antigos
+em texto puro são migrados (recriptografados) na leitura. Reutilize esse fluxo em qualquer
+automação com `zimmy.with_credentials(key, titulo, cb)` + `zimmy.confirm_credentials(key, dados)`.
 
 ## Pets
 
@@ -390,32 +432,39 @@ descartado e o Zimmy pergunta de novo. Reutilize esse fluxo em qualquer automaç
 - **Random generation**: `_random_cfg()` aims for a **balanced aesthetic and cheerful
   colors**:
 - **Geração aleatória**: `_random_cfg()` busca **estética equilibrada e cores alegres**:
+  - **Critter archetypes** — about **55%** of random pets come out as a recognizable
+    **little animal**: `cat`, `dog`, `bunny`, `bear`, `frog`, `fox`, `mouse` or `pig`
+    (`critter` key). The animal is set by **shape** (ears/mouth/whiskers/tail/proportions)
+    — the **color stays random** (a purple cat is valid and cute). The other ~45% remain
+    free-form abstract creatures.
+  - **Arquétipos de bichinhos** — cerca de **55%** dos pets aleatórios saem como um
+    **bichinho reconhecível**: `cat`, `dog`, `bunny`, `bear`, `frog`, `fox`, `mouse` ou
+    `pig` (chave `critter`). O bicho é definido pela **forma**
+    (orelhas/boca/bigodes/cauda/proporções) — a **cor segue aleatória** (um gato roxo é
+    válido e fofo). Os outros ~45% continuam criaturas abstratas livres.
   - **Geometry** — it draws the **body silhouette** (`body_shape`: `round`/`tall`/
-    `wide`/`pear` — standing egg, cute shorty or teardrop body), the **ear shape**
-    (round/pointy), the **mouth style** (`smile`/`cat`/`open`/`line`), the
-    **proportions** and the **presence of elements** (antennas, nose, eyelashes,
-    cheeks).
+    `wide`/`pear`/`chubby`/`slim`), the **ear shape** (round/pointy/floppy), the
+    **mouth style** (`smile`/`cat`/`open`/`line`/`tongue`/`fang`), the **proportions**
+    and the **presence of elements** (antennas, nose, eyelashes, cheeks).
   - **Geometria** — sorteia a **silhueta do corpo** (`body_shape`: `round`/`tall`/
-    `wide`/`pear` — ovinho em pé, baixinho fofo ou corpo em gota), a **forma de
-    orelha** (redonda/pontuda), o **estilo de boca** (`smile`/`cat`/`open`/`line`),
-    as **proporções** e a **presença de elementos** (antenas, nariz, cílios,
-    bochechas).
-  - **Extra "skeleton" categories** (each one drawn **independently**, to break away
-    from the Default): **tail** (`curl`/`puff`/`stub`), **horn**
-    (`unicorn`/`devil`/`antlers`, with its own color), **tuft** (`tuft`/`cowlick`/
-    `mohawk`), **eye shape** (`oval`/`tall`/`sleepy`), **pupil** (`big`/`cat`/`sparkle`),
-    **eyebrow** (`flat`/`raised`/`serious`), **paws**, **little arms**, **belly mark**
-    (`spot`/`heart`), **whiskers** (`short`/`long`), **wings** and **freckles**. Most
-    have `none` with a higher weight, so the pets vary a lot without getting
-    overloaded.
-  - **Categorias extras do "esqueleto"** (cada uma sorteada de forma **independente**,
-    para fugir do Default): **rabo** (`curl`/`puff`/`stub`), **chifre**
-    (`unicorn`/`devil`/`antlers`, com cor própria), **topete** (`tuft`/`cowlick`/
-    `mohawk`), **formato do olho** (`oval`/`tall`/`sleepy`), **pupila**
-    (`big`/`cat`/`sparkle`), **sobrancelha** (`flat`/`raised`/`serious`), **patas**,
-    **bracinhos**, **marca na barriga** (`spot`/`heart`), **bigodes**
-    (`short`/`long`), **asas** e **sardas**. A maioria tem `none` com peso maior, então
-    os pets variam bastante sem ficarem sobrecarregados.
+    `wide`/`pear`/`chubby`/`slim`), a **forma de orelha** (redonda/pontuda/caída), o
+    **estilo de boca** (`smile`/`cat`/`open`/`line`/`tongue`/`fang`), as **proporções** e
+    a **presença de elementos** (antenas, nariz, cílios, bochechas).
+  - **Extra "skeleton" categories** (each drawn **independently**): **tail**
+    (`curl`/`puff`/`stub`), **horn** (`unicorn`/`devil`/`antlers`), **tuft**
+    (`tuft`/`cowlick`/`mohawk`), **eye shape** (`oval`/`tall`/`sleepy`), **pupil**
+    (`big`/`cat`/`sparkle`/`heart`), **eyebrow** (`flat`/`raised`/`serious`), **paws**,
+    **little arms**, **belly mark** (`spot`/`heart`), **whiskers** (`short`/`long`),
+    **wings**, **freckles**, **body pattern** (`spots`/`stripes`) and **muzzle**. Most
+    have `none` with a higher weight, so pets vary a lot without getting overloaded.
+  - **Categorias extras do "esqueleto"** (cada uma sorteada de forma **independente**):
+    **rabo** (`curl`/`puff`/`stub`), **chifre** (`unicorn`/`devil`/`antlers`), **topete**
+    (`tuft`/`cowlick`/`mohawk`), **formato do olho** (`oval`/`tall`/`sleepy`), **pupila**
+    (`big`/`cat`/`sparkle`/`heart`), **sobrancelha** (`flat`/`raised`/`serious`),
+    **patas**, **bracinhos**, **marca na barriga** (`spot`/`heart`), **bigodes**
+    (`short`/`long`), **asas**, **sardas**, **padrão no corpo** (`spots`/`stripes`) e
+    **focinho**. A maioria tem `none` com peso maior, então os pets variam bastante sem
+    ficarem sobrecarregados.
   - **Color** — it starts from a base hue and derives the highlight colors via a
     **harmony scheme** (analogous / complementary / triadic / mono), with saturation and
     brightness in **vibrant-yet-soft** ranges (cheerful theme, avoiding dirty/dark tones)
@@ -449,21 +498,21 @@ descartado e o Zimmy pergunta de novo. Reutilize esse fluxo em qualquer automaç
 - Os acessórios são uma **camada independente do pet**, desenhados por cima por
   `_draw_accessories()` e descritos por `_default_acc()`/`_random_acc()`. Cada categoria
   é **sorteada de forma independente** (cada uma com sua cor própria):
-  - **Originals**: hat (`beanie`/`tophat`/`crown`/`cap`), glasses
-    (`round`/`square`/`star`), bow (head/neck) and scarf.
-  - **Originais**: chapéu (`beanie`/`tophat`/`crown`/`cap`), óculos
-    (`round`/`square`/`star`), laço (cabeça/pescoço) e cachecol.
-  - **Extra categories** (~a dozen): necklace (`pearls`/`pendant`), earrings
-    (`studs`/`hoops`), collar (`plain`/`bell`), headphones, monocle, mustache
-    (`curly`/`thin`), little flower, brooch (`star`/`heart`), tie (`necktie`/`bowtie`),
-    diagonal sash (`sash`), mask (`medical`/`ninja`) and cheek sticker
-    (`star`/`heart`). Most have `none` with a higher weight, to vary without
-    overdoing it.
-  - **Categorias extras** (~uma dúzia): colar (`pearls`/`pendant`), brincos
-    (`studs`/`hoops`), coleira (`plain`/`bell`), fones de ouvido, monóculo, bigode
-    (`curly`/`thin`), florzinha, broche (`star`/`heart`), gravata (`necktie`/`bowtie`),
-    faixa diagonal (`sash`), máscara (`medical`/`ninja`) e adesivo de bochecha
-    (`star`/`heart`). A maioria tem `none` com peso maior, para variar sem exagerar.
+  - **Originals**: hat (`beanie`/`tophat`/`crown`/`cap`/`wizard`), glasses
+    (`round`/`square`/`star`/`heart`/`sunglasses`), bow (head/neck) and scarf.
+  - **Originais**: chapéu (`beanie`/`tophat`/`crown`/`cap`/`wizard`), óculos
+    (`round`/`square`/`star`/`heart`/`sunglasses`), laço (cabeça/pescoço) e cachecol.
+  - **Extra categories**: necklace (`pearls`/`pendant`), earrings (`studs`/`hoops`),
+    collar (`plain`/`bell`), headphones, monocle, mustache (`curly`/`thin`), little
+    flower, brooch (`star`/`heart`), tie (`necktie`/`bowtie`), diagonal sash, mask
+    (`medical`/`ninja`), cheek sticker (`star`/`heart`), belt (`plain`/`buckle`) and
+    backpack. Most have `none` with a higher weight, to vary without overdoing it.
+  - **Categorias extras**: colar (`pearls`/`pendant`), brincos (`studs`/`hoops`),
+    coleira (`plain`/`bell`), fones de ouvido, monóculo, bigode (`curly`/`thin`),
+    florzinha, broche (`star`/`heart`), gravata (`necktie`/`bowtie`), faixa diagonal,
+    máscara (`medical`/`ninja`), adesivo de bochecha (`star`/`heart`), cinto
+    (`plain`/`buckle`) e mochila. A maioria tem `none` com peso maior, para variar sem
+    exagerar.
 - The **random generation** of accessories has its own checkbox (**🎲 Random
   accessories**), separate from pet generation. The **display** is controlled by
   **👓 Show accessories** (on by default). Since the Default wears nothing, the display

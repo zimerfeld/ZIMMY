@@ -1,6 +1,6 @@
 ---
 tags: [sistema, fala, ui, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 lang: en
 ---
 
@@ -11,8 +11,13 @@ A `Label` (created in the [[Fluxo - Inicialização (EN)]]) with an outline, usi
 renderer — a `SystemFont` would make the text disappear).
 
 ## API
-- `say(t)` (`zimmy.gd:904`) — sets the text, schedules clearing (`speech_clear=2.5s`) and
-  calls `_relayout()`.
+- `say(msg, hold := 2.5)` — sets the text, schedules clearing (`speech_clear = hold`) and
+  calls `_relayout()`. Shows **immediately** (pet interactions, selection, save/errors).
+- `notify(msg)` — **notification queue** for automations/e-mails: enqueues into
+  `notify_queue`, and the [[Fluxo - Loop (_process) (EN)]] releases the next one every
+  `NOTIFY_GAP = 5s` (`notify_cd`), calling `say(msg, NOTIFY_HOLD)` — the message stays
+  visible for **5s** (`NOTIFY_HOLD`) before hiding. Prevents several messages (e.g. many
+  currency quotes) from overwriting each other. The 1st shows now; the rest wait 5s.
 - In the [[Fluxo - Loop (_process) (EN)]], when `speech_clear` expires the text is cleared
   and the window shrinks.
 
@@ -25,8 +30,9 @@ renderer — a `SystemFont` would make the text disappear).
 
 ## Who speaks
 Initial greeting; actions (`feed/pet/play/_react`); pet and accessory
-generation/selection; saving/errors; and the bad-mood complaints
-([[Sistema - Interação e Mau Humor (EN)]], list `MOOD_NEG`).
+generation/selection; saving/errors; bad-mood complaints
+([[Sistema - Interação e Mau Humor (EN)]], list `mood_neg`); and the **automations/
+e-mails** (via `notify()`, spaced 5s apart).
 
 ## Mirrors on the face
 `say()` also deduces the emotion from the emoji and the face reflects it while the

@@ -33,8 +33,13 @@ camadas traseiras e do topo se posicionarem em relação ao corpo.
    (formato por `eye_shape`; pupila por `pupil_style` via `_draw_pupils`),
    **sobrancelhas** (`eyebrow`, só neutro/olhos abertos), cílios (`has_eyelashes`) e
    `_draw_mouth(style)`.
+10b. **Rosto de necessidade** — sem fala, se uma barra zerou, o rosto idle vira
+    `hungry`/`needy`/`bored` (`_need_expression`) ([[Sistema - Necessidades]]).
 11. **Acessórios** — `if show_accessories` → `_draw_accessories()`
     ([[Sistema - Acessórios]]).
+12. **Barras de necessidade** — `if show_status: _draw_stat_bars()` — num **rodapé** abaixo
+    do pet (transform identidade, px reais), 3 barras com ícone 🦴/🤚/🎾 (2×) à esquerda
+    via `draw_string` ([[Sistema - Necessidades]]).
 
 ## Primitivas (helpers)
 - `_ellipse(c, r, col, segs=40)` — polígono elíptico preenchido.

@@ -1,6 +1,6 @@
 ---
 tags: [sistema, interacao, gameplay, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 ---
 
 # 😤 Sistema - Interação e Mau Humor
@@ -13,13 +13,17 @@ Limita o spam de interações e dá personalidade ao pet. Centralizado em
 1. **Máx. 1 ação/clique por segundo** — `action_cd` (= `ACTION_COOLDOWN=1.0`),
    decrementado no [[Fluxo - Loop (_process)]].
 2. **A mesma ação no máx. 3x seguidas** — `last_action` + `action_repeats`
-   (`MAX_REPEAT=3`). Uma ação **diferente** zera a contagem.
+   (`MAX_REPEAT=3`). Uma ação **diferente** zera a contagem. A trava também **libera
+   sozinha após `REPEAT_RESET=30s`** sem nova ação aceita: `repeat_reset_cd` (reiniciado
+   a cada ação aceita em `_can_act`) é decrementado no [[Fluxo - Loop (_process)]] e, ao
+   chegar a 0, zera `action_repeats`/`last_action` — a mesma ação volta a funcionar e
+   reconta até 3.
 3. **Insistir na mesma ação em <1s → reclamação** — se `action_cd>0` e a ação é a
    mesma, chama `_complain()`.
 
 ## `_complain()` (`zimmy.gd:864`)
 Expressa **repulsa / raiva / tristeza / indiferença / descaso** (frase aleatória de
-`MOOD_NEG`, ex.: "para com isso! 😠", "tanto faz 😑", "...zzz 😴"), reduz `happy` em 6
+`ta("mood_neg")`, localizada, ex.: "para com isso! 😠", "tanto faz 😑", "...zzz 😴"), reduz `happy` em 6
 e respeita um cooldown próprio `complain_cd` (`COMPLAIN_COOLDOWN=1.5`) para não
 spammar fala. O emoji da frase também **deixa o rosto** raivoso/enojado/triste/
 indiferente — ver [[Sistema - Expressões Faciais]].
@@ -31,6 +35,7 @@ indiferente — ver [[Sistema - Expressões Faciais]].
 | repete <1s (insistência) | bloqueia + `_complain()` |
 | 4ª+ vez, ≥1s, sem spam | bloqueia em silêncio |
 | ação diferente | zera contador e executa |
+| 30s sem repetir (mesma ação) | trava libera, reconta do zero |
 
 > Só as ações de carinho/alimentar/brincar/clique passam por aqui. Trocar pet/
 > acessório e abrir menu **não** são limitados.

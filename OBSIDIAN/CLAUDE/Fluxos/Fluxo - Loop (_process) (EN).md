@@ -19,6 +19,11 @@ lang: en
 7. **Automation scheduler** — `_tick_schedules(delta)` triggers the enabled scheduled
    automations according to their frequency ([[Sistema - Menu de Contexto (EN)]]).
 8. **Needs** — `hunger` rises; if >70, `happy` drops.
-9. **Clears speech** — when `speech_clear` expires, it clears and runs `_relayout()`
-   ([[Sistema - Balão de Fala (EN)]]).
-10. **`queue_redraw()`** — schedules the [[Sistema - Render (_draw) (EN)]].
+9. **Need bars** — `stat_decay_timer`; every `STAT_DECAY_PERIOD=1800s` (30 min) each bar
+   (`stat_feed`/`stat_pet`/`stat_play`) drops 1; with all three at 0, `get_tree().quit()`
+   ([[Sistema - Necessidades (EN)]]).
+10. **Repeat lock** — `repeat_reset_cd` (releases the 3x lock after 30s; see
+    [[Sistema - Interação e Mau Humor (EN)]]).
+11. **Clears speech** — when `speech_clear` expires, it clears and runs `_relayout()`
+    ([[Sistema - Balão de Fala (EN)]]).
+12. **`queue_redraw()`** — schedules the [[Sistema - Render (_draw) (EN)]].

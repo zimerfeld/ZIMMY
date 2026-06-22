@@ -17,9 +17,11 @@ Como um clique/ação vira (ou não) uma reação. Regras em
      - mesma ação → `_complain()` (mau humor) e retorna `false`;
      - ação diferente → retorna `false` em silêncio.
    - mesma ação já repetida `MAX_REPEAT=3`x (sem spam) → `false` em silêncio.
-   - senão: atualiza `last_action`/`action_repeats`, arma `action_cd=1.0`,
-     retorna `true`.
+   - senão: atualiza `last_action`/`action_repeats`, arma `action_cd=1.0` e
+     `repeat_reset_cd=REPEAT_RESET=30`, retorna `true`.
 4. Se `true`: aplica efeito (humor/fome), `say(...)` e `hop(...)`.
+5. **Liberação por tempo**: 30s sem nova ação aceita (`repeat_reset_cd`→0 no
+   [[Fluxo - Loop (_process)]]) zera `action_repeats`/`last_action` — a trava de 3x solta.
 
 ## Efeitos por ação
 | Ação | happy | hunger | hop |

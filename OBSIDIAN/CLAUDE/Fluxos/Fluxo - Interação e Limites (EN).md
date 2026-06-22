@@ -18,9 +18,11 @@ How a click/action turns (or doesn't) into a reaction. Rules in
      - same action → `_complain()` (bad mood) and returns `false`;
      - different action → returns `false` silently.
    - same action already repeated `MAX_REPEAT=3`x (no spam) → `false` silently.
-   - otherwise: updates `last_action`/`action_repeats`, arms `action_cd=1.0`,
-     returns `true`.
+   - otherwise: updates `last_action`/`action_repeats`, arms `action_cd=1.0` and
+     `repeat_reset_cd=REPEAT_RESET=30`, returns `true`.
 4. If `true`: applies the effect (mood/hunger), `say(...)` and `hop(...)`.
+5. **Time-based release**: 30s with no new accepted action (`repeat_reset_cd`→0 in the
+   [[Fluxo - Loop (_process) (EN)]]) resets `action_repeats`/`last_action` — the 3x lock releases.
 
 ## Effects per action
 | Action | happy | hunger | hop |

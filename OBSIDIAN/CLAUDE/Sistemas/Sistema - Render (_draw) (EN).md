@@ -34,8 +34,13 @@ back and top layers position themselves relative to the body.
    (shape by `eye_shape`; pupil by `pupil_style` via `_draw_pupils`),
    **eyebrows** (`eyebrow`, only neutral/open eyes), eyelashes (`has_eyelashes`) and
    `_draw_mouth(style)`.
+10b. **Need face** — with no speech, if a bar hit zero the idle face becomes
+    `hungry`/`needy`/`bored` (`_need_expression`) ([[Sistema - Necessidades (EN)]]).
 11. **Accessories** — `if show_accessories` → `_draw_accessories()`
     ([[Sistema - Acessórios (EN)]]).
+12. **Need bars** — `if show_status: _draw_stat_bars()` — in a **footer** below the pet
+    (identity transform, real px), 3 bars with a 🦴/🤚/🎾 icon (2×) on the left via
+    `draw_string` ([[Sistema - Necessidades (EN)]]).
 
 ## Primitives (helpers)
 - `_ellipse(c, r, col, segs=40)` — filled elliptical polygon.

@@ -1,6 +1,6 @@
 ---
 tags: [sistema, expressao, rosto, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-21
 lang: en
 ---
 
@@ -29,6 +29,15 @@ While the pet speaks, **the face mirrors the emotion of the sentence's emoji**. 
 | `disgust` | 🤢 🤮 😖 | crooked eye, wavy mouth, little tongue |
 | `indifferent` | 😑 🙄 😒 🫤 | eyes as dashes, straight mouth |
 | `sleepy` | 😴 💤 🥱 | ∪ eyes, little mouth |
+
+## Need faces (no speech) — via `_need_expression()`
+When a need bar hits zero, the **idle face** changes (same `_draw_expression`):
+| Expression | Trigger | Face |
+|---|---|---|
+| `hungry` | `stat_feed=0` | sad eyes, **wide-open mouth** + little tongue |
+| `needy` | `stat_pet=0` | **crying** (two tears), sad mouth |
+| `bored` | `stat_play=0` | **closed eyes** (—), droopy brow, straight mouth |
+See [[Sistema - Necessidades (EN)]].
 
 ## Synergy
 The [[Sistema - Interação e Mau Humor (EN)|bad mood]] sentences (`MOOD_NEG`) use

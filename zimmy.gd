@@ -252,7 +252,7 @@ const STRINGS := {
 	"cred_pass_ph":   {"pt": "senha de aplicativo (não a senha normal)",
 		"en": "app password (not your normal password)"},
 	# falas (say)
-	"hello":          {"pt": "olá! eu sou o Zimmy 🧡","en": "hi! I'm Zimmy 🧡"},
+	"hello":          {"pt": "olá! eu sou o %s 🧡","en": "hi! I'm %s 🧡"},
 	"say_default":    {"pt": "Padrão 🐾",            "en": "Default 🐾"},
 	"say_no_acc":     {"pt": "sem acessório 🚫",     "en": "no accessory 🚫"},
 	"pet_deleted":    {"pt": "pet excluído: %s 🗑️",  "en": "pet deleted: %s 🗑️"},
@@ -678,7 +678,9 @@ func _ready() -> void:
 	_build_menu()
 	_build_save_dialog()
 
-	say(t("hello"))
+	# Saudação usa o nome do pet salvo ativo (ou "Zimmy" se for o Default/aleatório).
+	var greet_name := current_pet_name if saved_pets.has(current_pet_name) else "Zimmy"
+	say(t("hello") % greet_name)
 
 # ------------------------------------------------------------------ menu / UI
 func _build_menu() -> void:

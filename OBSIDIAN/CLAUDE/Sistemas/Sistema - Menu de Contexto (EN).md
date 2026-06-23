@@ -52,6 +52,7 @@ mouse-over capture between submenus is native (each is an **OS window**,
 📧 E-mails ▸ (12) → submenu email_menu
 💬 WhatsApp ▸ (19) → submenu whatsapp_menu (unread chats, read from the window title)
 🌐 Language ▸ (15) → submenu lang_menu
+❤️ Donate ▸ (20) → submenu donate_menu (GitHub Sponsors, Ko-fi — open links)
 ──
 Quit (9)
 ```

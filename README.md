@@ -138,6 +138,8 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 - 🇧🇷 **💬 WhatsApp ▸** — mostra o número de **conversas não lidas do WhatsApp** como badge no rótulo. **Não** faz login no WhatsApp (não há API; a sessão fica presa ao navegador) — apenas **lê o título da janela do WhatsApp Web** que o seu navegador mantém aberto (o título vira "(N) WhatsApp" quando há não lidas). Mantenha o **WhatsApp Web aberto e vinculado**. Ver **WhatsApp** abaixo.
 - 🇬🇧 **🌐 Language ▸** — chooses the language of **all system texts** (menu, dialogs and the pet's speech) between **Português (Brasil)** and **English (US)**. The switch is immediate and the option stays marked (✓). See **Language** below.
 - 🇧🇷 **🌐 Idioma ▸** — escolhe o idioma de **todos os textos do sistema** (menu, diálogos e as falas do pet) entre **Português (Brasil)** e **English (US)**. A troca é imediata e a opção fica marcada (✓). Ver **Idioma** abaixo.
+- 🇬🇧 **❤️ Donate ▸** — submenu with two ways to support the project: **GitHub Sponsors** and **Ko-fi**. Each opens the link in your browser (`OS.shell_open`).
+- 🇧🇷 **❤️ Doação ▸** — submenu com dois jeitos de apoiar o projeto: **GitHub Sponsors** e **Ko-fi**. Cada um abre o link no navegador (`OS.shell_open`).
 - 🇬🇧 **Quit**.
 - 🇧🇷 **Sair**.
 

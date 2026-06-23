@@ -52,6 +52,7 @@ submenus é nativo (cada submenu é uma **janela do SO**, `gui_embed_subwindows 
 📧 E-mails ▸ (12) → submenu email_menu
 💬 WhatsApp ▸ (19) → submenu whatsapp_menu (conversas não lidas, lendo o título da janela)
 🌐 Idioma ▸ (15) → submenu lang_menu
+❤️ Doação ▸ (20) → submenu donate_menu (GitHub Sponsors, Ko-fi — abrem links)
 ──
 Sair (9)
 ```

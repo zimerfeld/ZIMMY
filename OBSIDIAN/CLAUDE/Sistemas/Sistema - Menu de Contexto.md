@@ -15,9 +15,20 @@ No clique direito, antes do `popup()`: `_rebuild_automations_menu()`,
 `_refresh_save_labels()`, `menu.reset_size()` e então
 `menu.position = _context_menu_position(menu.size)`. **`_context_menu_position`** calcula
 o retângulo real do pet na tela (`get_window().position + (pet_x, pet_y)`, `PET_DRAW²`)
-e testa candidatos **direita → esquerda → abaixo → acima** (gap de 8px): retorna o
-primeiro que **cabe na área útil** (`screen_get_usable_rect().encloses`) e **não cobre o
-pet** (`!intersects`). Sem encaixe perfeito, clampa o candidato da direita às bordas.
+deixa o menu **colado no pet** e decide a **direção da cascata** (`lvl = max(menu.x, 300)`,
+`cascade = 2·lvl` ≈ 2 níveis de submenu): **(1)** se a cascata cabe **à direita** (pet à
+esquerda/centro), menu à direita do pet, submenus p/ a direita (nativo); **(2)** se não cabe
+à direita mas cabe **à esquerda** (pet na direita da tela), menu à esquerda do pet e
+`_cascade_left = true` → os submenus abrem p/ a **ESQUERDA**; **(3)** nenhum dos dois (tela
+estreita) → recua p/ a direita o necessário (melhor esforço). Se o menu cobrir o pet nessa
+posição, desce (ou sobe). **Cascata p/ a esquerda** (`_flip_submenu_if_left`): como os
+submenus do Godot só abrem p/ a direita, cada submenu (mapeado em `_submenu_parent`) conecta
+`about_to_popup` e, quando `_cascade_left`, sobrescreve o **X** para `pai.position.x −
+sub.size.x` (mantendo o Y que o Godot alinhou ao item). Assim o menu fica junto do pet à
+direita e a cascata flui p/ a esquerda, sem sobrepor. As prévias de nota são limitadas a 30
+chars p/ os submenus não ficarem largos demais. O empilhamento/captura de mouse-over entre
+submenus é nativo (cada submenu é uma **janela do SO**, `gui_embed_subwindows = false`): o
+último aberto fica no topo e captura o mouse, sem repassar eventos para os menus atrás.
 
 ## Itens e ids (`MI_*`) — ver [[Entrada - Itens do Menu]]
 ```
@@ -36,7 +47,10 @@ pet** (`!intersects`). Sem encaixe perfeito, clampa o candidato da direita às b
 🗑️ Excluir acessório ▸ (14) → submenu acc_del_menu
 ──
 ⚙️ Automações ▸ (11) → submenu automations_menu
+   └ 💱 Moedas ▸ (17) → submenu moedas_menu (cotações; só aparece se houver alguma)
+📝 Notas ▸ (18) → submenu notes_menu (bloquinho de texto; manual + área de transferência)
 📧 E-mails ▸ (12) → submenu email_menu
+💬 WhatsApp ▸ (19) → submenu whatsapp_menu (conversas não lidas, lendo o título da janela)
 🌐 Idioma ▸ (15) → submenu lang_menu
 ──
 Sair (9)
@@ -74,8 +88,22 @@ chave `lang` em settings.json) e chama `_apply_menu_labels()` (reaplica rótulos
   → item normal; handler `_on_pick_automation` → `_run_automation` (instancia e chama
   `run(self)`). **Agendadas** (com `SCHEDULE`) → `add_check_item` (✓ = ligada, rótulo
   com a frequência); o handler alterna `_set_automation_enabled(path, on)`. O item
-  **⚙️ Automações** fica **desabilitado** quando a pasta não tem scripts; o submenu é
-  reescaneado a cada abertura do menu (no clique direito).
+  **⚙️ Automações** fica **desabilitado** quando a pasta não tem scripts (nem avulsas
+  nem moedas); o submenu é reescaneado a cada abertura do menu (no clique direito).
+- **moedas_menu** (parte de `_rebuild_automations_menu`): scripts com
+  `MENU_GROUP := "moedas"` (as cotações `cotacao_*`) são roteados para o submenu
+  **💱 Moedas** (`MI_MOEDAS = 17`), aninhado no topo de **⚙️ Automações**. O item de
+  submenu só é criado quando há pelo menos uma cotação; mesmo handler `_on_pick_automation`.
+- **notes_menu** (`_rebuild_notes_menu`): bloquinho de notas de texto (`MI_NOTES = 18`),
+  acima de 📧 E-mails. Itens fixos `➕ Nova nota...` (`NOTE_NEW`) e
+  `📋 Colar da área de transferência` (`NOTE_PASTE`); depois a lista de notas (ids 100+
+  ↔ `note_ids` → índice em `notes`) — **clicar copia** o texto para a área de transferência
+  (`DisplayServer.clipboard_set`). Subsubmenu `🗑️ Excluir nota` (`notes_del_menu`,
+  `MI_NOTES_DEL`, ids 100+ ↔ `note_del_ids`) remove a nota. Sem notas, mostra o rótulo
+  desabilitado `(nenhuma nota)`. `➕ Nova nota...` abre o `notes_dialog` (ConfirmationDialog
+  com `TextEdit` multilinha); `📋 Colar` lê `DisplayServer.clipboard_get()`. Persistência:
+  `user://notes.json` (array de strings — `_save_notes`/`_load_notes`). A prévia no menu
+  é uma linha só (`_note_preview`: tira quebras e limita a 40 chars).
 
 ## Automações + Agendador (pasta `Automacoes/`)
 Drop-in de scripts: cada `.gd` em `Automacoes/` com `run(zimmy)` vira um item.
@@ -99,16 +127,35 @@ nomes trocam de idioma na hora. Contrato em `Automacoes/LEIAME.md`.
 
 ## Submenu 📧 E-mails (grupos, badges, credenciais)
 Consts opcionais lidas no scan: `MENU_GROUP` (roteia p/ um submenu dedicado — `email` →
-`email_menu`), `ICON_COLOR` (ícone à esquerda via `add_icon_check_item` + `_provider_icon`,
+`email_menu`; `moedas` → `moedas_menu`, aninhado em ⚙️ Automações; `whatsapp` →
+`whatsapp_menu`, top-level `MI_WHATSAPP = 19`), `ICON_COLOR` (ícone à esquerda via `add_icon_check_item` + `_provider_icon`,
 cacheado), `BADGE_KEY` (rótulo mostra `automation_badges[key]`, setado por
 `set_automation_badge`), `CRED_KEY` (arquivo de credencial). Mapas: `automation_groups`,
 `automation_icon_colors`, `automation_badge_keys`, `automation_cred_keys`,
 `automation_item_menu` (id → menu onde o item está, p/ marcar o ✓ no menu certo).
-**Credenciais** (`CRED_PREFIX = user://cred_`): `with_credentials`/`confirm_credentials`/
-`forget_credentials`/`load`/`save`; diálogo `cred_dialog` (e-mail + App Password mascarada);
-pede ao ligar se não houver salva, grava só após validar. **IMAP**: `imap_unread(host,
-port, user, pass, cb)` (TCP+TLS, `LOGIN` + `STATUS INBOX (UNSEEN)`). Exemplos
-`email_gmail`/`email_outlook` (exigem App Password). Contrato em `Automacoes/LEIAME.md`.
+**Credenciais** (`CRED_PREFIX = user://cred_`): `with_credentials(key, title, cb, help_steps:="", help_url:="")`/`confirm_credentials`/
+`forget_credentials`/`load`/`save`; diálogo `cred_dialog` (passo-a-passo opcional `cred_help` +
+link `cred_link`→`OS.shell_open(help_url)` no topo, e-mail + App Password mascarada). O
+`email_gmail` passa o passo-a-passo de como gerar a App Password (exibido na 1ª vez);
+pede ao ligar se não houver salva, grava só após validar. **Gmail** (`email_gmail`) usa o
+**feed Atom**: `http_get_auth(url, user, pass, cb)` (GET com `Authorization: Basic`, devolve
+`cb.call(status, body)`) em `mail/feed/atom`, e um regex extrai `<fullcount>N</fullcount>` —
+sem IMAP. **Outlook** (`email_outlook`) usa **IMAP**: `imap_unread(host, port, user, pass,
+cb)` (TCP+TLS, `LOGIN` + `STATUS INBOX (UNSEEN)`). Ambos exigem App Password (Basic no feed,
+`LOGIN` no IMAP). Contrato em `Automacoes/LEIAME.md`.
+
+## Submenu 💬 WhatsApp (conversas não lidas)
+Drop-in `whatsapp.gd` (`MENU_GROUP = "whatsapp"` → submenu top-level `💬 WhatsApp`,
+`BADGE_KEY`, `ICON_COLOR = 25d366`, `SCHEDULE = "1m"`). **Não há API nem credencial**: o
+WhatsApp Web prende a sessão ao navegador vinculado por QR. A automação só **lê o título
+da janela** do WhatsApp Web (`OS.execute("tasklist", ["/v","/fo","csv","/nh"])`) — quando
+há não lidas o título vira `"(N) WhatsApp"`; um `RegEx` `(?i)\((\d+)\)\s*whatsapp` extrai N
+(comparação em minúsculas / `(?i)` p/ casar qualquer caixa — `WhatsApp`, `web.whatsapp.com`,
+janela PWA; sem parênteses ⇒ 0; janela ausente ⇒ badge `?` + aviso "não está aberto"). É
+observação passiva (não toca nos servidores do WhatsApp, não viola os termos). Requer o
+WhatsApp Web aberto e idealmente **como UMA janela própria** (atalho `chrome --app=...` ou
+⋮ ▸ Criar atalho ▸ Abrir como janela): com a aba normal + uma 2ª janela abertas ao mesmo
+tempo, o WhatsApp mostra "aberto em outra janela" e não põe o `(N)` no título.
 
 ## Diálogo de salvar / renomear
 `_build_save_dialog` + `_open_save_dialog(mode, action)` reaproveitam o mesmo

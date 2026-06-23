@@ -84,6 +84,10 @@ Formatos aceitos em `SCHEDULE`:
   com o JSON decodificado (ou null). Na *closure*, referencie só `zimmy` e variáveis
   locais (**não** `self`), para funcionar tanto no clique quanto no disparo agendado.
   Ver os exemplos `cotacao_*.gd`.
+- **Web autenticado**: `zimmy.http_get_auth(url, user, pass, cb)` — GET com
+  `Authorization: Basic`; chama `cb.call(status, body)` (status = código HTTP: 200 ok,
+  401 credencial inválida, 0 = falha de rede). Útil p/ feeds protegidos. Ver `email_gmail.gd`
+  (feed Atom do Gmail → `<fullcount>N</fullcount>`).
 - **Sistema**: automações são GDScript, então podem usar `OS.execute(...)` /
   `OS.create_process(...)` (ex.: `shutdown`, bipe) e `Time.get_datetime_dict_from_system()`.
   Ver `desligar_pc.gd` e `alarme.gd`.
@@ -95,6 +99,8 @@ Constantes opcionais que o Zimmy lê do script:
 | Const | Efeito |
 |---|---|
 | `MENU_GROUP := "email"` | põe o item num submenu dedicado **📧 E-mails** (em vez de ⚙️ Automações) |
+| `MENU_GROUP := "moedas"` | põe o item no submenu **💱 Moedas**, aninhado dentro de ⚙️ Automações (usado pelas cotações) |
+| `MENU_GROUP := "whatsapp"` | põe o item no submenu dedicado **💬 WhatsApp** (usado pelo contador de não lidas) |
 | `ICON_COLOR := "ea4335"` | cor do **ícone à esquerda** do item (hex) |
 | `BADGE_KEY := "..."` | chave do **badge**; o rótulo mostra o valor de `zimmy.set_automation_badge(key, texto)` |
 | `CRED_KEY := "..."` | guarda credenciais em `user://cred_<key>.json` (gitignored) |

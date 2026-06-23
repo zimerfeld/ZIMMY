@@ -25,7 +25,10 @@ Endpoints acionados pelo menu de contexto. Ids `MI_*` despachados em `_on_menu(i
 | 8 | `MI_CHOOSE_ACC` | 🧳 Escolher acessório ▸ | submenu `acc_menu` |
 | 14 | `MI_DEL_ACC` | 🗑️ Excluir acessório ▸ | submenu `acc_del_menu` |
 | 11 | `MI_AUTOMATIONS` | ⚙️ Automações ▸ | submenu `automations_menu` |
+| 17 | `MI_MOEDAS` | 💱 Moedas ▸ | submenu `moedas_menu` (aninhado em ⚙️ Automações; só aparece se houver cotações) |
+| 18 | `MI_NOTES` | 📝 Notas ▸ | submenu `notes_menu` → `_on_pick_note` (nova/colar/copiar) + `🗑️ Excluir nota` (`notes_del_menu` → `_on_del_note`) |
 | 12 | `MI_EMAIL` | 📧 E-mails ▸ | submenu `email_menu` |
+| 19 | `MI_WHATSAPP` | 💬 WhatsApp ▸ | submenu `whatsapp_menu` (drop-in `whatsapp.gd`, `MENU_GROUP="whatsapp"`; lê o título da janela do WhatsApp Web) |
 | 15 | `MI_LANG` | 🌐 Idioma ▸ | submenu `lang_menu` → `_on_pick_language` |
 | 9 | `MI_QUIT` | Sair | `get_tree().quit()` |
 

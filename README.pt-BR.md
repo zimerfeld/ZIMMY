@@ -149,12 +149,24 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   **avulsas** aparecem como botões (executam uma vez ao clicar); automações
   **agendadas** aparecem como itens **marcáveis** (✓ = ligada) com a frequência no
   rótulo — é o **agendador visual**. Ver **Automações** abaixo.
+- **📝 Notas ▸** — um bloquinho de notas de texto. **➕ Nova nota...** abre um campo
+  multilinha para digitar; **📋 Colar da área de transferência** transforma o texto
+  atual da área de transferência numa nota. As notas salvas aparecem na lista — **clicar
+  numa copia o texto de volta para a área de transferência**; **🗑️ Excluir nota ▸**
+  remove. As notas persistem em `user://notes.json`. Ver **Notas** abaixo.
 - **📧 E-mails ▸** — submenu dedicado aos provedores de e-mail (Gmail, Outlook), cada um
   com o **ícone à esquerda** e o **contador de não lidos** no rótulo. Fica **desabilitado**
   se não houver automações de e-mail. Ver **E-mails** abaixo.
+- **💬 WhatsApp ▸** — mostra o número de **conversas não lidas do WhatsApp** como badge.
+  **Não** faz login no WhatsApp (não há API; a sessão fica presa ao navegador) — apenas
+  **lê o título da janela do WhatsApp Web** que o seu navegador mantém aberto (vira
+  "(N) WhatsApp" quando há não lidas). Mantenha o **WhatsApp Web aberto e vinculado**.
+  Ver **WhatsApp** abaixo.
 - **🌐 Idioma ▸** — escolhe o idioma de **todos os textos do sistema** (menu, diálogos e
   as falas do pet) entre **Português (Brasil)** e **English (US)**. A troca é imediata e
   a opção fica marcada (✓). Ver **Idioma** abaixo.
+- **❤️ Doação ▸** — submenu com dois jeitos de apoiar o projeto: **GitHub Sponsors** e
+  **Ko-fi**. Cada um abre o link no navegador (`OS.shell_open`).
 - **Sair**.
 
 ## Necessidades (barras de status)
@@ -179,6 +191,16 @@ do pet** (saudação, reações de alimentar/carinho/brincar, mau humor, avisos)
 idioma em **🌐 Idioma ▸**; a interface inteira muda na hora e a escolha é **persistida**
 em `user://settings.json` (chave `lang`), voltando no mesmo idioma na próxima abertura.
 As automações da pasta `Automacoes/` mantêm os textos definidos por cada script.
+
+## Notas
+
+O submenu **📝 Notas ▸** é um bloquinho de texto para lembretes e trechos rápidos.
+Crie uma nota de dois jeitos: **➕ Nova nota...** abre um diálogo multilinha para
+digitar, ou **📋 Colar da área de transferência** transforma o que estiver na área de
+transferência numa nota. Cada nota salva aparece na lista (prévia reduzida a uma linha);
+**clicar numa nota copia o texto completo de volta para a área de transferência**, pronto
+para colar em qualquer lugar. Remova notas em **🗑️ Excluir nota ▸**. Tudo é **persistido**
+em `user://notes.json` (uma lista simples de strings), então as notas sobrevivem a reinícios.
 
 ## Automações
 
@@ -236,11 +258,13 @@ para funcionar tanto no clique quanto no disparo agendado.
 | Auto-alimentar 🦴 | `auto_alimentar.gd` | a cada 20s — alimenta se com fome |
 | Lembrete Pomodoro ☕ | `lembrete_pomodoro.gd` | a cada 25min — lembra de pausar |
 | Comemorar hora cheia 🎉 | `comemoracao_hora_cheia.gd` | `hourly` — comemora cada virada de hora |
-| Cotação USD/EUR/GBP/JPY/CNY 💱 | `cotacao_*.gd` | avulsas — cotação da moeda em BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), grátis). As 5 moedas de maior influência (cesta SDR) formam o "submenu de moedas" em ⚙️ Automações |
+| Cotação USD/EUR/GBP/JPY/CNY 💱 | `cotacao_*.gd` | avulsas — cotação da moeda em BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), grátis). As 5 moedas de maior influência (cesta SDR) ficam agrupadas no submenu **💱 Moedas** aninhado em ⚙️ Automações (`MENU_GROUP := "moedas"`) |
 | Desligar PC 🔌 | `desligar_pc.gd` | `daily@23:00` — desliga o Windows com 60s de aviso |
 | Cancelar desligamento ❌ | `cancelar_desligamento.gd` | avulsa — aborta o desligamento (`shutdown /a`) |
 | Alarme ⏰ | `alarme.gd` | `daily@08:00` — pula, avisa e dá um bipe |
-| Gmail / Outlook 📧 | `email_gmail.gd`, `email_outlook.gd` | a cada 5min — contam e-mails não lidos via IMAP; aparecem no submenu **📧 E-mails** |
+| Gmail 📧 | `email_gmail.gd` | a cada 5min — conta e-mails não lidos pelo **feed Atom** (`mail/feed/atom`, HTTP Basic + App Password); aparece no submenu **📧 E-mails** |
+| Outlook 📧 | `email_outlook.gd` | a cada 5min — conta e-mails não lidos via **IMAP**; aparece no submenu **📧 E-mails** |
+| WhatsApp 💬 | `whatsapp.gd` | a cada 1min — conta conversas não lidas **lendo o título da janela do WhatsApp Web** (`tasklist`), sem API/login; aparece no submenu **💬 WhatsApp** |
 
 > **Atenção (desligar PC):** `desligar_pc.gd` executa `shutdown` de verdade. Vem
 > **desligado** por padrão e dá 60s de aviso; para abortar, rode "Cancelar desligamento".
@@ -249,20 +273,30 @@ para funcionar tanto no clique quanto no disparo agendado.
 
 Automações que declaram `const MENU_GROUP := "email"` aparecem num submenu dedicado
 **📧 E-mails**, com o **ícone do provedor à esquerda** (cor de `ICON_COLOR`) e o
-**contador de não lidos no rótulo**. Cada provedor (`email_gmail.gd`, `email_outlook.gd`)
-busca a contagem por **IMAP sobre TLS** (`zimmy.imap_unread(...)`) a cada 5 min.
+**contador de não lidos no rótulo**, atualizado a cada 5 min. O **Gmail**
+(`email_gmail.gd`) usa o **feed Atom**, leve — um único GET autenticado em
+`mail/feed/atom` (`zimmy.http_get_auth(...)`) que devolve `<fullcount>N</fullcount>`, sem
+máquina de estados IMAP. O **Outlook** (`email_outlook.gd`) usa **IMAP sobre TLS**
+(`zimmy.imap_unread(...)`). Os dois autenticam com uma **App Password** (HTTP Basic no
+feed, `LOGIN` no IMAP).
 
 **Pré-requisito — App Password** (a senha normal **não funciona mais**):
 
 - **Gmail**: ative a verificação em 2 etapas e gere uma *Senha de app* em
-  [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords); confira
-  que o **IMAP está ativado** (Gmail ▸ Configurações ▸ Encaminhamento e POP/IMAP). O Google
-  mostra a senha em 4 grupos de 4 — pode colar **com ou sem os espaços** (o Zimmy remove).
-  Use a **Senha de app**, não a sua senha normal do Google.
+  [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords). O **feed
+  Atom não exige IMAP ativado** — só a App Password. O Google mostra a senha em 4 grupos de
+  4 — pode colar **com ou sem os espaços** (o Zimmy remove). Use a **Senha de app**, não a
+  sua senha normal do Google.
 - **Outlook/Hotmail**: gere uma *Senha de aplicativo* em
   [account.microsoft.com/security](https://account.microsoft.com/security). Contas
   **Microsoft 365 corporativas** costumam ter IMAP/básico **desativado** pelo admin — aí
   não funciona.
+
+**Passo-a-passo de primeira vez**: na primeira vez que você liga o **Gmail** (enquanto
+ainda não há credencial salva), o diálogo de login mostra um **passo-a-passo de como gerar
+a App Password**, além de um link clicável **"↗ Abrir a página da Senha de app"** que abre a
+página do Google no navegador. Qualquer automação pode fornecer a sua própria ajuda pelos
+parâmetros opcionais `help_steps`/`help_url` de `zimmy.with_credentials(...)`.
 
 **Credenciais**: ao **ligar** um provedor no menu, o Zimmy pede *e-mail* + *App Password*.
 Elas são salvas **por automação** em `user://cred_<chave>.json` (ex.: `cred_email_gmail.json`)
@@ -273,6 +307,24 @@ vale em outro computador. Só são gravadas/atualizadas **após um login válido
 mudar e o login falhar, o arquivo é descartado e o Zimmy pergunta de novo. Arquivos antigos
 em texto puro são migrados (recriptografados) na leitura. Reutilize esse fluxo em qualquer
 automação com `zimmy.with_credentials(key, titulo, cb)` + `zimmy.confirm_credentials(key, dados)`.
+
+### WhatsApp (submenu 💬 WhatsApp) — conversas não lidas
+
+A automação `whatsapp.gd` (`MENU_GROUP := "whatsapp"`) mostra o número de **conversas não
+lidas do WhatsApp** como badge, a cada minuto. **Importante — ela não se conecta ao
+WhatsApp:** não existe API pública e a sessão do WhatsApp Web é presa criptograficamente ao
+navegador que leu o QR, então não dá para reusá-la de fora. Automatizar o cliente do
+WhatsApp (ex.: com bibliotecas não oficiais) **violaria os Termos do WhatsApp e arriscaria
+um banimento**, então o Zimmy **não** faz isso. Em vez disso, faz **observação passiva**: lê
+o **título da janela do WhatsApp Web** que o seu próprio navegador mantém aberto, via
+`tasklist` — o WhatsApp põe `(N) WhatsApp` no título quando há não lidas, e um pequeno regex
+extrai o `N`. Nenhum servidor é acessado, nada é injetado.
+
+**Requisito:** mantenha o **WhatsApp Web aberto e vinculado** a este aparelho — de
+preferência como **janela própria** (Chrome ▸ ⋮ ▸ *Transmitir, salvar e compartilhar* ▸
+*Criar atalho...* ▸ ✓ *Abrir como janela*), assim a contagem fica no título mesmo quando não
+é a aba ativa. Se a janela não for encontrada, o badge mostra `?` e o Zimmy avisa que não
+está aberto.
 
 ## Pets
 

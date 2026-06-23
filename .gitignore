@@ -22,3 +22,7 @@ mono_crash.*.json
 # Credenciais de automações (NUNCA versionar) — ficam em user://, mas por garantia:
 cred_*.json
 *.cred.json
+
+# Build exportado (Windows) — passa do limite de 100 MB do GitHub; não versionar
+build/
+*.exe

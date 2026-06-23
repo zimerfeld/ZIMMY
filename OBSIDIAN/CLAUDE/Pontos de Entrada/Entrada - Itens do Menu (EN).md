@@ -26,8 +26,12 @@ Endpoints triggered by the context menu. `MI_*` ids dispatched in `_on_menu(id)`
 | 8 | `MI_CHOOSE_ACC` | 🧳 Escolher acessório ▸ | submenu `acc_menu` |
 | 14 | `MI_DEL_ACC` | 🗑️ Excluir acessório ▸ | submenu `acc_del_menu` |
 | 11 | `MI_AUTOMATIONS` | ⚙️ Automações ▸ | submenu `automations_menu` |
+| 17 | `MI_MOEDAS` | 💱 Currencies ▸ | submenu `moedas_menu` (nested in ⚙️ Automations; only shown if there are rates) |
+| 18 | `MI_NOTES` | 📝 Notes ▸ | submenu `notes_menu` → `_on_pick_note` (new/paste/copy) + `🗑️ Delete note` (`notes_del_menu` → `_on_del_note`) |
 | 12 | `MI_EMAIL` | 📧 E-mails ▸ | submenu `email_menu` |
+| 19 | `MI_WHATSAPP` | 💬 WhatsApp ▸ | submenu `whatsapp_menu` (drop-in `whatsapp.gd`, `MENU_GROUP="whatsapp"`; reads the WhatsApp Web window title) |
 | 15 | `MI_LANG` | 🌐 Idioma ▸ | submenu `lang_menu` → `_on_pick_language` |
+| 20 | `MI_DONATE` | ❤️ Donate ▸ | submenu `donate_menu` → `_on_pick_donate` (GitHub Sponsors / Ko-fi via `OS.shell_open`) |
 | 9 | `MI_QUIT` | Sair | `get_tree().quit()` |
 
 ## Submenus

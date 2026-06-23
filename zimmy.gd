@@ -42,6 +42,7 @@ const PETS_FILE := "user://pets.json"
 const ACC_FILE := "user://accessories.json"
 const SETTINGS_FILE := "user://settings.json"   # guarda a última posição na tela
 const SCHEDULES_FILE := "user://schedules.json" # quais automações agendadas estão ligadas
+const NOTES_FILE := "user://notes.json"         # bloquinho de notas de texto (lista de strings)
 const AUTOMACOES_DIR := "res://Automacoes/"   # scripts de automação (drop-in) — ver Automacoes/LEIAME.md
 const RANDOM_PERIOD := 10.0  # segundos entre gerações aleatórias de pets/acessórios (quando ligado)
 const PET_COLOR_KEYS := ["body_color", "belly_color", "ear_color", "cheek_color",
@@ -82,6 +83,9 @@ var cred_user_edit: LineEdit
 var cred_pass_edit: LineEdit
 var cred_l1: Label   # rótulo "E-mail:" (retraduzido ao abrir o diálogo)
 var cred_l2: Label   # rótulo "App Password..." (idem)
+var cred_help: Label      # passo-a-passo (ex.: como obter a App Password do Gmail)
+var cred_link: LinkButton # link p/ abrir a página da App Password no navegador
+var cred_help_url := ""   # URL que o cred_link abre (vazio = sem link)
 var cred_pending_key := ""               # chave da credencial sendo solicitada agora
 var cred_pending_cb := Callable()        # callback a chamar com {user, pass} ao confirmar
 var cred_prompt_suppressed: Dictionary = {} # chaves cujo prompt o usuário cancelou (não insistir)
@@ -157,10 +161,19 @@ var menu: PopupMenu
 var pets_menu: PopupMenu
 var acc_menu: PopupMenu
 var automations_menu: PopupMenu
+var moedas_menu: PopupMenu
 var email_menu: PopupMenu
+var whatsapp_menu: PopupMenu       # submenu 💬 WhatsApp (drop-in com MENU_GROUP = "whatsapp")
 var pets_del_menu: PopupMenu
 var acc_del_menu: PopupMenu
 var lang_menu: PopupMenu
+var notes_menu: PopupMenu          # submenu 📝 Notas
+var notes_del_menu: PopupMenu      # subsubmenu 🗑️ Excluir nota
+var notes_dialog: ConfirmationDialog
+var note_edit: TextEdit            # campo multilinha do diálogo de nova nota
+var notes: Array = []              # lista de notas (strings), persistida em notes.json
+var note_ids: Dictionary = {}      # id do item no submenu Notas -> índice em `notes`
+var note_del_ids: Dictionary = {}  # id do item em Excluir nota -> índice em `notes`
 var save_dialog: ConfirmationDialog
 var name_edit: LineEdit
 var save_mode := "pet"      # "pet" ou "acc" — o que o diálogo de salvar grava
@@ -189,6 +202,13 @@ const MI_DEL_PET := 13
 const MI_DEL_ACC := 14
 const MI_LANG := 15
 const MI_STATUS := 16
+const MI_MOEDAS := 17   # submenu 💱 Moedas, dentro de ⚙️ Automações
+const MI_NOTES := 18    # submenu 📝 Notas (acima de 📧 E-mails)
+# ids internos do submenu 📝 Notas (espaço próprio; as notas em si usam 100+)
+const NOTE_NEW := 1      # ➕ Nova nota...
+const NOTE_PASTE := 2    # 📋 Colar da área de transferência
+const MI_NOTES_DEL := 3  # 🗑️ Excluir nota ▸ (subsubmenu)
+const MI_WHATSAPP := 19  # submenu 💬 WhatsApp (contador de conversas não lidas)
 const LANG_PT := 1   # ids dos itens do submenu de idioma
 const LANG_EN := 2
 
@@ -214,7 +234,10 @@ const STRINGS := {
 	"mi_choose_acc": {"pt": "🧳 Escolher acessório", "en": "🧳 Choose accessory"},
 	"mi_del_acc":    {"pt": "🗑️ Excluir acessório",  "en": "🗑️ Delete accessory"},
 	"mi_automations":{"pt": "⚙️ Automações",         "en": "⚙️ Automations"},
+	"mi_moedas":     {"pt": "💱 Moedas",             "en": "💱 Currencies"},
+	"mi_notes":      {"pt": "📝 Notas",              "en": "📝 Notes"},
 	"mi_emails":     {"pt": "📧 E-mails",            "en": "📧 E-mails"},
+	"mi_whatsapp":   {"pt": "💬 WhatsApp",           "en": "💬 WhatsApp"},
 	"mi_language":   {"pt": "🌐 Idioma",             "en": "🌐 Language"},
 	"mi_quit":       {"pt": "Sair",                  "en": "Quit"},
 	# submenus / sentinelas (rótulo exibido; o valor lógico continua "Default"/"Nenhum")
@@ -251,6 +274,8 @@ const STRINGS := {
 	"cred_user_ph":   {"pt": "voce@gmail.com",       "en": "you@gmail.com"},
 	"cred_pass_ph":   {"pt": "senha de aplicativo (não a senha normal)",
 		"en": "app password (not your normal password)"},
+	"cred_open_page": {"pt": "↗ Abrir a página da Senha de app",
+		"en": "↗ Open the App Password page"},
 	# falas (say)
 	"hello":          {"pt": "olá! eu sou o %s 🧡","en": "hi! I'm %s 🧡"},
 	"say_default":    {"pt": "Padrão 🐾",            "en": "Default 🐾"},
@@ -274,6 +299,19 @@ const STRINGS := {
 	"acc_renamed":    {"pt": "acessório renomeado: %s ✏️","en": "accessory renamed: %s ✏️"},
 	"automation_invalid":{"pt": "automação inválida 🚫","en": "invalid automation 🚫"},
 	"automation_norun":{"pt": "automação sem run() 🤔","en": "automation has no run() 🤔"},
+	# notas (📝 Notas)
+	"note_new":       {"pt": "➕ Nova nota...",       "en": "➕ New note..."},
+	"note_paste":     {"pt": "📋 Colar da área de transferência","en": "📋 Paste from clipboard"},
+	"note_delete":    {"pt": "🗑️ Excluir nota",       "en": "🗑️ Delete note"},
+	"note_empty":     {"pt": "(nenhuma nota)",       "en": "(no notes)"},
+	"note_new_title": {"pt": "Nova nota",            "en": "New note"},
+	"note_ph":        {"pt": "Digite ou cole o texto da nota...","en": "Type or paste the note text..."},
+	"note_saved":     {"pt": "nota salva 📝",         "en": "note saved 📝"},
+	"note_pasted":    {"pt": "nota colada da área de transferência 📋","en": "note pasted from clipboard 📋"},
+	"note_copied":    {"pt": "nota copiada! 📋",      "en": "note copied! 📋"},
+	"note_deleted":   {"pt": "nota excluída 🗑️",      "en": "note deleted 🗑️"},
+	"note_clip_empty":{"pt": "área de transferência vazia 🤔","en": "clipboard is empty 🤔"},
+	"note_empty_input":{"pt": "nota vazia 🤔",        "en": "empty note 🤔"},
 	"login_incomplete":{"pt": "login incompleto 🙈", "en": "incomplete login 🙈"},
 	"hi_react":       {"pt": "oi! 👋",               "en": "hi! 👋"},
 	"sched_on":       {"pt": "⏱️ %s ligada (%s)",    "en": "⏱️ %s on (%s)"},
@@ -675,6 +713,7 @@ func _ready() -> void:
 	add_child(speech)
 
 	_load_schedules()   # antes de montar o menu, para os checkboxes refletirem o estado
+	_load_notes()       # idem: notas salvas já aparecem no submenu 📝 Notas
 	_build_menu()
 	_build_save_dialog()
 
@@ -694,8 +733,18 @@ func _build_menu() -> void:
 	acc_del_menu.id_pressed.connect(_on_del_acc)
 	automations_menu = PopupMenu.new()
 	automations_menu.id_pressed.connect(_on_pick_automation)
+	moedas_menu = PopupMenu.new()
+	moedas_menu.id_pressed.connect(_on_pick_automation)
+	automations_menu.add_child(moedas_menu)   # fica sempre na árvore; o item-submenu é (re)criado em _rebuild
 	email_menu = PopupMenu.new()
 	email_menu.id_pressed.connect(_on_pick_automation)
+	whatsapp_menu = PopupMenu.new()
+	whatsapp_menu.id_pressed.connect(_on_pick_automation)
+	notes_menu = PopupMenu.new()
+	notes_menu.id_pressed.connect(_on_pick_note)
+	notes_del_menu = PopupMenu.new()
+	notes_del_menu.id_pressed.connect(_on_del_note)
+	notes_menu.add_child(notes_del_menu)   # fica sempre na árvore; o item-submenu é (re)criado em _rebuild
 	lang_menu = PopupMenu.new()
 	lang_menu.add_radio_check_item("Português (Brasil)", LANG_PT)
 	lang_menu.add_radio_check_item("English (US)", LANG_EN)
@@ -721,7 +770,9 @@ func _build_menu() -> void:
 	menu.add_submenu_node_item(t("mi_del_acc"), acc_del_menu, MI_DEL_ACC)
 	menu.add_separator()
 	menu.add_submenu_node_item(t("mi_automations"), automations_menu, MI_AUTOMATIONS)
+	menu.add_submenu_node_item(t("mi_notes"), notes_menu, MI_NOTES)
 	menu.add_submenu_node_item(t("mi_emails"), email_menu, MI_EMAIL)
+	menu.add_submenu_node_item(t("mi_whatsapp"), whatsapp_menu, MI_WHATSAPP)
 	menu.add_submenu_node_item(t("mi_language"), lang_menu, MI_LANG)
 	menu.add_separator()
 	menu.add_item(t("mi_quit"), MI_QUIT)
@@ -729,9 +780,11 @@ func _build_menu() -> void:
 	add_child(menu)
 	_build_cred_dialog()
 	_build_delete_dialog()
+	_build_notes_dialog()
 	_rebuild_pets_menu()
 	_rebuild_acc_menu()
 	_rebuild_automations_menu()
+	_rebuild_notes_menu()
 	_refresh_lang_checks()
 
 ## Marca (✓) o idioma ativo no submenu de idioma.
@@ -763,13 +816,16 @@ func _apply_menu_labels() -> void:
 	menu.set_item_text(menu.get_item_index(MI_CHOOSE_ACC), t("mi_choose_acc"))
 	menu.set_item_text(menu.get_item_index(MI_DEL_ACC), t("mi_del_acc"))
 	menu.set_item_text(menu.get_item_index(MI_AUTOMATIONS), t("mi_automations"))
+	menu.set_item_text(menu.get_item_index(MI_NOTES), t("mi_notes"))
 	menu.set_item_text(menu.get_item_index(MI_EMAIL), t("mi_emails"))
+	menu.set_item_text(menu.get_item_index(MI_WHATSAPP), t("mi_whatsapp"))
 	menu.set_item_text(menu.get_item_index(MI_LANG), t("mi_language"))
 	menu.set_item_text(menu.get_item_index(MI_QUIT), t("mi_quit"))
 	_refresh_save_labels()                 # MI_SAVE_PET/ACC (Salvar vs Renomear)
 	_rebuild_pets_menu()                   # sentinelas "Selecione..."/"Padrão"
 	_rebuild_acc_menu()                    # sentinelas "Selecione..."/"Nenhum"
 	_rebuild_automations_menu()            # nomes das automações no idioma atual
+	_rebuild_notes_menu()                  # rótulos do submenu 📝 Notas no idioma atual
 
 ## (Re)constrói o dropdown de pets: "Selecione..." (0) e "Default" (1) no topo.
 func _rebuild_pets_menu() -> void:
@@ -850,18 +906,33 @@ func _refresh_acc_menu_checks() -> void:
 ## Sem nenhuma automação válida, o item "⚙️ Automações" do menu fica desabilitado.
 func _rebuild_automations_menu() -> void:
 	automations_menu.clear()
+	moedas_menu.clear()
 	email_menu.clear()
+	whatsapp_menu.clear()
 	automation_ids.clear()
 	automation_item_menu.clear()
 	var list := _scan_automations()
 	var n_auto := 0
 	var n_email := 0
+	var n_moedas := 0
+	var n_whatsapp := 0
+	# Submenu "💱 Moedas" no topo de Automações (só aparece se houver alguma cotação).
+	for a in list:
+		if automation_groups.get(a["path"], "") == "moedas":
+			automations_menu.add_submenu_node_item(t("mi_moedas"), moedas_menu, MI_MOEDAS)
+			break
 	var next_id := 100
 	for a in list:
 		var path: String = a["path"]
 		var sched: Dictionary = a["sched"]
 		var group: String = automation_groups.get(path, "")
-		var target: PopupMenu = email_menu if group == "email" else automations_menu
+		var target: PopupMenu = automations_menu
+		if group == "email":
+			target = email_menu
+		elif group == "moedas":
+			target = moedas_menu
+		elif group == "whatsapp":
+			target = whatsapp_menu
 		# Rótulo: nome + (frequência, se agendada) + (badge, se houver).
 		var label: String = a["name"]
 		if not sched.is_empty():
@@ -870,9 +941,9 @@ func _rebuild_automations_menu() -> void:
 			var bk: String = automation_badge_keys[path]
 			if automation_badges.has(bk):
 				label += " — %s %s" % [automation_badges[bk], t("unread")]
-		# E-mail: ícone do provedor à esquerda (cor de ICON_COLOR).
+		# Ícone à esquerda (cor de ICON_COLOR) — usado por e-mail e WhatsApp.
 		var icon: Texture2D = null
-		if group == "email" and automation_icon_colors.has(path):
+		if automation_icon_colors.has(path):
 			icon = _provider_icon(automation_icon_colors[path])
 		# Agendadas viram item marcável (✓ = ligada); avulsas, item comum.
 		if not sched.is_empty():
@@ -890,11 +961,16 @@ func _rebuild_automations_menu() -> void:
 		automation_item_menu[next_id] = target
 		if group == "email":
 			n_email += 1
+		elif group == "moedas":
+			n_moedas += 1
+		elif group == "whatsapp":
+			n_whatsapp += 1
 		else:
 			n_auto += 1
 		next_id += 1
-	menu.set_item_disabled(menu.get_item_index(MI_AUTOMATIONS), n_auto == 0)
+	menu.set_item_disabled(menu.get_item_index(MI_AUTOMATIONS), n_auto == 0 and n_moedas == 0)
 	menu.set_item_disabled(menu.get_item_index(MI_EMAIL), n_email == 0)
+	menu.set_item_disabled(menu.get_item_index(MI_WHATSAPP), n_whatsapp == 0)
 
 ## Ícone simples de provedor: um círculo preenchido na cor dada (cacheado por cor).
 func _provider_icon(color: Color) -> Texture2D:
@@ -912,6 +988,125 @@ func _provider_icon(color: Color) -> Texture2D:
 	var tex := ImageTexture.create_from_image(img)
 	_icon_cache[hex] = tex
 	return tex
+
+# ------------------------------------------------------------------ notas (📝 Notas)
+## (Re)constrói o submenu 📝 Notas: ações fixas (nova/colar) + a lista de notas salvas
+## (clicar copia para a área de transferência) + o subsubmenu 🗑️ Excluir nota.
+func _rebuild_notes_menu() -> void:
+	notes_menu.clear()
+	notes_del_menu.clear()
+	note_ids.clear()
+	note_del_ids.clear()
+	notes_menu.add_item(t("note_new"), NOTE_NEW)
+	notes_menu.add_item(t("note_paste"), NOTE_PASTE)
+	notes_menu.add_separator()
+	if notes.is_empty():
+		var idx := notes_menu.get_item_count()
+		notes_menu.add_item(t("note_empty"))   # rótulo desabilitado quando não há notas
+		notes_menu.set_item_disabled(idx, true)
+	else:
+		var nid := 100
+		for i in notes.size():
+			var preview := _note_preview(notes[i])
+			notes_menu.add_item(preview, nid)
+			note_ids[nid] = i
+			notes_del_menu.add_item(preview, nid)
+			note_del_ids[nid] = i
+			nid += 1
+	notes_menu.add_separator()
+	notes_menu.add_submenu_node_item(t("note_delete"), notes_del_menu, MI_NOTES_DEL)
+	notes_menu.set_item_disabled(notes_menu.get_item_index(MI_NOTES_DEL), notes.is_empty())
+
+## Prévia de uma nota numa única linha: tira quebras/tabs e limita o comprimento.
+func _note_preview(text: String) -> String:
+	var one := text.strip_edges().replace("\n", " ").replace("\t", " ")
+	if one.length() > 40:
+		one = one.substr(0, 40).strip_edges() + "…"
+	return "🗒️ " + one
+
+## Clique no submenu Notas: ações fixas ou (id 100+) copiar a nota para a transferência.
+func _on_pick_note(id: int) -> void:
+	if id == NOTE_NEW:
+		_open_note_dialog()
+	elif id == NOTE_PASTE:
+		_paste_note_from_clipboard()
+	elif note_ids.has(id):
+		var i: int = note_ids[id]
+		if i >= 0 and i < notes.size():
+			DisplayServer.clipboard_set(notes[i])
+			say(t("note_copied"))
+
+## Clique em 🗑️ Excluir nota: remove a nota e regrava o disco.
+func _on_del_note(id: int) -> void:
+	if not note_del_ids.has(id):
+		return
+	var i: int = note_del_ids[id]
+	if i >= 0 and i < notes.size():
+		notes.remove_at(i)
+		_save_notes()
+		_rebuild_notes_menu()
+		say(t("note_deleted"))
+
+## Cria uma nota a partir do texto atual da área de transferência (copy/paste).
+func _paste_note_from_clipboard() -> void:
+	var txt := DisplayServer.clipboard_get()
+	if txt.strip_edges() == "":
+		say(t("note_clip_empty"))
+		return
+	_add_note(txt)
+	say(t("note_pasted"))
+
+## Acrescenta uma nota, persiste e reconstrói o submenu.
+func _add_note(text: String) -> void:
+	notes.append(text)
+	_save_notes()
+	_rebuild_notes_menu()
+
+## Diálogo (multilinha) de nova nota — texto digitado à mão.
+func _build_notes_dialog() -> void:
+	notes_dialog = ConfirmationDialog.new()
+	notes_dialog.set_flag(Window.FLAG_ALWAYS_ON_TOP, true)
+	note_edit = TextEdit.new()
+	note_edit.custom_minimum_size = Vector2(340, 150)
+	note_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	notes_dialog.add_child(note_edit)
+	notes_dialog.confirmed.connect(_on_note_confirmed)
+	add_child(notes_dialog)
+
+func _open_note_dialog() -> void:
+	notes_dialog.title = t("note_new_title")
+	notes_dialog.ok_button_text = t("btn_save")
+	notes_dialog.cancel_button_text = t("btn_cancel")
+	note_edit.placeholder_text = t("note_ph")
+	note_edit.text = ""
+	var scr := DisplayServer.screen_get_usable_rect()
+	notes_dialog.size = Vector2i(400, 230)
+	notes_dialog.position = scr.position + (scr.size - notes_dialog.size) / 2
+	notes_dialog.popup()
+	note_edit.grab_focus()
+
+func _on_note_confirmed() -> void:
+	var txt := note_edit.text.strip_edges()
+	if txt == "":
+		say(t("note_empty_input"))
+		return
+	_add_note(txt)
+	say(t("note_saved"))
+
+## Persiste a lista de notas (JSON simples — um array de strings).
+func _save_notes() -> void:
+	var f := FileAccess.open(NOTES_FILE, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(notes, "  "))
+		f.close()
+
+## Carrega as notas salvas (notes.json). Ignora silenciosamente se faltar/for inválido.
+func _load_notes() -> void:
+	var parsed = _read_json(NOTES_FILE)
+	if parsed is Array:
+		notes = []
+		for v in parsed:
+			notes.append(str(v))
 
 ## Lista os scripts .gd de res://Automacoes/ como [{name, path, sched}], ordenados pelo
 ## nome. Também (re)preenche schedule_defs com as automações que declaram frequência.
@@ -1147,6 +1342,30 @@ func http_get_json(url: String, cb: Callable) -> void:
 			cb.call(false, null)
 		http.queue_free()
 
+## Utilitário para automações web COM autenticação HTTP Basic: faz um GET em `url`
+## enviando o cabeçalho Authorization derivado de user/password e chama
+## `cb.call(status: int, body: String)`:
+##  - status = código HTTP (200 ok, 401 credencial inválida, 0 = falha de rede/DNS/timeout)
+##  - body   = corpo da resposta como texto (vazio em falha de rede)
+## A senha é limpa de espaços (App Passwords são exibidas em grupos de 4). Cria e descarta
+## o HTTPRequest sozinho. Na closure passada use só `zimmy` e variáveis locais (não `self`).
+func http_get_auth(url: String, user: String, password: String, cb: Callable) -> void:
+	var http := HTTPRequest.new()
+	add_child(http)
+	var pass_clean := password.replace(" ", "").replace("\t", "")
+	var token := Marshalls.utf8_to_base64("%s:%s" % [user, pass_clean])
+	var headers := ["Authorization: Basic " + token]
+	http.request_completed.connect(func(result, code, _headers, body):
+		var status: int = (code if result == HTTPRequest.RESULT_SUCCESS else 0)
+		if cb.is_valid():
+			cb.call(status, body.get_string_from_utf8())
+		http.queue_free()
+	)
+	if http.request(url, headers, HTTPClient.METHOD_GET) != OK:
+		if cb.is_valid():
+			cb.call(0, "")
+		http.queue_free()
+
 # ------------------------------------------------------------------ badges de automação
 ## Define o texto do badge (ex.: contador de não-lidos) de uma automação, por chave
 ## (const BADGE_KEY). Aparece no rótulo do item na próxima vez que o menu é montado.
@@ -1207,7 +1426,9 @@ func forget_credentials(key: String) -> void:
 ## Entrega as credenciais de `key` a `cb.call({user, pass})`. Se não houver salvas,
 ## abre o diálogo de login (a menos que o usuário já tenha cancelado este `key`).
 ## NÃO salva sozinho — a automação valida e chama confirm_credentials() se válido.
-func with_credentials(key: String, title: String, cb: Callable) -> void:
+## `help_steps`/`help_url` (opcionais): passo-a-passo + link exibidos no topo do diálogo
+## (ex.: como gerar a App Password) — aparecem na 1ª vez, quando ainda não há credencial.
+func with_credentials(key: String, title: String, cb: Callable, help_steps := "", help_url := "") -> void:
 	var saved := load_credentials(key)
 	if not saved.is_empty():
 		if cb.is_valid():
@@ -1225,8 +1446,15 @@ func with_credentials(key: String, title: String, cb: Callable) -> void:
 	cred_pass_edit.placeholder_text = t("cred_pass_ph")
 	cred_user_edit.text = ""
 	cred_pass_edit.text = ""
+	# Passo-a-passo opcional no topo (ex.: Gmail). Sem ajuda, some e o diálogo fica compacto.
+	cred_help.text = help_steps
+	cred_help.visible = help_steps != ""
+	cred_help_url = help_url
+	cred_link.text = t("cred_open_page")
+	cred_link.visible = help_url != ""
 	var scr := DisplayServer.screen_get_usable_rect()
-	cred_dialog.size = Vector2i(360, 170)
+	cred_dialog.size = Vector2i(380, 260) if help_steps != "" else Vector2i(360, 170)
+	cred_dialog.reset_size()
 	cred_dialog.position = scr.position + (scr.size - cred_dialog.size) / 2
 	cred_dialog.popup()
 	cred_user_edit.grab_focus()
@@ -1243,6 +1471,14 @@ func _build_cred_dialog() -> void:
 	cred_dialog.set_flag(Window.FLAG_ALWAYS_ON_TOP, true)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
+	# Passo-a-passo (ex.: como gerar a App Password) — exibido no topo quando há ajuda.
+	cred_help = Label.new()
+	cred_help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	cred_help.custom_minimum_size = Vector2(360, 0)
+	cred_help.visible = false
+	cred_link = LinkButton.new()
+	cred_link.visible = false
+	cred_link.pressed.connect(func(): if cred_help_url != "": OS.shell_open(cred_help_url))
 	cred_l1 = Label.new(); cred_l1.text = t("cred_email_label")
 	cred_user_edit = LineEdit.new()
 	cred_user_edit.custom_minimum_size = Vector2(320, 0)
@@ -1251,6 +1487,7 @@ func _build_cred_dialog() -> void:
 	cred_pass_edit = LineEdit.new()
 	cred_pass_edit.secret = true
 	cred_pass_edit.placeholder_text = t("cred_pass_ph")
+	box.add_child(cred_help); box.add_child(cred_link)
 	box.add_child(cred_l1); box.add_child(cred_user_edit)
 	box.add_child(cred_l2); box.add_child(cred_pass_edit)
 	cred_dialog.add_child(box)

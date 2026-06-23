@@ -149,9 +149,19 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   automations appear as buttons (run once when clicked); **scheduled** automations
   appear as **checkable** items (✓ = on) with the frequency in the label — this is the
   **visual scheduler**. See **Automations** below.
+- **📝 Notes ▸** — a small text scratchpad. **➕ New note...** opens a multiline field to
+  type a note; **📋 Paste from clipboard** turns the current clipboard text into a note.
+  Saved notes are listed below — **clicking one copies it back to the clipboard**;
+  **🗑️ Delete note ▸** removes them. Notes persist in `user://notes.json`. See **Notes**
+  below.
 - **📧 E-mails ▸** — submenu dedicated to the e-mail providers (Gmail, Outlook), each
   with the **icon on the left** and the **unread counter** in the label. It is
   **disabled** if there are no e-mail automations. See **E-mails** below.
+- **💬 WhatsApp ▸** — shows the number of **unread WhatsApp chats** as a badge. It does
+  **not** log into WhatsApp (there's no API; the session is tied to your browser) — it
+  simply **reads the title of the WhatsApp Web window** your browser keeps open (the title
+  becomes "(N) WhatsApp" when there are unread chats). Keep **WhatsApp Web open and
+  linked**. See **WhatsApp** below.
 - **🌐 Language ▸** — chooses the language of **all system texts** (menu, dialogs and
   the pet's speech) between **Português (Brasil)** and **English (US)**. The switch is
   immediate and the option stays marked (✓). See **Language** below.
@@ -179,6 +189,16 @@ the context menu items, the dialogs (save/rename/delete/login) and the **pet's s
 in `user://settings.json` (`lang` key), coming back in the same language on the next
 launch. The automations in the `Automacoes/` folder keep the texts defined by each
 script.
+
+## Notes
+
+The **📝 Notes ▸** submenu is a small text scratchpad for quick reminders and snippets.
+Create a note in two ways: **➕ New note...** opens a multiline dialog to type one, or
+**📋 Paste from clipboard** turns whatever is currently on the clipboard into a note. Each
+saved note is listed (preview trimmed to one line); **clicking a note copies its full text
+back to the clipboard**, ready to paste anywhere. Remove notes via **🗑️ Delete note ▸**.
+Everything is **persisted** in `user://notes.json` (a plain list of strings), so notes
+survive restarts.
 
 ## Automations
 
@@ -237,11 +257,13 @@ the `HTTPRequest` under the hood. In the *closure* use only `zimmy` and local va
 | Auto-feed 🦴 | `auto_alimentar.gd` | every 20s — feeds if hungry |
 | Pomodoro reminder ☕ | `lembrete_pomodoro.gd` | every 25min — reminds you to take a break |
 | Celebrate full hour 🎉 | `comemoracao_hora_cheia.gd` | `hourly` — celebrates each turn of the hour |
-| USD/EUR/GBP/JPY/CNY quote 💱 | `cotacao_*.gd` | one-off — currency quote in BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), free). The 5 most influential currencies (SDR basket) form the "currencies submenu" under ⚙️ Automations |
+| USD/EUR/GBP/JPY/CNY quote 💱 | `cotacao_*.gd` | one-off — currency quote in BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), free). The 5 most influential currencies (SDR basket) are grouped into the **💱 Currencies** submenu nested inside ⚙️ Automations (`MENU_GROUP := "moedas"`) |
 | Shut down PC 🔌 | `desligar_pc.gd` | `daily@23:00` — shuts down Windows with a 60s warning |
 | Cancel shutdown ❌ | `cancelar_desligamento.gd` | one-off — aborts the shutdown (`shutdown /a`) |
 | Alarm ⏰ | `alarme.gd` | `daily@08:00` — hops, warns and gives a beep |
-| Gmail / Outlook 📧 | `email_gmail.gd`, `email_outlook.gd` | every 5min — count unread e-mails via IMAP; appear in the **📧 E-mails** submenu |
+| Gmail 📧 | `email_gmail.gd` | every 5min — count unread e-mails via the **Atom feed** (`mail/feed/atom`, HTTP Basic + App Password); appears in the **📧 E-mails** submenu |
+| Outlook 📧 | `email_outlook.gd` | every 5min — count unread e-mails via **IMAP**; appears in the **📧 E-mails** submenu |
+| WhatsApp 💬 | `whatsapp.gd` | every 1min — counts unread WhatsApp chats by **reading the WhatsApp Web window title** (`tasklist`), no API/login; appears in the **💬 WhatsApp** submenu |
 
 > **Caution (shut down PC):** `desligar_pc.gd` runs a real `shutdown`. It comes **off**
 > by default and gives a 60s warning; to abort, run "Cancel shutdown".
@@ -250,21 +272,29 @@ the `HTTPRequest` under the hood. In the *closure* use only `zimmy` and local va
 
 Automations that declare `const MENU_GROUP := "email"` appear in a dedicated **📧
 E-mails** submenu, with the **provider icon on the left** (color from `ICON_COLOR`) and
-the **unread counter in the label**. Each provider (`email_gmail.gd`,
-`email_outlook.gd`) fetches the count via **IMAP over TLS** (`zimmy.imap_unread(...)`)
-every 5 min.
+the **unread counter in the label**, refreshed every 5 min. **Gmail** (`email_gmail.gd`)
+uses the lightweight **Atom feed** — a single authenticated GET to `mail/feed/atom`
+(`zimmy.http_get_auth(...)`) returning `<fullcount>N</fullcount>`, no IMAP state machine.
+**Outlook** (`email_outlook.gd`) uses **IMAP over TLS** (`zimmy.imap_unread(...)`). Both
+authenticate with an **App Password** (HTTP Basic for the feed, `LOGIN` for IMAP).
 
 **Prerequisite — App Password** (the normal password **no longer works**):
 
 - **Gmail**: enable 2-step verification and generate an *App Password* at
-  [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords); check
-  that **IMAP is enabled** (Gmail ▸ Settings ▸ Forwarding and POP/IMAP). Google shows the
-  App Password in 4 groups of 4 — you can paste it **with or without the spaces** (Zimmy
-  strips them). Use the **App Password**, not your normal Google password.
+  [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords). The
+  **Atom feed doesn't need IMAP enabled** — just the App Password. Google shows it in 4
+  groups of 4 — you can paste it **with or without the spaces** (Zimmy strips them). Use
+  the **App Password**, not your normal Google password.
 - **Outlook/Hotmail**: generate an *App password* at
   [account.microsoft.com/security](https://account.microsoft.com/security). **Corporate
   Microsoft 365** accounts usually have IMAP/basic **disabled** by the admin — then it
   does not work.
+
+**First-time step-by-step**: the very first time you turn on **Gmail** (while no credential
+is saved yet), the login dialog shows a short **step-by-step on how to generate the App
+Password**, plus a clickable **"↗ Open the App Password page"** link that opens Google's page
+in your browser. Any automation can supply its own help via the optional `help_steps`/`help_url`
+args of `zimmy.with_credentials(...)`.
 
 **Credentials**: when you **turn on** a provider in the menu, Zimmy asks for *e-mail* +
 *App Password*. They are saved **per automation** in `user://cred_<key>.json` (e.g.
@@ -276,6 +306,23 @@ valid login**; if the password changes and the login fails, the file is discarde
 asks again. Old plain-text credential files are migrated (re-encrypted) on read. Reuse this
 flow in any automation with `zimmy.with_credentials(key, title, cb)` +
 `zimmy.confirm_credentials(key, data)`.
+
+### WhatsApp (💬 WhatsApp submenu) — unread chats
+
+The `whatsapp.gd` automation (`MENU_GROUP := "whatsapp"`) shows the number of **unread
+WhatsApp chats** as a badge, every minute. **Important — it does not connect to WhatsApp:**
+there is no public API and a WhatsApp Web session is cryptographically bound to the browser
+that scanned the QR, so it can't be reused from outside. Automating the WhatsApp client
+(e.g. with unofficial libraries) would **violate WhatsApp's Terms and risk a ban**, so Zimmy
+does **not** do that. Instead it does pure **passive observation**: it reads the **title of
+the WhatsApp Web window** your own browser keeps open via `tasklist` — WhatsApp sets the
+title to `(N) WhatsApp` when there are unread chats, and a small regex extracts `N`. No
+servers are contacted, nothing is injected.
+
+**Requirement:** keep **WhatsApp Web open and linked** to this device — ideally as its
+**own window** (Chrome ▸ ⋮ ▸ *Cast, save, and share* ▸ *Create shortcut...* ▸ ✓ *Open as
+window*) so the count stays in the title even when it isn't the active tab. If the window
+isn't found, the badge shows `?` and Zimmy says it isn't open.
 
 ## Pets
 

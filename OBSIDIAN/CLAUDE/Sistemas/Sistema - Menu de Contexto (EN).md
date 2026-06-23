@@ -38,7 +38,10 @@ candidate to the edges.
 🗑️ Delete accessory ▸ (14) → submenu acc_del_menu
 ──
 ⚙️ Automations ▸ (11) → submenu automations_menu
+   └ 💱 Currencies ▸ (17) → submenu moedas_menu (rates; only shown if any exist)
+📝 Notes ▸ (18) → submenu notes_menu (text scratchpad; manual + clipboard)
 📧 E-mails ▸ (12) → submenu email_menu
+💬 WhatsApp ▸ (19) → submenu whatsapp_menu (unread chats, read from the window title)
 🌐 Language ▸ (15) → submenu lang_menu
 ──
 Quit (9)
@@ -76,8 +79,23 @@ key `lang` in settings.json) and calls `_apply_menu_labels()` (reapplies the men
   → normal item; handler `_on_pick_automation` → `_run_automation` (instantiates and calls
   `run(self)`). **Scheduled** (with `SCHEDULE`) → `add_check_item` (✓ = on, label
   with the frequency); the handler toggles `_set_automation_enabled(path, on)`. The
-  **⚙️ Automations** item is **disabled** when the folder has no scripts; the submenu is
-  rescanned every time the menu opens (on right-click).
+  **⚙️ Automations** item is **disabled** when the folder has no scripts (neither
+  standalone nor currencies); the submenu is rescanned every time the menu opens (on
+  right-click).
+- **moedas_menu** (part of `_rebuild_automations_menu`): scripts with
+  `MENU_GROUP := "moedas"` (the `cotacao_*` rates) are routed to the **💱 Currencies**
+  submenu (`MI_MOEDAS = 17`), nested at the top of **⚙️ Automations**. The submenu item
+  is only created when at least one rate exists; same handler `_on_pick_automation`.
+- **notes_menu** (`_rebuild_notes_menu`): a small text scratchpad (`MI_NOTES = 18`), above
+  📧 E-mails. Fixed items `➕ New note...` (`NOTE_NEW`) and `📋 Paste from clipboard`
+  (`NOTE_PASTE`); then the note list (ids 100+ ↔ `note_ids` → index in `notes`) — **clicking
+  copies** the text back to the clipboard (`DisplayServer.clipboard_set`). Subsubmenu
+  `🗑️ Delete note` (`notes_del_menu`, `MI_NOTES_DEL`, ids 100+ ↔ `note_del_ids`) removes a
+  note. With no notes, shows a disabled `(no notes)` label. `➕ New note...` opens
+  `notes_dialog` (a ConfirmationDialog with a multiline `TextEdit`); `📋 Paste` reads
+  `DisplayServer.clipboard_get()`. Persistence: `user://notes.json` (array of strings —
+  `_save_notes`/`_load_notes`). The menu preview is single-line (`_note_preview`: strips
+  newlines, caps at 40 chars).
 
 ## Automations + Scheduler (folder `Automacoes/`)
 Drop-in scripts: each `.gd` in `Automacoes/` with `run(zimmy)` becomes an item.
@@ -101,16 +119,36 @@ names switch language immediately. Contract in `Automacoes/LEIAME.md`.
 
 ## 📧 E-mails submenu (groups, badges, credentials)
 Optional consts read in the scan: `MENU_GROUP` (routes to a dedicated submenu — `email` →
-`email_menu`), `ICON_COLOR` (icon on the left via `add_icon_check_item` + `_provider_icon`,
+`email_menu`; `moedas` → `moedas_menu`, nested in ⚙️ Automations; `whatsapp` →
+`whatsapp_menu`, top-level `MI_WHATSAPP = 19`), `ICON_COLOR` (icon on the left via `add_icon_check_item` + `_provider_icon`,
 cached), `BADGE_KEY` (label shows `automation_badges[key]`, set by
 `set_automation_badge`), `CRED_KEY` (credential file). Maps: `automation_groups`,
 `automation_icon_colors`, `automation_badge_keys`, `automation_cred_keys`,
 `automation_item_menu` (id → menu where the item lives, to mark the ✓ in the right menu).
-**Credentials** (`CRED_PREFIX = user://cred_`): `with_credentials`/`confirm_credentials`/
-`forget_credentials`/`load`/`save`; `cred_dialog` dialog (e-mail + masked App Password);
-asks when turning on if none is saved, writes only after validating. **IMAP**: `imap_unread(host,
-port, user, pass, cb)` (TCP+TLS, `LOGIN` + `STATUS INBOX (UNSEEN)`). Examples
-`email_gmail`/`email_outlook` (require an App Password). Contract in `Automacoes/LEIAME.md`.
+**Credentials** (`CRED_PREFIX = user://cred_`): `with_credentials(key, title, cb, help_steps:="", help_url:="")`/`confirm_credentials`/
+`forget_credentials`/`load`/`save`; `cred_dialog` dialog (optional step-by-step `cred_help` +
+`cred_link`→`OS.shell_open(help_url)` at the top, e-mail + masked App Password). `email_gmail`
+passes the step-by-step on how to generate the App Password (shown the first time);
+asks when turning on if none is saved, writes only after validating. **Gmail**
+(`email_gmail`) uses the **Atom feed**: `http_get_auth(url, user, pass, cb)` (GET with
+`Authorization: Basic`, returns `cb.call(status, body)`) on `mail/feed/atom`, and a regex
+extracts `<fullcount>N</fullcount>` — no IMAP. **Outlook** (`email_outlook`) uses **IMAP**:
+`imap_unread(host, port, user, pass, cb)` (TCP+TLS, `LOGIN` + `STATUS INBOX (UNSEEN)`). Both
+require an App Password (Basic for the feed, `LOGIN` for IMAP). Contract in
+`Automacoes/LEIAME.md`.
+
+## 💬 WhatsApp submenu (unread chats)
+Drop-in `whatsapp.gd` (`MENU_GROUP = "whatsapp"` → top-level `💬 WhatsApp` submenu,
+`BADGE_KEY`, `ICON_COLOR = 25d366`, `SCHEDULE = "1m"`). **No API and no credentials**:
+WhatsApp Web locks the session to the QR-linked browser. The automation only **reads the
+window title** (`OS.execute("tasklist", ["/v","/fo","csv","/nh"])`) — when there are unread
+chats the title becomes `"(N) WhatsApp"`; a `RegEx` `(?i)\((\d+)\)\s*whatsapp` extracts N
+(lowercased / `(?i)` to match any case — `WhatsApp`, `web.whatsapp.com`, the PWA window; no
+parens ⇒ 0; window missing ⇒ badge `?` + "isn't open" notice). Passive observation (never
+touches WhatsApp servers, doesn't break the ToS). Requires WhatsApp Web open and ideally as
+**ONE dedicated window** (`chrome --app=...` shortcut, or ⋮ ▸ Create shortcut ▸ Open as
+window): with the normal tab AND a 2nd window open at once, WhatsApp shows "open in another
+window" and won't put the `(N)` in the title.
 
 ## Save / rename dialog
 `_build_save_dialog` + `_open_save_dialog(mode, action)` reuse the same

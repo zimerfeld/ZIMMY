@@ -3,6 +3,7 @@ extends RefCounted
 
 const AUTOMATION_NAME := "Cotação CNY 🇨🇳"
 const AUTOMATION_NAME_EN := "CNY rate 🇨🇳"
+const MENU_GROUP := "moedas"      # vai para o submenu 💱 Moedas (dentro de Automações)
 
 func run(zimmy) -> void:
 	zimmy.notify(zimmy.lang_text("buscando CNY... 🌐", "fetching CNY... 🌐"))

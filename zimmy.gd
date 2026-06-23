@@ -167,6 +167,7 @@ var whatsapp_menu: PopupMenu       # submenu 💬 WhatsApp (drop-in com MENU_GRO
 var pets_del_menu: PopupMenu
 var acc_del_menu: PopupMenu
 var lang_menu: PopupMenu
+var donate_menu: PopupMenu         # submenu ❤️ Doação / Donate (GitHub Sponsors, Ko-fi)
 var notes_menu: PopupMenu          # submenu 📝 Notas
 var notes_del_menu: PopupMenu      # subsubmenu 🗑️ Excluir nota
 var _cascade_left := false         # true = abrir os submenus para a ESQUERDA (pet à direita, sem espaço à direita)
@@ -211,6 +212,12 @@ const NOTE_NEW := 1      # ➕ Nova nota...
 const NOTE_PASTE := 2    # 📋 Colar da área de transferência
 const MI_NOTES_DEL := 3  # 🗑️ Excluir nota ▸ (subsubmenu)
 const MI_WHATSAPP := 19  # submenu 💬 WhatsApp (contador de conversas não lidas)
+const MI_DONATE := 20    # submenu ❤️ Doação / Donate (acima de Sair)
+# ids internos do submenu ❤️ Doação (abrem links no navegador)
+const DONATE_SPONSORS := 1   # GitHub Sponsors
+const DONATE_KOFI := 2       # Ko-fi
+const DONATE_SPONSORS_URL := "https://github.com/sponsors/zimerfeld"
+const DONATE_KOFI_URL := "https://ko-fi.com/C0D621FCGD"
 const LANG_PT := 1   # ids dos itens do submenu de idioma
 const LANG_EN := 2
 
@@ -240,6 +247,7 @@ const STRINGS := {
 	"mi_notes":      {"pt": "📝 Notas",              "en": "📝 Notes"},
 	"mi_emails":     {"pt": "📧 E-mails",            "en": "📧 E-mails"},
 	"mi_whatsapp":   {"pt": "💬 WhatsApp",           "en": "💬 WhatsApp"},
+	"mi_donate":     {"pt": "❤️ Doação",             "en": "❤️ Donate"},
 	"mi_language":   {"pt": "🌐 Idioma",             "en": "🌐 Language"},
 	"mi_quit":       {"pt": "Sair",                  "en": "Quit"},
 	# submenus / sentinelas (rótulo exibido; o valor lógico continua "Default"/"Nenhum")
@@ -751,6 +759,10 @@ func _build_menu() -> void:
 	lang_menu.add_radio_check_item("Português (Brasil)", LANG_PT)
 	lang_menu.add_radio_check_item("English (US)", LANG_EN)
 	lang_menu.id_pressed.connect(_on_pick_language)
+	donate_menu = PopupMenu.new()
+	donate_menu.add_icon_item(_provider_icon(Color("ea4aaa")), "GitHub Sponsors", DONATE_SPONSORS)
+	donate_menu.add_icon_item(_provider_icon(Color("ff5e2b")), "Ko-fi", DONATE_KOFI)
+	donate_menu.id_pressed.connect(_on_pick_donate)
 
 	menu = PopupMenu.new()
 	menu.add_check_item(t("mi_status"), MI_STATUS)   # mesmo grupo de Alimentar/Carinho/Brincar
@@ -776,6 +788,7 @@ func _build_menu() -> void:
 	menu.add_submenu_node_item(t("mi_emails"), email_menu, MI_EMAIL)
 	menu.add_submenu_node_item(t("mi_whatsapp"), whatsapp_menu, MI_WHATSAPP)
 	menu.add_submenu_node_item(t("mi_language"), lang_menu, MI_LANG)
+	menu.add_submenu_node_item(t("mi_donate"), donate_menu, MI_DONATE)
 	menu.add_separator()
 	menu.add_item(t("mi_quit"), MI_QUIT)
 	menu.id_pressed.connect(_on_menu)
@@ -784,7 +797,7 @@ func _build_menu() -> void:
 	_submenu_parent = {
 		pets_menu: menu, pets_del_menu: menu, acc_menu: menu, acc_del_menu: menu,
 		automations_menu: menu, notes_menu: menu, email_menu: menu, whatsapp_menu: menu,
-		lang_menu: menu, moedas_menu: automations_menu, notes_del_menu: notes_menu,
+		lang_menu: menu, donate_menu: menu, moedas_menu: automations_menu, notes_del_menu: notes_menu,
 	}
 	for sub in _submenu_parent:
 		(sub as PopupMenu).about_to_popup.connect(_flip_submenu_if_left.bind(sub))
@@ -796,6 +809,12 @@ func _build_menu() -> void:
 	_rebuild_automations_menu()
 	_rebuild_notes_menu()
 	_refresh_lang_checks()
+
+## Clique numa opção de doação: abre o link do provedor no navegador padrão.
+func _on_pick_donate(id: int) -> void:
+	match id:
+		DONATE_SPONSORS: OS.shell_open(DONATE_SPONSORS_URL)
+		DONATE_KOFI: OS.shell_open(DONATE_KOFI_URL)
 
 ## Marca (✓) o idioma ativo no submenu de idioma.
 func _refresh_lang_checks() -> void:
@@ -829,6 +848,7 @@ func _apply_menu_labels() -> void:
 	menu.set_item_text(menu.get_item_index(MI_NOTES), t("mi_notes"))
 	menu.set_item_text(menu.get_item_index(MI_EMAIL), t("mi_emails"))
 	menu.set_item_text(menu.get_item_index(MI_WHATSAPP), t("mi_whatsapp"))
+	menu.set_item_text(menu.get_item_index(MI_DONATE), t("mi_donate"))
 	menu.set_item_text(menu.get_item_index(MI_LANG), t("mi_language"))
 	menu.set_item_text(menu.get_item_index(MI_QUIT), t("mi_quit"))
 	_refresh_save_labels()                 # MI_SAVE_PET/ACC (Salvar vs Renomear)

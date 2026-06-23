@@ -165,6 +165,8 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 - **🌐 Language ▸** — chooses the language of **all system texts** (menu, dialogs and
   the pet's speech) between **Português (Brasil)** and **English (US)**. The switch is
   immediate and the option stays marked (✓). See **Language** below.
+- **❤️ Donate ▸** — submenu with two ways to support the project: **GitHub Sponsors** and
+  **Ko-fi**. Each opens the link in your browser (`OS.shell_open`).
 - **Quit**.
 
 ## Needs (status bars)

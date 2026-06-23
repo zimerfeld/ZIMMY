@@ -31,6 +31,7 @@ Endpoints triggered by the context menu. `MI_*` ids dispatched in `_on_menu(id)`
 | 12 | `MI_EMAIL` | 📧 E-mails ▸ | submenu `email_menu` |
 | 19 | `MI_WHATSAPP` | 💬 WhatsApp ▸ | submenu `whatsapp_menu` (drop-in `whatsapp.gd`, `MENU_GROUP="whatsapp"`; reads the WhatsApp Web window title) |
 | 15 | `MI_LANG` | 🌐 Idioma ▸ | submenu `lang_menu` → `_on_pick_language` |
+| 20 | `MI_DONATE` | ❤️ Donate ▸ | submenu `donate_menu` → `_on_pick_donate` (GitHub Sponsors / Ko-fi via `OS.shell_open`) |
 | 9 | `MI_QUIT` | Sair | `get_tree().quit()` |
 
 ## Submenus

@@ -16,10 +16,19 @@ On right-click, before `popup()`: `_rebuild_automations_menu()`,
 `_refresh_save_labels()`, `menu.reset_size()` and then
 `menu.position = _context_menu_position(menu.size)`. **`_context_menu_position`** computes
 the pet's actual rectangle on screen (`get_window().position + (pet_x, pet_y)`, `PET_DRAW²`)
-and tests candidates **right → left → below → above** (8px gap): it returns the
-first one that **fits in the usable area** (`screen_get_usable_rect().encloses`) and **does
-not cover the pet** (`!intersects`). With no perfect fit, it clamps the right-side
-candidate to the edges.
+keeps the menu **glued to the pet** and decides the **cascade direction** (`lvl = max(menu.x,
+300)`, `cascade = 2·lvl` ≈ 2 submenu levels): **(1)** if the cascade fits **to the right** (pet
+on the left/center), menu right of the pet, submenus open right (native); **(2)** if it doesn't
+fit right but fits **to the left** (pet on the right of the screen), menu left of the pet and
+`_cascade_left = true` → submenus open **LEFTWARD**; **(3)** neither (narrow screen) → recede
+right as needed (best-effort). If the menu would cover the pet there, it drops below (or above).
+**Leftward cascade** (`_flip_submenu_if_left`): since Godot submenus only open rightward, each
+submenu (mapped in `_submenu_parent`) connects `about_to_popup` and, when `_cascade_left`,
+overrides the **X** to `parent.position.x − sub.size.x` (keeping the Y Godot aligned to the
+item). So the menu sits next to the pet on the right and the cascade flows left, without
+overlap. Note previews are capped at 30 chars so submenus don't get too wide. The z-order /
+mouse-over capture between submenus is native (each is an **OS window**,
+`gui_embed_subwindows = false`): the last-opened sits on top and grabs the mouse.
 
 ## Items and ids (`MI_*`) — see [[Entrada - Itens do Menu (EN)]]
 ```

@@ -169,6 +169,8 @@ var acc_del_menu: PopupMenu
 var lang_menu: PopupMenu
 var notes_menu: PopupMenu          # submenu 📝 Notas
 var notes_del_menu: PopupMenu      # subsubmenu 🗑️ Excluir nota
+var _cascade_left := false         # true = abrir os submenus para a ESQUERDA (pet à direita, sem espaço à direita)
+var _submenu_parent: Dictionary = {}  # submenu PopupMenu -> seu PopupMenu pai (p/ reposicionar à esquerda)
 var notes_dialog: ConfirmationDialog
 var note_edit: TextEdit            # campo multilinha do diálogo de nova nota
 var notes: Array = []              # lista de notas (strings), persistida em notes.json
@@ -778,6 +780,14 @@ func _build_menu() -> void:
 	menu.add_item(t("mi_quit"), MI_QUIT)
 	menu.id_pressed.connect(_on_menu)
 	add_child(menu)
+	# Mapa submenu -> pai e gancho p/ reposicionar à esquerda quando _cascade_left.
+	_submenu_parent = {
+		pets_menu: menu, pets_del_menu: menu, acc_menu: menu, acc_del_menu: menu,
+		automations_menu: menu, notes_menu: menu, email_menu: menu, whatsapp_menu: menu,
+		lang_menu: menu, moedas_menu: automations_menu, notes_del_menu: notes_menu,
+	}
+	for sub in _submenu_parent:
+		(sub as PopupMenu).about_to_popup.connect(_flip_submenu_if_left.bind(sub))
 	_build_cred_dialog()
 	_build_delete_dialog()
 	_build_notes_dialog()
@@ -1020,8 +1030,8 @@ func _rebuild_notes_menu() -> void:
 ## Prévia de uma nota numa única linha: tira quebras/tabs e limita o comprimento.
 func _note_preview(text: String) -> String:
 	var one := text.strip_edges().replace("\n", " ").replace("\t", " ")
-	if one.length() > 40:
-		one = one.substr(0, 40).strip_edges() + "…"
+	if one.length() > 30:
+		one = one.substr(0, 30).strip_edges() + "…"
 	return "🗒️ " + one
 
 ## Clique no submenu Notas: ações fixas ou (id 100+) copiar a nota para a transferência.
@@ -1892,31 +1902,61 @@ func _refresh_save_labels() -> void:
 	menu.set_item_text(menu.get_item_index(MI_SAVE_ACC),
 		t("mi_rename_acc") if acc_saved else t("mi_save_acc"))
 
-## Escolhe a posição do menu de contexto: ao lado do pet (direita → esquerda →
-## abaixo → acima), sem cobri-lo e sempre dentro da área útil da tela. Se nenhum lado
-## couber, usa o primeiro candidato clampado às bordas da tela.
+## Reposiciona um submenu à ESQUERDA do seu pai quando a cascata está indo para a esquerda
+## (`_cascade_left`). Os submenus do Godot abrem à direita do pai; aqui, no `about_to_popup`,
+## sobrescrevemos só o X (mantendo o Y que o Godot alinhou ao item) para o lado esquerdo.
+func _flip_submenu_if_left(sub: PopupMenu) -> void:
+	if not _cascade_left:
+		return
+	var parent: PopupMenu = _submenu_parent.get(sub, null)
+	if parent == null:
+		return
+	var new_x := parent.position.x - sub.size.x
+	var scr := DisplayServer.screen_get_usable_rect()
+	if new_x >= scr.position.x:
+		sub.position = Vector2i(new_x, sub.position.y)
+
+## Escolhe a posição do menu de contexto ao lado do pet, mantendo-o PERTO do pet e
+## garantindo espaço para a cascata de submenus (menu + 2 níveis). Como os submenus do
+## Godot abrem para a direita, decidimos aqui a direção da cascata:
+##  1) pet à esquerda/centro com espaço à direita → menu à direita do pet, cascata p/ direita;
+##  2) sem espaço à direita, mas com espaço à esquerda → menu à esquerda do pet, cascata p/
+##     a ESQUERDA (`_cascade_left`, via `_flip_submenu_if_left`) — assim o menu fica colado
+##     no pet mesmo quando ele está na direita da tela;
+##  3) nenhum dos dois (tela estreita) → recua p/ a direita o necessário (melhor esforço).
 func _context_menu_position(menu_size: Vector2i) -> Vector2i:
 	var scr := DisplayServer.screen_get_usable_rect()
+	var scr_right := scr.position.x + scr.size.x
+	var scr_bottom := scr.position.y + scr.size.y
 	# Retângulo real do pet na tela (dentro da janela, ignorando a faixa transparente).
 	var win_pos := get_window().position
 	var pet_rect := Rect2i(win_pos + Vector2i(int(pet_x), int(pet_y)),
 		Vector2i(PET_DRAW, PET_DRAW))
 	var gap := 8
-	var candidates: Array[Vector2i] = [
-		Vector2i(pet_rect.end.x + gap, pet_rect.position.y),                  # direita
-		Vector2i(pet_rect.position.x - gap - menu_size.x, pet_rect.position.y), # esquerda
-		Vector2i(pet_rect.position.x, pet_rect.end.y + gap),                  # abaixo
-		Vector2i(pet_rect.position.x, pet_rect.position.y - gap - menu_size.y), # acima
-	]
-	for pos in candidates:
-		var r := Rect2i(pos, menu_size)
-		if scr.encloses(r) and not r.intersects(pet_rect):
-			return pos
-	# Fallback: clampa o candidato da direita às bordas da tela.
-	var f: Vector2i = candidates[0]
-	f.x = clampi(f.x, scr.position.x, scr.position.x + scr.size.x - menu_size.x)
-	f.y = clampi(f.y, scr.position.y, scr.position.y + scr.size.y - menu_size.y)
-	return f
+	var lvl := maxi(menu_size.x, 300)            # largura estimada por nível de submenu
+	var cascade := 2 * lvl                        # espaço dos 2 níveis de submenu além do menu
+	var rx := pet_rect.end.x + gap                # menu à direita do pet
+	var lx := pet_rect.position.x - gap - menu_size.x  # menu à esquerda do pet
+	var x: int
+	if rx + menu_size.x + cascade <= scr_right:           # 1) cascata p/ a direita cabe
+		_cascade_left = false
+		x = rx
+	elif lx - cascade >= scr.position.x:                  # 2) cascata p/ a esquerda cabe
+		_cascade_left = true
+		x = lx
+	else:                                                 # 3) melhor esforço: recua à direita
+		_cascade_left = false
+		x = scr_right - (menu_size.x + cascade)
+	x = clampi(x, scr.position.x, scr_right - menu_size.x)
+	# Y ao lado do pet; se nessa posição o menu cobrir o pet, desce (ou sobe).
+	var y := pet_rect.position.y
+	if Rect2i(Vector2i(x, y), menu_size).intersects(pet_rect):
+		if pet_rect.end.y + gap + menu_size.y <= scr_bottom:
+			y = pet_rect.end.y + gap
+		elif pet_rect.position.y - gap - menu_size.y >= scr.position.y:
+			y = pet_rect.position.y - gap - menu_size.y
+	y = clampi(y, scr.position.y, scr_bottom - menu_size.y)
+	return Vector2i(x, y)
 
 # ------------------------------------------------------------------ persistência
 func _cfg_to_json(cfg: Dictionary) -> Dictionary:

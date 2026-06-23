@@ -15,9 +15,20 @@ No clique direito, antes do `popup()`: `_rebuild_automations_menu()`,
 `_refresh_save_labels()`, `menu.reset_size()` e então
 `menu.position = _context_menu_position(menu.size)`. **`_context_menu_position`** calcula
 o retângulo real do pet na tela (`get_window().position + (pet_x, pet_y)`, `PET_DRAW²`)
-e testa candidatos **direita → esquerda → abaixo → acima** (gap de 8px): retorna o
-primeiro que **cabe na área útil** (`screen_get_usable_rect().encloses`) e **não cobre o
-pet** (`!intersects`). Sem encaixe perfeito, clampa o candidato da direita às bordas.
+deixa o menu **colado no pet** e decide a **direção da cascata** (`lvl = max(menu.x, 300)`,
+`cascade = 2·lvl` ≈ 2 níveis de submenu): **(1)** se a cascata cabe **à direita** (pet à
+esquerda/centro), menu à direita do pet, submenus p/ a direita (nativo); **(2)** se não cabe
+à direita mas cabe **à esquerda** (pet na direita da tela), menu à esquerda do pet e
+`_cascade_left = true` → os submenus abrem p/ a **ESQUERDA**; **(3)** nenhum dos dois (tela
+estreita) → recua p/ a direita o necessário (melhor esforço). Se o menu cobrir o pet nessa
+posição, desce (ou sobe). **Cascata p/ a esquerda** (`_flip_submenu_if_left`): como os
+submenus do Godot só abrem p/ a direita, cada submenu (mapeado em `_submenu_parent`) conecta
+`about_to_popup` e, quando `_cascade_left`, sobrescreve o **X** para `pai.position.x −
+sub.size.x` (mantendo o Y que o Godot alinhou ao item). Assim o menu fica junto do pet à
+direita e a cascata flui p/ a esquerda, sem sobrepor. As prévias de nota são limitadas a 30
+chars p/ os submenus não ficarem largos demais. O empilhamento/captura de mouse-over entre
+submenus é nativo (cada submenu é uma **janela do SO**, `gui_embed_subwindows = false`): o
+último aberto fica no topo e captura o mouse, sem repassar eventos para os menus atrás.
 
 ## Itens e ids (`MI_*`) — ver [[Entrada - Itens do Menu]]
 ```

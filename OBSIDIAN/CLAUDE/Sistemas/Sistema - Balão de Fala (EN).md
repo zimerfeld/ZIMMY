@@ -23,7 +23,7 @@ renderer — a `SystemFont` would make the text disappear).
 
 ## Sizing — in `_relayout()` ([[Sistema - Janela Overlay (EN)]])
 - Measures the text with the real font; width grows only as needed.
-- Above `MAX_W=640 px` it enables wrapping (`AUTOWRAP_WORD_SMART`) and computes the line count.
+- Above `MAX_W=300 px` it enables wrapping (`AUTOWRAP_WORD_SMART`) and computes the line count (a long phrase wraps into multiple lines).
 - The text band sits **right above the pet's body**:
   `speech.position.y = pet_y - SPEECH_GAP - band` (the `HOP_HEADROOM` is left over on top).
 - Constants: `SPEECH_PAD_X=18`, `SPEECH_PAD_Y=7`, `SPEECH_GAP=4`.

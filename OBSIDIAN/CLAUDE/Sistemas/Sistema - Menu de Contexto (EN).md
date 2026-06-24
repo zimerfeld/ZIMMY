@@ -1,6 +1,6 @@
 ---
 tags: [sistema, ui, menu, zimmy-pet]
-atualizado: 2026-06-21
+atualizado: 2026-06-24
 lang: en
 ---
 
@@ -47,10 +47,10 @@ mouse-over capture between submenus is native (each is an **OS window**,
 🗑️ Delete accessory ▸ (14) → submenu acc_del_menu
 ──
 ⚙️ Automations ▸ (11) → submenu automations_menu
-   └ 💱 Currencies ▸ (17) → submenu moedas_menu (rates; only shown if any exist)
+💱 Currencies ▸ (17) → submenu moedas_menu (rates; main-menu item right below Automations; disabled if none exist)
 📝 Notes ▸ (18) → submenu notes_menu (text scratchpad; manual + clipboard)
-📧 E-mails ▸ (12) → submenu email_menu
-💬 WhatsApp ▸ (19) → submenu whatsapp_menu (unread chats, read from the window title)
+📧 E-mails ▸ (12) → submenu email_menu (🔊 Sound alert on top + Gmail)
+💬 WhatsApp ▸ (19) → submenu whatsapp_menu (🔊 Sound alert on top + unread chats, read from the window title)
 🌐 Language ▸ (15) → submenu lang_menu
 ❤️ Donate ▸ (20) → submenu donate_menu (GitHub Sponsors, Ko-fi — open links)
 ──
@@ -94,8 +94,18 @@ key `lang` in settings.json) and calls `_apply_menu_labels()` (reapplies the men
   right-click).
 - **moedas_menu** (part of `_rebuild_automations_menu`): scripts with
   `MENU_GROUP := "moedas"` (the `cotacao_*` rates) are routed to the **💱 Currencies**
-  submenu (`MI_MOEDAS = 17`), nested at the top of **⚙️ Automations**. The submenu item
-  is only created when at least one rate exists; same handler `_on_pick_automation`.
+  submenu. This submenu is a **main-menu item** (`MI_MOEDAS := 17`), placed **right below
+  ⚙️ Automations** (added in `_build_menu` via
+  `menu.add_submenu_node_item(t("mi_moedas"), moedas_menu, MI_MOEDAS)`; in the
+  `_submenu_parent` map the parent of `moedas_menu` is the main `menu`, not
+  `automations_menu`). The item is **disabled** when there are no rates
+  (`menu.set_item_disabled(menu.get_item_index(MI_MOEDAS), n_moedas == 0)`); same handler
+  `_on_pick_automation`. Each rate shows a small **flag icon (texture) on the left** via
+  `const ICON_FLAG := "us"/"eu"/"gb"/"jp"/"cn"` (read in `_scan_automations` into
+  `automation_flags`, drawn by `_flag_icon()` — flag emoji are *regional-indicator* pairs that
+  **don't** render in `PopupMenu`, so we draw a pixel texture instead). The names have **no
+  emoji** (`AUTOMATION_NAME`: "Cotação USD", "Cotação EUR", ...; EN: "USD rate" etc.). The
+  rates **don't use `ICON_COLOR`** (the icon is the `ICON_FLAG` flag).
 - **notes_menu** (`_rebuild_notes_menu`): a small text scratchpad (`MI_NOTES = 18`), above
   📧 E-mails. Fixed items `➕ New note...` (`NOTE_NEW`) and `📋 Paste from clipboard`
   (`NOTE_PASTE`); then the note list (ids 100+ ↔ `note_ids` → index in `notes`) — **clicking
@@ -105,7 +115,7 @@ key `lang` in settings.json) and calls `_apply_menu_labels()` (reapplies the men
   `notes_dialog` (a ConfirmationDialog with a multiline `TextEdit`); `📋 Paste` reads
   `DisplayServer.clipboard_get()`. Persistence: `user://notes.json` (array of strings —
   `_save_notes`/`_load_notes`). The menu preview is single-line (`_note_preview`: strips
-  newlines, caps at 40 chars).
+  newlines, caps at 30 chars, appending "..." at the end when longer).
 
 ## Automations + Scheduler (folder `Automacoes/`)
 Drop-in scripts: each `.gd` in `Automacoes/` with `run(zimmy)` becomes an item.
@@ -129,7 +139,7 @@ names switch language immediately. Contract in `Automacoes/LEIAME.md`.
 
 ## 📧 E-mails submenu (groups, badges, credentials)
 Optional consts read in the scan: `MENU_GROUP` (routes to a dedicated submenu — `email` →
-`email_menu`; `moedas` → `moedas_menu`, nested in ⚙️ Automations; `whatsapp` →
+`email_menu`; `moedas` → `moedas_menu`, main-menu item right below ⚙️ Automations; `whatsapp` →
 `whatsapp_menu`, top-level `MI_WHATSAPP = 19`), `ICON_COLOR` (icon on the left via `add_icon_check_item` + `_provider_icon`,
 cached), `BADGE_KEY` (label shows `automation_badges[key]`, set by
 `set_automation_badge`), `CRED_KEY` (credential file). Maps: `automation_groups`,
@@ -142,10 +152,21 @@ passes the step-by-step on how to generate the App Password (shown the first tim
 asks when turning on if none is saved, writes only after validating. **Gmail**
 (`email_gmail`) uses the **Atom feed**: `http_get_auth(url, user, pass, cb)` (GET with
 `Authorization: Basic`, returns `cb.call(status, body)`) on `mail/feed/atom`, and a regex
-extracts `<fullcount>N</fullcount>` — no IMAP. **Outlook** (`email_outlook`) uses **IMAP**:
-`imap_unread(host, port, user, pass, cb)` (TCP+TLS, `LOGIN` + `STATUS INBOX (UNSEEN)`). Both
-require an App Password (Basic for the feed, `LOGIN` for IMAP). Contract in
-`Automacoes/LEIAME.md`.
+extracts `<fullcount>N</fullcount>` — no IMAP. Gmail is the only provider in the submenu;
+it requires an App Password (Basic for the feed). Contract in `Automacoes/LEIAME.md`.
+
+## 🔊 Sound alert (unread)
+At the **top** of the **💬 WhatsApp** and **📧 E-mails** submenus (before the counter item)
+there is a **🔊 Sound alert** checkbox (translation key `mi_sound_alert`, "🔊 Alerta de som" / "🔊 Sound alert"). When the unread
+badge **increases** (a new message arrived), Zimmy plays a quiet sound: a ringing phone
+(WhatsApp) or a mail delivery (Gmail). The toggles use the ids `SND_WHATSAPP := 50` and
+`SND_GMAIL := 51` (below 100, where automation ids begin), handled in `_on_pick_automation`;
+the state persists in settings.json as `wa_sound` / `gmail_sound` (variables
+`whatsapp_sound_on` / `gmail_sound_on`, on by default). The sound is synthesized in code (no
+audio files) via `AudioStreamWAV` in `_build_audio`/`_build_ring_sound`/`_build_chime_sound`/
+`_make_wav`/`_play_alert`, played by two `AudioStreamPlayer` nodes
+(`_ring_player`/`_chime_player`). Playback is triggered inside `set_automation_badge(key,
+text)` upon detecting a numeric increase of the badge for the `whatsapp` or `email_gmail` keys.
 
 ## 💬 WhatsApp submenu (unread chats)
 Drop-in `whatsapp.gd` (`MENU_GROUP = "whatsapp"` → top-level `💬 WhatsApp` submenu,

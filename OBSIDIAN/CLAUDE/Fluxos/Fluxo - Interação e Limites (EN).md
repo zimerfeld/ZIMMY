@@ -20,11 +20,14 @@ How a click/action turns (or doesn't) into a reaction. Rules in
    - same action already repeated `MAX_REPEAT=3`x (no spam) → `false` silently.
    - otherwise: updates `last_action`/`action_repeats`, arms `action_cd=1.0` and
      `repeat_reset_cd=REPEAT_RESET=30`, returns `true`.
-4. If `true`: applies the effect (mood/hunger), `say(...)` and `hop(...)`.
+4. If `true`: applies the effect (mood/hunger), calls `hop(...)` (the pet **jumps** — see
+   [[Sistema - Animação (EN)]]) and `say(...)`.
 5. **Time-based release**: 30s with no new accepted action (`repeat_reset_cd`→0 in the
    [[Fluxo - Loop (_process) (EN)]]) resets `action_repeats`/`last_action` — the 3x lock releases.
 
 ## Effects per action
+The `hop` column lists the force passed to `hop()` (the jump impulse, `vy = -force`).
+
 | Action | happy | hunger | hop |
 |---|---|---|---|
 | `feed` | +8 | −25 | 320 |
@@ -33,4 +36,4 @@ How a click/action turns (or doesn't) into a reaction. Rules in
 | `_react` (click) | +5 | — | 320 |
 | `_complain` | −6 | — | — |
 
-Jump animation: [[Sistema - Animação (EN)]]. Speech: [[Sistema - Balão de Fala (EN)]].
+Animation (`hop` active): [[Sistema - Animação (EN)]]. Speech: [[Sistema - Balão de Fala (EN)]].

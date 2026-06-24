@@ -8,6 +8,11 @@ atualizado: 2026-06-21
 Mover a janela e lembrar onde o pet ficou. Lógica em `_input()`
 ([[Entrada - Eventos de Input]]) + persistência ([[Sistema - Persistência]]).
 
+> **Modo de reposicionar o pet.** O pet dá um pulinho ao interagir (`hop()` — ver
+> [[Sistema - Animação]]), mas arrastar com o botão esquerdo é a forma de reposicioná-lo
+> de fato. O pet fica **ancorado** (não se desloca) quando o balão de fala é grande e
+> excede a janela — ver Âncora abaixo.
+
 ## Arrastar
 - **Botão esquerdo pressiona**: `dragging=true`, `moved=false`, guarda `drag_offset`.
 - **Movimento com `dragging`**: se moveu >1px marca `moved=true`; calcula
@@ -18,8 +23,11 @@ Mover a janela e lembrar onde o pet ficou. Lógica em `_input()`
 
 ## Âncora (centro-inferior)
 `anchor` é o ponto fixo na tela. Tudo (relayout, abertura, drag) deriva a posição da
-janela a partir dele, então o pet não "pula" ao falar/redimensionar.
-Ver [[Sistema - Janela Overlay]].
+janela a partir dele, então o pet não se desloca ao falar/redimensionar. Em `_relayout()`
+a posição da janela vem **só** da âncora, **sem reclampar pelo tamanho da janela** — então
+um balão de fala **grande** pode transbordar para a borda da tela, mas o **pet não se
+move** (continua ancorado). A âncora em si é mantida dentro da tela ao **arrastar**
+(`_input`) e ao **carregar** (`_ready`). Ver [[Sistema - Janela Overlay]].
 
 ## Posição salva
 - `_save_settings()` (antigo `_save_window_pos`) grava `{anchor_x, anchor_y, pet, acc,

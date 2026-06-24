@@ -14,12 +14,13 @@ draw_set_transform(Vector2(pet_x, pet_y), 0.0, Vector2(PET_SCALE, PET_SCALE))
 ```
 O `_draw()` usa um **espaço lógico 200×200** (centro do corpo ~ (100,108)); o
 transform escala por `PET_SCALE=0.75` e posiciona em `(pet_x, pet_y)` calculados no
-[[Sistema - Janela Overlay|_relayout]]. `o = Vector2(0, y_off)` aplica o pulo.
+[[Sistema - Janela Overlay|_relayout]]. `o = Vector2(0, y_off)` aplica o pulo (`y_off`
+oscila durante o salto — ver [[Sistema - Animação]]).
 
 ## Ordem de desenho
 A geometria do corpo (`bw`/`bh`/`by`/`head_top`) é calculada **no início**, para as
 camadas traseiras e do topo se posicionarem em relação ao corpo.
-1. Sombra (encolhe no ar).
+1. Sombra (encolhe quando o pet está no ar durante o pulo).
 2. **Asas** (`wings`) e **rabo** (`tail`) — bem atrás, antes do corpo.
 3. Antenas (atrás) — se `has_antennae`.
 4. Orelhas — `round` (elipses) ou `pointy` (triângulos), se `has_ears`.

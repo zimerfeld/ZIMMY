@@ -19,11 +19,14 @@ Como um clique/ação vira (ou não) uma reação. Regras em
    - mesma ação já repetida `MAX_REPEAT=3`x (sem spam) → `false` em silêncio.
    - senão: atualiza `last_action`/`action_repeats`, arma `action_cd=1.0` e
      `repeat_reset_cd=REPEAT_RESET=30`, retorna `true`.
-4. Se `true`: aplica efeito (humor/fome), `say(...)` e `hop(...)`.
+4. Se `true`: aplica efeito (humor/fome), chama `hop(...)` (o pet **pula** — ver
+   [[Sistema - Animação]]) e `say(...)`.
 5. **Liberação por tempo**: 30s sem nova ação aceita (`repeat_reset_cd`→0 no
    [[Fluxo - Loop (_process)]]) zera `action_repeats`/`last_action` — a trava de 3x solta.
 
 ## Efeitos por ação
+A coluna `hop` lista a força passada a `hop()` (impulso do pulo, `vy = -force`).
+
 | Ação | happy | hunger | hop |
 |---|---|---|---|
 | `feed` | +8 | −25 | 320 |
@@ -32,4 +35,4 @@ Como um clique/ação vira (ou não) uma reação. Regras em
 | `_react` (clique) | +5 | — | 320 |
 | `_complain` | −6 | — | — |
 
-Animação do pulo: [[Sistema - Animação]]. Fala: [[Sistema - Balão de Fala]].
+Animação (`hop` ativo): [[Sistema - Animação]]. Fala: [[Sistema - Balão de Fala]].

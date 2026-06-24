@@ -26,12 +26,15 @@ No `.exe` a janela pode iniciar opaca; por isso a flag + clear color são refor�
 ## Layout dinâmico — `_relayout()` (`zimmy.gd:546`)
 A janela tem o **pet no fundo** e uma faixa transparente acima:
 - `PET_DRAW = 150` (= `PET_BOX * PET_SCALE`, pet 25% menor) — ver [[Sistema - Render (_draw)]].
-- `HOP_HEADROOM = 80` — espaço acima p/ o pulo não cortar ([[Sistema - Animação]]).
+- `HOP_HEADROOM = 80` — faixa transparente reservada acima do pet para o pulo não ser
+  cortado ([[Sistema - Animação]]).
 - `top_space = max(faixa_da_fala + SPEECH_GAP, HOP_HEADROOM)`.
 - `win_h = top_space + PET_DRAW`; `pet_y = top_space`;
   `pet_x = (win_w - PET_DRAW)/2` (centralizado).
 - A janela é **ancorada pelo centro-inferior** (`anchor`), então o pet não se
-  desloca quando fala/pula. A posição final é **clampada** à tela.
+  desloca quando fala. A posição final vem **só da âncora**, **sem reclampar pelo tamanho
+  da janela** — um balão de fala grande pode transbordar para a borda da tela, mas o pet
+  permanece ancorado (ver [[Fluxo - Arrastar e Posição]]).
 
 ## Limitações
 - A janela inteira (incluindo a faixa transparente) captura cliques — não há

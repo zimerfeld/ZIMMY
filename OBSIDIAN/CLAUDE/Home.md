@@ -28,7 +28,7 @@ Veja [[_Memória do Claude]] para a convenção de notas, links e atualização.
 - [[Sistema - Pets]] — config, geração procedural, formas e elementos
 - [[Sistema - Acessórios]] — camada independente (chapéu/óculos/laço/cachecol)
 - [[Sistema - Render (_draw)]] — pipeline de desenho e primitivas
-- [[Sistema - Animação]] — respiração, pulo, piscada, olhos
+- [[Sistema - Animação]] — respiração, piscada, pulo, olhos
 - [[Sistema - Expressões Faciais]] — rosto espelha o emoji falado
 - [[Sistema - Balão de Fala]] — `say()` + `_relayout()`
 - [[Sistema - Interação e Mau Humor]] — cooldown, limite de repetição, reclamações

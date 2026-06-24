@@ -22,7 +22,7 @@ um `SystemFont` faria o texto sumir).
 
 ## Dimensionamento — em `_relayout()` ([[Sistema - Janela Overlay]])
 - Mede o texto com a fonte real; largura cresce só o necessário.
-- Acima de `MAX_W=640 px` ativa quebra (`AUTOWRAP_WORD_SMART`) e calcula nº de linhas.
+- Acima de `MAX_W=300 px` ativa quebra (`AUTOWRAP_WORD_SMART`) e calcula nº de linhas (fala longa quebra em várias linhas).
 - A faixa do texto fica **logo acima do corpo** do pet:
   `speech.position.y = pet_y - SPEECH_GAP - band` (o `HOP_HEADROOM` sobra por cima).
 - Constantes: `SPEECH_PAD_X=18`, `SPEECH_PAD_Y=7`, `SPEECH_GAP=4`.

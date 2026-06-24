@@ -1,6 +1,6 @@
 ---
 tags: [sistema, animacao, zimmy-pet]
-atualizado: 2026-06-20
+atualizado: 2026-06-24
 lang: en
 ---
 
@@ -13,12 +13,33 @@ the [[Sistema - Render (_draw) (EN)]].
 `bob += delta * 2.2`; in `_draw`, `br = sin(bob) * 0.025` modulates the height of the
 body/belly.
 
-## Jump ("hop") with gravity
-- `hop(force=320)` sets `vy = -force`.
-- In `_process`: `y_off += vy*delta; vy += 900*delta;` and locks at `y_off=0` on the ground.
-- Forces per action: click/`_react`/`feed` = 320, `pet` = 220, `play` = 420.
-- Maximum height of `play` ≈ 98 logical px → motivated the `HOP_HEADROOM=80` in the
-  [[Sistema - Janela Overlay (EN)]] so it does not get clipped.
+## Jump ("hop")
+- The pet **does a little hop** when interacted with. `hop(force=320)` is
+  `func hop(force := 320.0) -> void: vy = -force`, called by
+  `feed`/`pet`/`play`/`_react` and by the alarm (`alarme.gd`).
+- The "gravity" in `_process` (`y_off += vy*delta; vy += 900*delta; ...`) is active and
+  produces the jump: `vy` gets the negative impulse and gravity brings the pet back to the
+  ground. The pet can also be **dragged** by the user (left button — see
+  [[Fluxo - Arrastar e Posição (EN)]]).
+- The `HOP_HEADROOM=80` in the [[Sistema - Janela Overlay (EN)]] reserves the space above
+  the pet so the jump is not clipped.
+
+## Per-action reaction animations (`ACTION_ANIMS`)
+- Each **distinct menu action** triggers a **randomly chosen** animation (`pick_random`)
+  from a pool matched to that action's "energy" — previously there was only the little
+  hop. Dispatch in `play_action_anim(action)` → `play_anim(name)`.
+- Repertoire (`play_anim`): `hop`, `double_hop`, `triple_hop`, `spin`, `spin_jump`,
+  `backflip`, `wiggle`, `nod`, `squish`, `tilt`, `dance` — physics hops (via `hop`/the
+  `hop_queue`) combined with rotation / squash-stretch / sway computed per-phase in
+  `_draw` while `anim != ""`.
+- `ACTION_ANIMS` map: `feed` (contained joy: hop/nod/wiggle/squish); `pet`
+  (melts/sways: nod/wiggle/tilt/squish); `play` (high energy: double/triple hop,
+  spin_jump, backflip, dance); `react` (clicking the pet: hop/wiggle/spin/tilt); `newpet`
+  ("ta-da": spin/spin_jump/dance); `newacc` (spin/wiggle/nod); `choose` (saved
+  pet/accessory: hop/spin/tilt); `save` (save/rename/notes: nod/hop); `sad` (deleting:
+  squish/tilt); `happy` (generic celebration: hop/spin/dance).
+- The **shadow stays grounded** (drawn before the animated transform) and the status bars
+  are unaffected. See [[Sistema - Render (_draw) (EN)]].
 
 ## Blink
 `blink_timer` counts down to the blink; `blink_t=0.16s` keeps the eyes closed; random

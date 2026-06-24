@@ -1,9 +1,10 @@
 # Cotação do Yuan Chinês (CNY) em Real, via AwesomeAPI (grátis, sem chave).
 extends RefCounted
 
-const AUTOMATION_NAME := "Cotação CNY 🇨🇳"
-const AUTOMATION_NAME_EN := "CNY rate 🇨🇳"
+const AUTOMATION_NAME := "Cotação CNY"
+const AUTOMATION_NAME_EN := "CNY rate"
 const MENU_GROUP := "moedas"      # vai para o submenu 💱 Moedas (dentro de Automações)
+const ICON_FLAG := "cn"           # bandeira (textura) à esquerda do item — ver _flag_icon()
 
 func run(zimmy) -> void:
 	zimmy.notify(zimmy.lang_text("buscando CNY... 🌐", "fetching CNY... 🌐"))

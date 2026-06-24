@@ -1,9 +1,10 @@
 # Cotação do Euro (EUR) em Real, via AwesomeAPI (grátis, sem chave).
 extends RefCounted
 
-const AUTOMATION_NAME := "Cotação EUR 💶"
-const AUTOMATION_NAME_EN := "EUR rate 💶"
+const AUTOMATION_NAME := "Cotação EUR"
+const AUTOMATION_NAME_EN := "EUR rate"
 const MENU_GROUP := "moedas"      # vai para o submenu 💱 Moedas (dentro de Automações)
+const ICON_FLAG := "eu"           # bandeira (textura) à esquerda do item — ver _flag_icon()
 
 func run(zimmy) -> void:
 	zimmy.notify(zimmy.lang_text("buscando EUR... 🌐", "fetching EUR... 🌐"))

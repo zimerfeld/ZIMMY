@@ -23,9 +23,10 @@
 Desktop pet overlay, made in Godot 4.6.
 A transparent, borderless, always-on-top window that floats over the desktop.
 The pet is drawn in a logical space of **200×200** and displayed at **75%** (≈150 px,
-`PET_SCALE`). The window also reserves a transparent strip above the pet
-(`HOP_HEADROOM`) so the **little hop** is not cut off, and it grows dynamically when
-Zimmy speaks.
+`PET_SCALE`). The window reserves a transparent strip above the pet (`HOP_HEADROOM`) so the
+**little hop** (on feed/pet/play) is not cut off, and it grows dynamically when Zimmy speaks.
+The pet stays **anchored by its bottom-center**: an oversized speech bubble that exceeds the
+window may overflow toward the screen edge, but it **never displaces the pet**.
 
 ## How to run
 
@@ -144,20 +145,34 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   and then **permanently deletes the accessory** from `accessories.json`. After
   deleting, Zimmy **always returns to `None`** (the Default). With no saved accessories,
   it shows "(no saved accessories)".
-- **⚙️ Automations ▸** — submenu with the available automations (scripts from the
-  `Automacoes/` folder). It is **disabled** when there are no automations. **One-off**
-  automations appear as buttons (run once when clicked); **scheduled** automations
-  appear as **checkable** items (✓ = on) with the frequency in the label — this is the
-  **visual scheduler**. See **Automations** below.
+- **⚙️ Automations ▸** — submenu with the available **one-off** automations (scripts from
+  the `Automacoes/` folder that run once when clicked), each with a green **▶ play icon**
+  on the left. It is **disabled** when there are no one-off automations. **Scheduled**
+  automations now live in **⏱️ Timers** (below). See **Automations** below.
+- **⏱️ Timers ▸** — its own submenu **right below ⚙️ Automations**, holding the
+  **scheduled** automations (those that declare `const SCHEDULE`/`SCHEDULE_SECONDS`) as
+  **checkable** items (✓ = on), each with a small **clock icon** on the left and the
+  **frequency in the label** — this is the **visual scheduler**, persisted in
+  `user://schedules.json`. Examples: `alarme.gd` (daily@08:00), `auto_alimentar.gd` (20s),
+  `comemoracao_hora_cheia.gd` (hourly), `desligar_pc.gd` (daily@23:00),
+  `lembrete_pomodoro.gd` (25m). It is **disabled** when there are no scheduled automations.
+- **💱 Currencies ▸** — its own submenu in the main menu, **below ⚙️ Automations / ⏱️ Timers**,
+  grouping the currency quotes (`MENU_GROUP := "moedas"`). Each item shows a small **flag icon on
+  the left** — a pixel-drawn texture (`ICON_FLAG := "us"/"eu"/"gb"/"jp"/"cn"`), because flag emoji
+  don't render in `PopupMenu`. It is **disabled** when there are no currency automations.
 - **📝 Notes ▸** — a small text scratchpad. **➕ New note...** opens a multiline field to
   type a note; **📋 Paste from clipboard** turns the current clipboard text into a note.
   Saved notes are listed below — **clicking one copies it back to the clipboard**;
-  **🗑️ Delete note ▸** removes them. Notes persist in `user://notes.json`. See **Notes**
-  below.
-- **📧 E-mails ▸** — submenu dedicated to the e-mail providers (Gmail, Outlook), each
-  with the **icon on the left** and the **unread counter** in the label. It is
-  **disabled** if there are no e-mail automations. See **E-mails** below.
-- **💬 WhatsApp ▸** — shows the number of **unread WhatsApp chats** as a badge. It does
+  **🗑️ Delete note ▸** removes them. In the menu each note is shown as a single-line preview
+  **truncated to 30 characters with "..."** when longer. Notes persist in `user://notes.json`.
+  See **Notes** below.
+- **📧 E-mails ▸** — submenu dedicated to the e-mail provider (Gmail), with the **icon on
+  the left** and the **unread counter** in the label. At the top, a **🔊 Sound alert**
+  checkbox toggles a soft mailbox-delivery chime that plays when a **new** e-mail arrives.
+  It is **disabled** if there are no e-mail automations. See **E-mails** below.
+- **💬 WhatsApp ▸** — shows the number of **unread WhatsApp chats** as a badge. At the top,
+  a **🔊 Sound alert** checkbox toggles a soft phone-ringing sound that plays when a **new**
+  chat arrives. It does
   **not** log into WhatsApp (there's no API; the session is tied to your browser) — it
   simply **reads the title of the WhatsApp Web window** your browser keeps open (the title
   becomes "(N) WhatsApp" when there are unread chats). Keep **WhatsApp Web open and
@@ -205,9 +220,10 @@ survive restarts.
 ## Automations
 
 Automations are `.gd` scripts placed in the **`Automacoes/`** folder (at the project
-root). They appear in the context menu under **⚙️ Automations** — the submenu is
-**rescanned every time the menu opens**, so new scripts appear without restarting. With
-no valid script, the menu item is disabled.
+root). They appear in the context menu under **⚙️ Automations** (the **one-off** ones,
+with a ▶ play icon) or **⏱️ Timers** (the **scheduled** ones, with a clock icon) — the
+submenus are **rescanned every time the menu opens**, so new scripts appear without
+restarting. With no valid script of a kind, the corresponding menu item is disabled.
 
 Each automation is a GDScript with:
 
@@ -236,9 +252,9 @@ are added as children of Zimmy and **persist** (useful for continuous automation
 ### Scheduler (frequency / recurrence)
 
 An automation that declares `const SCHEDULE` runs **on its own** at the indicated
-frequency, without needing to click. It appears in the **⚙️ Automations** submenu as a
-**checkable** item (✓ = on) with the interval in the label — this is the **visual
-scheduler**. Turning it on/off is **persistent**: whatever was on runs again when
+frequency, without needing to click. It appears in the **⏱️ Timers** submenu as a
+**checkable** item (✓ = on) with a clock icon and the interval in the label — this is the
+**visual scheduler**. Turning it on/off is **persistent**: whatever was on runs again when
 reopening Zimmy (state in `user://schedules.json`). `SCHEDULE` formats:
 `"30s"`/`"5m"`/`"2h"` (every N), `"hourly"` (every full hour, at minute :00),
 `"daily@09:00"` (1×/day at the time); or `const SCHEDULE_SECONDS := 300` (seconds). For
@@ -259,12 +275,11 @@ the `HTTPRequest` under the hood. In the *closure* use only `zimmy` and local va
 | Auto-feed 🦴 | `auto_alimentar.gd` | every 20s — feeds if hungry |
 | Pomodoro reminder ☕ | `lembrete_pomodoro.gd` | every 25min — reminds you to take a break |
 | Celebrate full hour 🎉 | `comemoracao_hora_cheia.gd` | `hourly` — celebrates each turn of the hour |
-| USD/EUR/GBP/JPY/CNY quote 💱 | `cotacao_*.gd` | one-off — currency quote in BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), free). The 5 most influential currencies (SDR basket) are grouped into the **💱 Currencies** submenu nested inside ⚙️ Automations (`MENU_GROUP := "moedas"`) |
+| USD/EUR/GBP/JPY/CNY quote 💱 | `cotacao_*.gd` | one-off — currency quote in BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), free). The 5 most influential currencies (SDR basket) are grouped into the **💱 Currencies** submenu in the main menu (`MENU_GROUP := "moedas"`), each item with a small **flag icon on the left** (texture from `ICON_FLAG`) |
 | Shut down PC 🔌 | `desligar_pc.gd` | `daily@23:00` — shuts down Windows with a 60s warning |
 | Cancel shutdown ❌ | `cancelar_desligamento.gd` | one-off — aborts the shutdown (`shutdown /a`) |
-| Alarm ⏰ | `alarme.gd` | `daily@08:00` — hops, warns and gives a beep |
+| Alarm ⏰ | `alarme.gd` | `daily@08:00` — warns and gives a beep |
 | Gmail 📧 | `email_gmail.gd` | every 5min — count unread e-mails via the **Atom feed** (`mail/feed/atom`, HTTP Basic + App Password); appears in the **📧 E-mails** submenu |
-| Outlook 📧 | `email_outlook.gd` | every 5min — count unread e-mails via **IMAP**; appears in the **📧 E-mails** submenu |
 | WhatsApp 💬 | `whatsapp.gd` | every 1min — counts unread WhatsApp chats by **reading the WhatsApp Web window title** (`tasklist`), no API/login; appears in the **💬 WhatsApp** submenu |
 
 > **Caution (shut down PC):** `desligar_pc.gd` runs a real `shutdown`. It comes **off**
@@ -276,9 +291,10 @@ Automations that declare `const MENU_GROUP := "email"` appear in a dedicated **�
 E-mails** submenu, with the **provider icon on the left** (color from `ICON_COLOR`) and
 the **unread counter in the label**, refreshed every 5 min. **Gmail** (`email_gmail.gd`)
 uses the lightweight **Atom feed** — a single authenticated GET to `mail/feed/atom`
-(`zimmy.http_get_auth(...)`) returning `<fullcount>N</fullcount>`, no IMAP state machine.
-**Outlook** (`email_outlook.gd`) uses **IMAP over TLS** (`zimmy.imap_unread(...)`). Both
-authenticate with an **App Password** (HTTP Basic for the feed, `LOGIN` for IMAP).
+(`zimmy.http_get_auth(...)`) returning `<fullcount>N</fullcount>`, no IMAP state machine,
+authenticated with an **App Password** (HTTP Basic). At the top of the submenu, **🔔 Sound
+alert** (default **on**, persisted) plays a soft mailbox-delivery chime whenever the unread
+count **goes up** (a new e-mail arrived).
 
 **Prerequisite — App Password** (the normal password **no longer works**):
 
@@ -287,10 +303,6 @@ authenticate with an **App Password** (HTTP Basic for the feed, `LOGIN` for IMAP
   **Atom feed doesn't need IMAP enabled** — just the App Password. Google shows it in 4
   groups of 4 — you can paste it **with or without the spaces** (Zimmy strips them). Use
   the **App Password**, not your normal Google password.
-- **Outlook/Hotmail**: generate an *App password* at
-  [account.microsoft.com/security](https://account.microsoft.com/security). **Corporate
-  Microsoft 365** accounts usually have IMAP/basic **disabled** by the admin — then it
-  does not work.
 
 **First-time step-by-step**: the very first time you turn on **Gmail** (while no credential
 is saved yet), the login dialog shows a short **step-by-step on how to generate the App
@@ -324,7 +336,9 @@ servers are contacted, nothing is injected.
 **Requirement:** keep **WhatsApp Web open and linked** to this device — ideally as its
 **own window** (Chrome ▸ ⋮ ▸ *Cast, save, and share* ▸ *Create shortcut...* ▸ ✓ *Open as
 window*) so the count stays in the title even when it isn't the active tab. If the window
-isn't found, the badge shows `?` and Zimmy says it isn't open.
+isn't found, the badge shows `?` and Zimmy says it isn't open. At the top of the submenu,
+**🔊 Sound alert** (default **on**, persisted) plays a soft phone-ringing sound whenever
+the unread count **goes up** (a new chat arrived).
 
 ## Pets
 
@@ -417,16 +431,21 @@ as native windows, outside the pet's little window.
 > black). Both are already configured in `project.godot`.
 
 Zimmy is drawn procedurally in `_draw()` (ellipses + the mouth curve), with breathing,
-blinking, little hops and eyes that follow the global mouse cursor.
+blinking, eyes that follow the global mouse cursor and **varied reaction animations**:
+each menu action triggers a **randomly chosen** move from a pool matched to that action's
+energy — `hop`, `double_hop`, `triple_hop`, `spin`, `spin_jump`, `backflip`, `wiggle`,
+`nod`, `squish`, `tilt`, `dance` (physics hops combined with rotation, squash-stretch and
+sway about a pivot). The shadow stays grounded and the status bars are unaffected.
 
 ### Dynamic speech bubble
 
 When Zimmy speaks, the **window grows and shrinks dynamically** to fit the phrase (and
-emojis) without cuts or unnecessary line breaks — see `_relayout()` in `zimmy.gd`. The
-width measures the text with the real font and grows only as needed; very long phrases
-(above `MAX_W = 640 px`) wrap by words. Zimmy stays **anchored by his bottom-center**, so
-he does not shift when the bubble appears or disappears, and the window is kept within
-the screen (clamp). That is why `stretch/mode` stays `disabled` (1 unit = 1 pixel),
+emojis) — see `_relayout()` in `zimmy.gd`. The width measures the text with the real font
+and grows only as needed; phrases wider than `MAX_W = 300 px` **wrap into multiple lines**
+(by words). Zimmy stays **anchored by his bottom-center**, so he does not shift when the
+bubble appears or disappears; the window position comes only from that anchor (no
+screen-edge reclamp), so an oversized bubble may overflow toward the screen edge rather
+than displacing the pet. That is why `stretch/mode` stays `disabled` (1 unit = 1 pixel),
 otherwise the canvas would stretch when resizing.
 
 > **Note (font/emojis):** use Godot's **default font** in the bubble — it renders accents

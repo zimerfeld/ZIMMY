@@ -79,10 +79,11 @@ Extra geometric categories (all `none` when absent):
 
 ## Settings (`user://settings.json`)
 `{ "anchor_x": int, "anchor_y": int, "pet": str, "acc": str, "show_acc": bool,
-"lang": "pt"|"en", "status": bool }` — anchor (bottom-center) of the last position
-**plus the active choice** of pet/accessory, accessory display, the **UI language** and the
-**status bars** display (`status`, OFF by default). See
-[[Sistema - Persistência (EN)]].
+"lang": "pt"|"en", "status": bool, "wa_sound": bool, "gmail_sound": bool }` — anchor
+(bottom-center) of the last position **plus the active choice** of pet/accessory, accessory
+display, the **UI language**, the **status bars** display (`status`, OFF by default) and the
+**sound alerts** of the 💬 WhatsApp / 📧 E-mails submenus (`wa_sound` / `gmail_sound`, ON by
+default). See [[Sistema - Persistência (EN)]].
 
 ## i18n (`STRINGS` / `STRING_LISTS`)
 `const` tables with `{ "pt": ..., "en": ... }` per key. `t(key)` returns the text and
@@ -90,5 +91,5 @@ Extra geometric categories (all `none` when absent):
 
 ## Notable constants ([[zimmy.gd (EN)]])
 `PET_BOX=200`, `PET_SCALE=0.75`, `PET_DRAW=150`, `HOP_HEADROOM=80`,
-`MAX_W=640`, `RANDOM_PERIOD=10.0`, `ACTION_COOLDOWN=1.0`, `MAX_REPEAT=3`,
+`MAX_W=300`, `RANDOM_PERIOD=10.0`, `ACTION_COOLDOWN=1.0`, `MAX_REPEAT=3`,
 `COMPLAIN_COOLDOWN=1.5`.

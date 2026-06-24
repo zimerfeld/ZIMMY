@@ -51,9 +51,10 @@ func run(zimmy) -> void:
 
 ## Agendamento (frequência / recorrência)
 
-Declare uma frequência e a automação aparece no submenu **⚙️ Automações** como um item
-**marcável** (✓ = ligada) mostrando o intervalo. Ligar/desligar é **persistente** —
-ao reabrir o Zimmy, o que estava ligado volta a rodar (estado em `user://schedules.json`).
+Declare uma frequência e a automação aparece no submenu **⏱️ Temporizadores** (logo
+abaixo de **⚙️ Automações**) como um item **marcável** (✓ = ligada), com um ícone de
+relógio, mostrando o intervalo. Ligar/desligar é **persistente** — ao reabrir o Zimmy, o
+que estava ligado volta a rodar (estado em `user://schedules.json`).
 
 ```gdscript
 extends RefCounted
@@ -99,7 +100,7 @@ Constantes opcionais que o Zimmy lê do script:
 | Const | Efeito |
 |---|---|
 | `MENU_GROUP := "email"` | põe o item num submenu dedicado **📧 E-mails** (em vez de ⚙️ Automações) |
-| `MENU_GROUP := "moedas"` | põe o item no submenu **💱 Moedas**, aninhado dentro de ⚙️ Automações (usado pelas cotações) |
+| `MENU_GROUP := "moedas"` | põe o item no submenu **💱 Moedas**, no menu principal logo abaixo de ⚙️ Automações (usado pelas cotações) |
 | `MENU_GROUP := "whatsapp"` | põe o item no submenu dedicado **💬 WhatsApp** (usado pelo contador de não lidas) |
 | `ICON_COLOR := "ea4335"` | cor do **ícone à esquerda** do item (hex) |
 | `BADGE_KEY := "..."` | chave do **badge**; o rótulo mostra o valor de `zimmy.set_automation_badge(key, texto)` |
@@ -111,14 +112,20 @@ credenciais salvas a `cb.call({user, pass})` ou, se não houver, abre o diálogo
 `forget_credentials(key)` apaga (ex.: login falhou). Regra: pede ao ligar a automação se
 não houver credencial salva; grava só após validação.
 
-**E-mail (IMAP)**: `zimmy.imap_unread(host, 993, user, pass, cb)` conta não-lidos
-(`STATUS INBOX (UNSEEN)`) sobre TLS e chama `cb.call(ok, count)`. Exige **App Password**
-(a senha normal do Gmail/Outlook não funciona mais). Ver `email_gmail.gd` / `email_outlook.gd`.
+**E-mail (Gmail)**: `zimmy.http_get_auth(url, user, pass, cb)` faz um GET autenticado
+(HTTP Basic) e chama `cb.call(status, body)`. O `email_gmail.gd` usa o **feed Atom**
+(`mail/feed/atom`), que devolve `<fullcount>N</fullcount>`. Exige **App Password**
+(a senha normal do Gmail não funciona mais). Ver `email_gmail.gd`.
+
+**Alerta de som**: os submenus **📧 E-mails** e **💬 WhatsApp** têm, no topo, um item
+**🔔 Alerta de som** (checkbox). Quando o badge do `BADGE_KEY` correspondente (`email_gmail`
+ou `whatsapp`) **aumenta**, o Zimmy toca um som baixo (correio / telefone). Tudo é tratado
+dentro do `zimmy` em `set_automation_badge(...)` — a automação só precisa atualizar o badge.
 
 ## Exemplos inclusos
 
 `auto_alimentar`, `lembrete_pomodoro`, `comemoracao_hora_cheia`, `cotacao_usd/eur/gbp/jpy/cny`,
-`desligar_pc`, `cancelar_desligamento`, `alarme`, `email_gmail`, `email_outlook`.
+`desligar_pc`, `cancelar_desligamento`, `alarme`, `email_gmail`, `whatsapp`.
 
 ### Exemplo mínimo (`extends RefCounted`)
 

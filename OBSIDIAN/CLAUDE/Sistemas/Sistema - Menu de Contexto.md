@@ -1,6 +1,6 @@
 ---
 tags: [sistema, ui, menu, zimmy-pet]
-atualizado: 2026-06-21
+atualizado: 2026-06-24
 ---
 
 # 🧭 Sistema - Menu de Contexto
@@ -47,10 +47,10 @@ submenus é nativo (cada submenu é uma **janela do SO**, `gui_embed_subwindows 
 🗑️ Excluir acessório ▸ (14) → submenu acc_del_menu
 ──
 ⚙️ Automações ▸ (11) → submenu automations_menu
-   └ 💱 Moedas ▸ (17) → submenu moedas_menu (cotações; só aparece se houver alguma)
+💱 Moedas ▸ (17) → submenu moedas_menu (cotações; item do menu principal logo abaixo de Automações; desabilitado se não houver nenhuma)
 📝 Notas ▸ (18) → submenu notes_menu (bloquinho de texto; manual + área de transferência)
-📧 E-mails ▸ (12) → submenu email_menu
-💬 WhatsApp ▸ (19) → submenu whatsapp_menu (conversas não lidas, lendo o título da janela)
+📧 E-mails ▸ (12) → submenu email_menu (🔊 Alerta de som no topo + Gmail)
+💬 WhatsApp ▸ (19) → submenu whatsapp_menu (🔊 Alerta de som no topo + conversas não lidas, lendo o título da janela)
 🌐 Idioma ▸ (15) → submenu lang_menu
 ❤️ Doação ▸ (20) → submenu donate_menu (GitHub Sponsors, Ko-fi — abrem links)
 ──
@@ -93,8 +93,18 @@ chave `lang` em settings.json) e chama `_apply_menu_labels()` (reaplica rótulos
   nem moedas); o submenu é reescaneado a cada abertura do menu (no clique direito).
 - **moedas_menu** (parte de `_rebuild_automations_menu`): scripts com
   `MENU_GROUP := "moedas"` (as cotações `cotacao_*`) são roteados para o submenu
-  **💱 Moedas** (`MI_MOEDAS = 17`), aninhado no topo de **⚙️ Automações**. O item de
-  submenu só é criado quando há pelo menos uma cotação; mesmo handler `_on_pick_automation`.
+  **💱 Moedas**. Esse submenu é um **item do menu principal** (`MI_MOEDAS := 17`),
+  posicionado **logo abaixo de ⚙️ Automações** (adicionado em `_build_menu` via
+  `menu.add_submenu_node_item(t("mi_moedas"), moedas_menu, MI_MOEDAS)`; no mapa
+  `_submenu_parent` o pai do `moedas_menu` é o `menu` principal, não o `automations_menu`).
+  O item fica **desabilitado** quando não há cotações
+  (`menu.set_item_disabled(menu.get_item_index(MI_MOEDAS), n_moedas == 0)`); mesmo
+  handler `_on_pick_automation`. Cada cotação mostra uma **bandeirinha (ícone de textura) à
+  esquerda** via `const ICON_FLAG := "us"/"eu"/"gb"/"jp"/"cn"` (lido em `_scan_automations`
+  para `automation_flags`, desenhado por `_flag_icon()` — emojis de bandeira são pares de
+  *regional indicators* que **não** são renderizados nos `PopupMenu`, por isso usamos textura).
+  Os nomes ficam **sem emoji** (`AUTOMATION_NAME`: "Cotação USD", "Cotação EUR", ...; EN:
+  "USD rate" etc.). As cotações **não usam `ICON_COLOR`** (o ícone é a bandeira de `ICON_FLAG`).
 - **notes_menu** (`_rebuild_notes_menu`): bloquinho de notas de texto (`MI_NOTES = 18`),
   acima de 📧 E-mails. Itens fixos `➕ Nova nota...` (`NOTE_NEW`) e
   `📋 Colar da área de transferência` (`NOTE_PASTE`); depois a lista de notas (ids 100+
@@ -104,7 +114,8 @@ chave `lang` em settings.json) e chama `_apply_menu_labels()` (reaplica rótulos
   desabilitado `(nenhuma nota)`. `➕ Nova nota...` abre o `notes_dialog` (ConfirmationDialog
   com `TextEdit` multilinha); `📋 Colar` lê `DisplayServer.clipboard_get()`. Persistência:
   `user://notes.json` (array de strings — `_save_notes`/`_load_notes`). A prévia no menu
-  é uma linha só (`_note_preview`: tira quebras e limita a 40 chars).
+  é uma linha só (`_note_preview`: tira quebras e limita a 30 chars, anexando "..." no final
+quando maior).
 
 ## Automações + Agendador (pasta `Automacoes/`)
 Drop-in de scripts: cada `.gd` em `Automacoes/` com `run(zimmy)` vira um item.
@@ -128,7 +139,7 @@ nomes trocam de idioma na hora. Contrato em `Automacoes/LEIAME.md`.
 
 ## Submenu 📧 E-mails (grupos, badges, credenciais)
 Consts opcionais lidas no scan: `MENU_GROUP` (roteia p/ um submenu dedicado — `email` →
-`email_menu`; `moedas` → `moedas_menu`, aninhado em ⚙️ Automações; `whatsapp` →
+`email_menu`; `moedas` → `moedas_menu`, item do menu principal logo abaixo de ⚙️ Automações; `whatsapp` →
 `whatsapp_menu`, top-level `MI_WHATSAPP = 19`), `ICON_COLOR` (ícone à esquerda via `add_icon_check_item` + `_provider_icon`,
 cacheado), `BADGE_KEY` (rótulo mostra `automation_badges[key]`, setado por
 `set_automation_badge`), `CRED_KEY` (arquivo de credencial). Mapas: `automation_groups`,
@@ -141,9 +152,22 @@ link `cred_link`→`OS.shell_open(help_url)` no topo, e-mail + App Password masc
 pede ao ligar se não houver salva, grava só após validar. **Gmail** (`email_gmail`) usa o
 **feed Atom**: `http_get_auth(url, user, pass, cb)` (GET com `Authorization: Basic`, devolve
 `cb.call(status, body)`) em `mail/feed/atom`, e um regex extrai `<fullcount>N</fullcount>` —
-sem IMAP. **Outlook** (`email_outlook`) usa **IMAP**: `imap_unread(host, port, user, pass,
-cb)` (TCP+TLS, `LOGIN` + `STATUS INBOX (UNSEEN)`). Ambos exigem App Password (Basic no feed,
-`LOGIN` no IMAP). Contrato em `Automacoes/LEIAME.md`.
+sem IMAP. O Gmail é o único provedor do submenu; exige App Password (Basic no feed).
+Contrato em `Automacoes/LEIAME.md`.
+
+## 🔊 Alerta de som (não lidas)
+No **topo** dos submenus **💬 WhatsApp** e **📧 E-mails** (antes do item contador) há um
+checkbox **🔊 Alerta de som** (chave de tradução `mi_sound_alert`, "🔊 Alerta de som" / "🔊 Sound alert"). Quando o badge de não
+lidos **aumenta** (chegou mensagem nova), o Zimmy toca um som baixo: telefone tocando
+(WhatsApp) ou entrega de correio (Gmail). Os toggles usam os ids `SND_WHATSAPP := 50` e
+`SND_GMAIL := 51` (abaixo de 100, onde começam os ids das automações), tratados em
+`_on_pick_automation`; o estado persiste em settings.json como `wa_sound` / `gmail_sound`
+(variáveis `whatsapp_sound_on` / `gmail_sound_on`, padrão ligado). O som é sintetizado em
+código (sem arquivos de áudio) via `AudioStreamWAV` nas funções
+`_build_audio`/`_build_ring_sound`/`_build_chime_sound`/`_make_wav`/`_play_alert`, tocado por
+dois nós `AudioStreamPlayer` (`_ring_player`/`_chime_player`). A reprodução é disparada dentro
+de `set_automation_badge(key, text)` ao detectar aumento numérico do badge das chaves
+`whatsapp` ou `email_gmail`.
 
 ## Submenu 💬 WhatsApp (conversas não lidas)
 Drop-in `whatsapp.gd` (`MENU_GROUP = "whatsapp"` → submenu top-level `💬 WhatsApp`,

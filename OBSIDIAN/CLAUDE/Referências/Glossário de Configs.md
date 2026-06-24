@@ -79,10 +79,11 @@ Categorias geométricas extras (todas com `none` quando ausentes):
 
 ## Settings (`user://settings.json`)
 `{ "anchor_x": int, "anchor_y": int, "pet": str, "acc": str, "show_acc": bool,
-"lang": "pt"|"en", "status": bool }` — âncora (centro-inferior) da última posição
-**+ escolha ativa** de pet/acessório, exibição de acessórios, **idioma da UI** e
-exibição das **barras de status** (`status`, OFF por padrão). Ver
-[[Sistema - Persistência]].
+"lang": "pt"|"en", "status": bool, "wa_sound": bool, "gmail_sound": bool }` — âncora
+(centro-inferior) da última posição **+ escolha ativa** de pet/acessório, exibição de
+acessórios, **idioma da UI**, exibição das **barras de status** (`status`, OFF por padrão)
+e os **alertas de som** dos submenus 💬 WhatsApp / 📧 E-mails (`wa_sound` / `gmail_sound`,
+ON por padrão). Ver [[Sistema - Persistência]].
 
 ## i18n (`STRINGS` / `STRING_LISTS`)
 Tabelas `const` com `{ "pt": ..., "en": ... }` por chave. `t(key)` devolve o texto e
@@ -90,5 +91,5 @@ Tabelas `const` com `{ "pt": ..., "en": ... }` por chave. `t(key)` devolve o tex
 
 ## Constantes notáveis ([[zimmy.gd]])
 `PET_BOX=200`, `PET_SCALE=0.75`, `PET_DRAW=150`, `HOP_HEADROOM=80`,
-`MAX_W=640`, `RANDOM_PERIOD=10.0`, `ACTION_COOLDOWN=1.0`, `MAX_REPEAT=3`,
+`MAX_W=300`, `RANDOM_PERIOD=10.0`, `ACTION_COOLDOWN=1.0`, `MAX_REPEAT=3`,
 `COMPLAIN_COOLDOWN=1.5`.

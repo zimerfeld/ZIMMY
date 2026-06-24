@@ -13,7 +13,7 @@ start full (100%) on every launch.
 ## Bars — `_draw_stat_bars()`
 Drawn in a **reserved footer below the pet** (`STATUS_FOOTER=58px`, added to `win_h` in
 `_relayout` only when `show_status`). `_draw_stat_bars()` resets the transform to
-**identity** (real px — no `PET_SCALE`, no hop offset) and stacks 3 rows (`row_h=16`, bar
+**identity** (real px — no `PET_SCALE` and no hop `y_off`) and stacks 3 rows (`row_h=16`, bar
 `bh=8`): track `Color(0,0,0,0.18)` + colored fill with width = `bw * stat/100` (no
 numbers). The **icon+bar group is the pet's width** (`PET_DRAW`) and **centered under it**
 (from `pet_x`) — it does **not** stretch with the speech bubble. Each bar has its **menu icon on the left** (🦴/🤚/🎾, `icon_fs=17` ≈ 2× the

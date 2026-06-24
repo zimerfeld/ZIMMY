@@ -23,9 +23,10 @@
 Desktop pet overlay, feito em Godot 4.6.
 Uma janela transparente, sem bordas e sempre no topo que flutua sobre a área de trabalho.
 O pet é desenhado num espaço lógico de **200×200** e exibido a **75%** (≈150 px,
-`PET_SCALE`). A janela reserva ainda uma faixa transparente acima do pet
-(`HOP_HEADROOM`) para o **pulinho** não ser cortado, e cresce dinamicamente quando o
-Zimmy fala.
+`PET_SCALE`). A janela reserva uma faixa transparente acima do pet (`HOP_HEADROOM`) para o
+**pulinho** (ao alimentar/fazer carinho/brincar) não ser cortado, e cresce dinamicamente
+quando o Zimmy fala. O pet fica **ancorado pelo centro-inferior**: um balão de fala grande
+que exceda a janela pode transbordar para a borda da tela, mas **nunca desloca o pet**.
 
 ## Como rodar
 
@@ -144,20 +145,34 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   e então **apaga o acessório permanentemente** do `accessories.json`. Após excluir, o
   Zimmy **volta sempre a `Nenhum`** (o Default). Sem acessórios salvos, mostra
   "(nenhum acessório salvo)".
-- **⚙️ Automações ▸** — submenu com as automações disponíveis (scripts da pasta
-  `Automacoes/`). Fica **desabilitado** quando não há nenhuma automação. Automações
-  **avulsas** aparecem como botões (executam uma vez ao clicar); automações
-  **agendadas** aparecem como itens **marcáveis** (✓ = ligada) com a frequência no
-  rótulo — é o **agendador visual**. Ver **Automações** abaixo.
+- **⚙️ Automações ▸** — submenu com as automações **avulsas** disponíveis (scripts da
+  pasta `Automacoes/` que executam uma vez ao clicar), cada uma com um **ícone ▶ play**
+  verde à esquerda. Fica **desabilitado** quando não há automações avulsas. As automações
+  **agendadas** agora ficam em **⏱️ Temporizadores** (abaixo). Ver **Automações** abaixo.
+- **⏱️ Temporizadores ▸** — submenu próprio **logo abaixo de ⚙️ Automações**, contendo as
+  automações **agendadas** (as que declaram `const SCHEDULE`/`SCHEDULE_SECONDS`) como
+  itens **marcáveis** (✓ = ligada), cada uma com um pequeno **ícone de relógio** à
+  esquerda e a **frequência no rótulo** — é o **agendador visual**, persistido em
+  `user://schedules.json`. Exemplos: `alarme.gd` (daily@08:00), `auto_alimentar.gd` (20s),
+  `comemoracao_hora_cheia.gd` (hourly), `desligar_pc.gd` (daily@23:00),
+  `lembrete_pomodoro.gd` (25m). Fica **desabilitado** quando não há automações agendadas.
+- **💱 Moedas ▸** — submenu próprio no menu principal, **abaixo de ⚙️ Automações / ⏱️ Temporizadores**,
+  agrupando as cotações de moeda (`MENU_GROUP := "moedas"`). Cada item mostra uma **bandeirinha
+  (ícone) à esquerda** — uma textura desenhada em pixel (`ICON_FLAG := "us"/"eu"/"gb"/"jp"/"cn"`),
+  pois emojis de bandeira não são renderizados no `PopupMenu`. Fica **desabilitado** quando não há cotações.
 - **📝 Notas ▸** — um bloquinho de notas de texto. **➕ Nova nota...** abre um campo
   multilinha para digitar; **📋 Colar da área de transferência** transforma o texto
   atual da área de transferência numa nota. As notas salvas aparecem na lista — **clicar
   numa copia o texto de volta para a área de transferência**; **🗑️ Excluir nota ▸**
-  remove. As notas persistem em `user://notes.json`. Ver **Notas** abaixo.
-- **📧 E-mails ▸** — submenu dedicado aos provedores de e-mail (Gmail, Outlook), cada um
-  com o **ícone à esquerda** e o **contador de não lidos** no rótulo. Fica **desabilitado**
-  se não houver automações de e-mail. Ver **E-mails** abaixo.
+  remove. No menu cada nota aparece como prévia de uma linha **truncada em 30 caracteres
+  com "..."** quando maior. As notas persistem em `user://notes.json`. Ver **Notas** abaixo.
+- **📧 E-mails ▸** — submenu dedicado ao provedor de e-mail (Gmail), com o **ícone à
+  esquerda** e o **contador de não lidos** no rótulo. No topo, uma caixa **🔊 Alerta de som**
+  liga/desliga um som baixo de entrega de correio que toca quando chega um e-mail **novo**.
+  Fica **desabilitado** se não houver automações de e-mail. Ver **E-mails** abaixo.
 - **💬 WhatsApp ▸** — mostra o número de **conversas não lidas do WhatsApp** como badge.
+  No topo, uma caixa **🔊 Alerta de som** liga/desliga um som baixo de telefone tocando
+  que toca quando chega uma conversa **nova**.
   **Não** faz login no WhatsApp (não há API; a sessão fica presa ao navegador) — apenas
   **lê o título da janela do WhatsApp Web** que o seu navegador mantém aberto (vira
   "(N) WhatsApp" quando há não lidas). Mantenha o **WhatsApp Web aberto e vinculado**.
@@ -205,9 +220,10 @@ em `user://notes.json` (uma lista simples de strings), então as notas sobrevive
 ## Automações
 
 Automações são scripts `.gd` colocados na pasta **`Automacoes/`** (na raiz do
-projeto). Aparecem no menu de contexto em **⚙️ Automações** — o submenu é
-**reescaneado toda vez que o menu abre**, então scripts novos aparecem sem reiniciar.
-Sem nenhum script válido, o item do menu fica desabilitado.
+projeto). Aparecem no menu de contexto em **⚙️ Automações** (as **avulsas**, com ícone
+▶ play) ou **⏱️ Temporizadores** (as **agendadas**, com ícone de relógio) — os submenus
+são **reescaneados toda vez que o menu abre**, então scripts novos aparecem sem reiniciar.
+Sem nenhum script válido de um tipo, o item de menu correspondente fica desabilitado.
 
 Cada automação é um GDScript com:
 
@@ -236,8 +252,8 @@ modelos.
 ### Agendador (frequência / recorrência)
 
 Uma automação que declara `const SCHEDULE` roda **sozinha** na frequência indicada,
-sem precisar clicar. Ela aparece no submenu **⚙️ Automações** como um item **marcável**
-(✓ = ligada) com o intervalo no rótulo — esse é o **agendador visual**. Ligar/desligar
+sem precisar clicar. Ela aparece no submenu **⏱️ Temporizadores** como um item **marcável**
+(✓ = ligada) com um ícone de relógio e o intervalo no rótulo — esse é o **agendador visual**. Ligar/desligar
 é **persistente**: o que estava ligado volta a rodar ao reabrir o Zimmy (estado em
 `user://schedules.json`). Formatos de `SCHEDULE`: `"30s"`/`"5m"`/`"2h"` (a cada N),
 `"hourly"` (toda hora cheia, no minuto :00), `"daily@09:00"` (1×/dia no horário); ou
@@ -258,12 +274,11 @@ para funcionar tanto no clique quanto no disparo agendado.
 | Auto-alimentar 🦴 | `auto_alimentar.gd` | a cada 20s — alimenta se com fome |
 | Lembrete Pomodoro ☕ | `lembrete_pomodoro.gd` | a cada 25min — lembra de pausar |
 | Comemorar hora cheia 🎉 | `comemoracao_hora_cheia.gd` | `hourly` — comemora cada virada de hora |
-| Cotação USD/EUR/GBP/JPY/CNY 💱 | `cotacao_*.gd` | avulsas — cotação da moeda em BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), grátis). As 5 moedas de maior influência (cesta SDR) ficam agrupadas no submenu **💱 Moedas** aninhado em ⚙️ Automações (`MENU_GROUP := "moedas"`) |
+| Cotação USD/EUR/GBP/JPY/CNY 💱 | `cotacao_*.gd` | avulsas — cotação da moeda em BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), grátis). As 5 moedas de maior influência (cesta SDR) ficam agrupadas no submenu **💱 Moedas** no menu principal (`MENU_GROUP := "moedas"`), cada item com uma **bandeirinha (ícone) à esquerda** (textura de `ICON_FLAG`) |
 | Desligar PC 🔌 | `desligar_pc.gd` | `daily@23:00` — desliga o Windows com 60s de aviso |
 | Cancelar desligamento ❌ | `cancelar_desligamento.gd` | avulsa — aborta o desligamento (`shutdown /a`) |
-| Alarme ⏰ | `alarme.gd` | `daily@08:00` — pula, avisa e dá um bipe |
+| Alarme ⏰ | `alarme.gd` | `daily@08:00` — avisa e dá um bipe |
 | Gmail 📧 | `email_gmail.gd` | a cada 5min — conta e-mails não lidos pelo **feed Atom** (`mail/feed/atom`, HTTP Basic + App Password); aparece no submenu **📧 E-mails** |
-| Outlook 📧 | `email_outlook.gd` | a cada 5min — conta e-mails não lidos via **IMAP**; aparece no submenu **📧 E-mails** |
 | WhatsApp 💬 | `whatsapp.gd` | a cada 1min — conta conversas não lidas **lendo o título da janela do WhatsApp Web** (`tasklist`), sem API/login; aparece no submenu **💬 WhatsApp** |
 
 > **Atenção (desligar PC):** `desligar_pc.gd` executa `shutdown` de verdade. Vem
@@ -276,9 +291,9 @@ Automações que declaram `const MENU_GROUP := "email"` aparecem num submenu ded
 **contador de não lidos no rótulo**, atualizado a cada 5 min. O **Gmail**
 (`email_gmail.gd`) usa o **feed Atom**, leve — um único GET autenticado em
 `mail/feed/atom` (`zimmy.http_get_auth(...)`) que devolve `<fullcount>N</fullcount>`, sem
-máquina de estados IMAP. O **Outlook** (`email_outlook.gd`) usa **IMAP sobre TLS**
-(`zimmy.imap_unread(...)`). Os dois autenticam com uma **App Password** (HTTP Basic no
-feed, `LOGIN` no IMAP).
+máquina de estados IMAP, autenticado com uma **App Password** (HTTP Basic). No topo do
+submenu, **🔊 Alerta de som** (ligado por padrão, persistido) toca um som baixo de entrega
+de correio sempre que o contador de não lidos **aumenta** (chegou e-mail novo).
 
 **Pré-requisito — App Password** (a senha normal **não funciona mais**):
 
@@ -287,10 +302,6 @@ feed, `LOGIN` no IMAP).
   Atom não exige IMAP ativado** — só a App Password. O Google mostra a senha em 4 grupos de
   4 — pode colar **com ou sem os espaços** (o Zimmy remove). Use a **Senha de app**, não a
   sua senha normal do Google.
-- **Outlook/Hotmail**: gere uma *Senha de aplicativo* em
-  [account.microsoft.com/security](https://account.microsoft.com/security). Contas
-  **Microsoft 365 corporativas** costumam ter IMAP/básico **desativado** pelo admin — aí
-  não funciona.
 
 **Passo-a-passo de primeira vez**: na primeira vez que você liga o **Gmail** (enquanto
 ainda não há credencial salva), o diálogo de login mostra um **passo-a-passo de como gerar
@@ -324,7 +335,9 @@ extrai o `N`. Nenhum servidor é acessado, nada é injetado.
 preferência como **janela própria** (Chrome ▸ ⋮ ▸ *Transmitir, salvar e compartilhar* ▸
 *Criar atalho...* ▸ ✓ *Abrir como janela*), assim a contagem fica no título mesmo quando não
 é a aba ativa. Se a janela não for encontrada, o badge mostra `?` e o Zimmy avisa que não
-está aberto.
+está aberto. No topo do submenu, **🔊 Alerta de som** (ligado por padrão, persistido) toca
+um som baixo de telefone tocando sempre que o contador de não lidas **aumenta** (chegou
+conversa nova).
 
 ## Pets
 
@@ -418,17 +431,23 @@ aparecerem como janelas nativas, fora da janelinha do pet.
 > (ele também pinta o fundo de preto). Ambos já estão configurados em `project.godot`.
 
 O Zimmy é desenhado proceduralmente em `_draw()` (elipses + curva da boca), com
-respiração, piscadas, pulinhos e olhos que seguem o cursor global do mouse.
+respiração, piscadas, olhos que seguem o cursor global do mouse e **animações de reação
+variadas**: cada ação do menu dispara um movimento **escolhido aleatoriamente** de um
+conjunto combinado à energia daquela ação — `hop`, `double_hop`, `triple_hop`, `spin`,
+`spin_jump`, `backflip`, `wiggle`, `nod`, `squish`, `tilt`, `dance` (pulinhos físicos
+combinados com rotação, squash-stretch e balanço em torno de um pivô). A sombra fica fixa
+no chão e as barras de status não são afetadas.
 
 ### Balão de fala dinâmico
 
 Quando o Zimmy fala, a **janela cresce e encolhe dinamicamente** para comportar a
-frase (e emojis) sem cortes nem quebras de linha desnecessárias — ver `_relayout()`
-em `zimmy.gd`. A largura mede o texto com a fonte real e cresce só o necessário;
-frases muito longas (acima de `MAX_W = 640 px`) quebram em palavras. O Zimmy fica
-**ancorado pelo seu centro-inferior**, então não se desloca quando o balão aparece
-ou some, e a janela é mantida dentro da tela (clamp). Por isso o `stretch/mode` fica
-em `disabled` (1 unidade = 1 pixel), senão o canvas esticaria ao redimensionar.
+frase (e emojis) — ver `_relayout()` em `zimmy.gd`. A largura mede o texto com a fonte
+real e cresce só o necessário; frases mais largas que `MAX_W = 300 px` **quebram em
+várias linhas** (por palavras). O Zimmy fica **ancorado pelo seu centro-inferior**,
+então não se desloca quando o balão aparece ou some; a posição da janela vem só dessa
+âncora (sem reclamp pela borda da tela), então um balão grande pode transbordar para a
+borda em vez de deslocar o pet. Por isso o `stretch/mode` fica em `disabled` (1 unidade
+= 1 pixel), senão o canvas esticaria ao redimensionar.
 
 > **Nota (fonte/emojis):** use a **fonte padrão** do Godot no balão — ela renderiza
 > acentos e emojis coloridos no renderer Compatibility. Um `SystemFont` (Segoe UI)

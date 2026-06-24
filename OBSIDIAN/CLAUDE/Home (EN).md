@@ -29,7 +29,7 @@ See [[_Memória do Claude (EN)]] for the convention on notes, links and updates.
 - [[Sistema - Pets (EN)]] — config, procedural generation, shapes and elements
 - [[Sistema - Acessórios (EN)]] — independent layer (hat/glasses/bow/scarf)
 - [[Sistema - Render (_draw) (EN)]] — drawing pipeline and primitives
-- [[Sistema - Animação (EN)]] — breathing, hop, blink, eyes
+- [[Sistema - Animação (EN)]] — breathing, blink, hop, eyes
 - [[Sistema - Expressões Faciais (EN)]] — face mirrors the spoken emoji
 - [[Sistema - Balão de Fala (EN)]] — `say()` + `_relayout()`
 - [[Sistema - Interação e Mau Humor (EN)]] — cooldown, repeat limit, complaints

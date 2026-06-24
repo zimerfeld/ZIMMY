@@ -2,9 +2,10 @@
 # Clique para ver na hora; ou agende adicionando, p.ex., const SCHEDULE := "daily@09:00".
 extends RefCounted
 
-const AUTOMATION_NAME := "Cotação USD 💵"
-const AUTOMATION_NAME_EN := "USD rate 💵"
+const AUTOMATION_NAME := "Cotação USD"
+const AUTOMATION_NAME_EN := "USD rate"
 const MENU_GROUP := "moedas"      # vai para o submenu 💱 Moedas (dentro de Automações)
+const ICON_FLAG := "us"           # bandeira (textura) à esquerda do item — ver _flag_icon()
 
 func run(zimmy) -> void:
 	zimmy.notify(zimmy.lang_text("buscando USD... 🌐", "fetching USD... 🌐"))

@@ -15,12 +15,13 @@ draw_set_transform(Vector2(pet_x, pet_y), 0.0, Vector2(PET_SCALE, PET_SCALE))
 ```
 `_draw()` uses a **200×200 logical space** (body center ~ (100,108)); the
 transform scales by `PET_SCALE=0.75` and positions at `(pet_x, pet_y)` computed in the
-[[Sistema - Janela Overlay (EN)|_relayout]]. `o = Vector2(0, y_off)` applies the jump.
+[[Sistema - Janela Overlay (EN)|_relayout]]. `o = Vector2(0, y_off)` applies the jump
+(`y_off` oscillates during the hop — see [[Sistema - Animação (EN)]]).
 
 ## Drawing order
 The body geometry (`bw`/`bh`/`by`/`head_top`) is computed **at the start**, so the
 back and top layers position themselves relative to the body.
-1. Shadow (shrinks in the air).
+1. Shadow (shrinks while the pet is in the air during the hop).
 2. **Wings** (`wings`) and **tail** (`tail`) — far behind, before the body.
 3. Antennae (behind) — if `has_antennae`.
 4. Ears — `round` (ellipses) or `pointy` (triangles), if `has_ears`.

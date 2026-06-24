@@ -35,7 +35,7 @@ const INK := Color(0.227, 0.141, 0.094)   # #3a2418
 const SPEECH_PAD_X := 18.0  # respiro lateral do texto (inclui o contorno)
 const SPEECH_PAD_Y := 7.0   # respiro vertical do texto
 const SPEECH_GAP := 4.0     # folga entre o balão e o topo do pet
-const MAX_W := 640          # largura máxima antes de permitir quebra de linha
+const MAX_W := 300          # largura máxima do balão; acima disso a fala quebra em linhas
 
 # --- pets / acessórios ---
 const PETS_FILE := "user://pets.json"
@@ -72,6 +72,7 @@ var automation_groups: Dictionary = {}  # caminho -> nome do grupo (ex.: "email"
 var automation_badge_keys: Dictionary = {} # caminho -> chave de badge (const BADGE_KEY)
 var automation_cred_keys: Dictionary = {}  # caminho -> chave de credencial (const CRED_KEY)
 var automation_icon_colors: Dictionary = {} # caminho -> Color do ícone (const ICON_COLOR, hex)
+var automation_flags: Dictionary = {}    # caminho -> código de bandeira (const ICON_FLAG: "us"/"eu"/...)
 var automation_badges: Dictionary = {}   # chave de badge -> texto exibido (ex.: "3", "!")
 var automation_item_menu: Dictionary = {} # id do item -> PopupMenu onde ele está (menu de automações ou de e-mail)
 var _icon_cache: Dictionary = {}         # hex -> ImageTexture (ícones de provedor)
@@ -131,6 +132,12 @@ const NOTIFY_HOLD := 5.0    # segundos que a mensagem de automação/e-mail fica
 var notify_queue: Array[String] = []
 var notify_cd := 0.0
 
+# --- alertas sonoros (WhatsApp / Gmail) ---
+var whatsapp_sound_on := true      # toca um "telefone" quando chega conversa nova
+var gmail_sound_on := true         # toca um "correio" quando chega e-mail novo
+var _ring_player: AudioStreamPlayer    # som de telefone tocando (WhatsApp)
+var _chime_player: AudioStreamPlayer   # som de entrega de correio (Gmail)
+
 # --- animação ---
 var bob := 0.0          # respiração (seno)
 var y_off := 0.0        # deslocamento do pulinho
@@ -138,6 +145,28 @@ var vy := 0.0           # velocidade vertical do pulo
 var blink_t := 0.0      # tempo restante de piscada
 var blink_timer := 2.5  # contagem até a próxima piscada
 var pupil_off := Vector2.ZERO
+# Animação de reação ("número" sorteado por ação de menu): rotação/escala/balanço
+# aplicados no _draw em torno de um pivô; os pulos continuam pela física (vy/y_off).
+var anim := ""          # nome da animação em curso ("" = nenhuma)
+var anim_t := 0.0       # tempo decorrido na animação atual
+var anim_dur := 0.0     # duração total da animação atual
+var hop_queue := 0      # pulinhos extras a disparar quando aterrissar (multi-hop)
+var hop_queue_force := 320.0
+
+# Para cada ação de menu distinta, um conjunto de animações sorteáveis (pick_random):
+# a reação varia a cada vez, mas combina com a "energia" da ação.
+const ACTION_ANIMS := {
+	"feed":   ["hop", "nod", "wiggle", "squish"],          # comer: alegria contida
+	"pet":    ["nod", "wiggle", "tilt", "squish"],          # carinho: derrete/balança
+	"play":   ["double_hop", "triple_hop", "spin_jump", "backflip", "dance"],  # brincar: energia alta
+	"react":  ["hop", "wiggle", "spin", "tilt"],            # clique avulso
+	"newpet": ["spin", "spin_jump", "dance"],              # pet novo gerado: "ta-dá"
+	"newacc": ["spin", "wiggle", "nod"],                   # acessório novo
+	"choose": ["hop", "spin", "tilt"],                     # escolher pet/acessório salvo
+	"save":   ["nod", "hop"],                              # salvar/renomear
+	"happy":  ["hop", "spin", "dance"],                    # comemoração genérica
+	"sad":    ["squish", "tilt"],                          # exclusão / mau resultado
+}
 
 # --- arrasto da janela ---
 var dragging := false
@@ -161,6 +190,7 @@ var menu: PopupMenu
 var pets_menu: PopupMenu
 var acc_menu: PopupMenu
 var automations_menu: PopupMenu
+var timers_menu: PopupMenu          # submenu ⏱️ Temporizadores: só automações agendadas
 var moedas_menu: PopupMenu
 var email_menu: PopupMenu
 var whatsapp_menu: PopupMenu       # submenu 💬 WhatsApp (drop-in com MENU_GROUP = "whatsapp")
@@ -205,7 +235,7 @@ const MI_DEL_PET := 13
 const MI_DEL_ACC := 14
 const MI_LANG := 15
 const MI_STATUS := 16
-const MI_MOEDAS := 17   # submenu 💱 Moedas, dentro de ⚙️ Automações
+const MI_MOEDAS := 17   # submenu 💱 Moedas, no menu principal (logo abaixo de ⚙️ Automações)
 const MI_NOTES := 18    # submenu 📝 Notas (acima de 📧 E-mails)
 # ids internos do submenu 📝 Notas (espaço próprio; as notas em si usam 100+)
 const NOTE_NEW := 1      # ➕ Nova nota...
@@ -213,6 +243,11 @@ const NOTE_PASTE := 2    # 📋 Colar da área de transferência
 const MI_NOTES_DEL := 3  # 🗑️ Excluir nota ▸ (subsubmenu)
 const MI_WHATSAPP := 19  # submenu 💬 WhatsApp (contador de conversas não lidas)
 const MI_DONATE := 20    # submenu ❤️ Doação / Donate (acima de Sair)
+const MI_TIMERS := 21    # submenu ⏱️ Temporizadores: automações agendadas (logo abaixo de ⚙️ Automações)
+# IDs dos toggles "🔔 Alerta de som" dentro dos submenus 💬 WhatsApp e 📧 E-mails.
+# Ficam abaixo de 100 (onde começam os IDs das automações) para não colidirem.
+const SND_WHATSAPP := 50
+const SND_GMAIL := 51
 # ids internos do submenu ❤️ Doação (abrem links no navegador)
 const DONATE_SPONSORS := 1   # GitHub Sponsors
 const DONATE_KOFI := 2       # Ko-fi
@@ -243,10 +278,12 @@ const STRINGS := {
 	"mi_choose_acc": {"pt": "🧳 Escolher acessório", "en": "🧳 Choose accessory"},
 	"mi_del_acc":    {"pt": "🗑️ Excluir acessório",  "en": "🗑️ Delete accessory"},
 	"mi_automations":{"pt": "⚙️ Automações",         "en": "⚙️ Automations"},
+	"mi_timers":     {"pt": "⏱️ Temporizadores",     "en": "⏱️ Timers"},
 	"mi_moedas":     {"pt": "💱 Moedas",             "en": "💱 Currencies"},
 	"mi_notes":      {"pt": "📝 Notas",              "en": "📝 Notes"},
 	"mi_emails":     {"pt": "📧 E-mails",            "en": "📧 E-mails"},
 	"mi_whatsapp":   {"pt": "💬 WhatsApp",           "en": "💬 WhatsApp"},
+	"mi_sound_alert":{"pt": "🔊 Alerta de som",      "en": "🔊 Sound alert"},
 	"mi_donate":     {"pt": "❤️ Doação",             "en": "❤️ Donate"},
 	"mi_language":   {"pt": "🌐 Idioma",             "en": "🌐 Language"},
 	"mi_quit":       {"pt": "Sair",                  "en": "Quit"},
@@ -292,8 +329,6 @@ const STRINGS := {
 	"say_no_acc":     {"pt": "sem acessório 🚫",     "en": "no accessory 🚫"},
 	"pet_deleted":    {"pt": "pet excluído: %s 🗑️",  "en": "pet deleted: %s 🗑️"},
 	"acc_deleted":    {"pt": "acessório excluído: %s 🗑️","en": "accessory deleted: %s 🗑️"},
-	"new_pet":        {"pt": "novo pet! 🎲",         "en": "new pet! 🎲"},
-	"new_acc":        {"pt": "novos acessórios! 🎲", "en": "new accessories! 🎲"},
 	"welcome_pet":    {"pt": "bem-vindo, %s! 🎉",    "en": "welcome, %s! 🎉"},
 	"congrats_acc":   {"pt": "parabéns pelo novo visual, %s! 🎉",
 		"en": "congrats on the new look, %s! 🎉"},
@@ -724,6 +759,7 @@ func _ready() -> void:
 
 	_load_schedules()   # antes de montar o menu, para os checkboxes refletirem o estado
 	_load_notes()       # idem: notas salvas já aparecem no submenu 📝 Notas
+	_build_audio()      # sintetiza e prepara os sons de alerta (WhatsApp / Gmail)
 	_build_menu()
 	_build_save_dialog()
 
@@ -743,9 +779,10 @@ func _build_menu() -> void:
 	acc_del_menu.id_pressed.connect(_on_del_acc)
 	automations_menu = PopupMenu.new()
 	automations_menu.id_pressed.connect(_on_pick_automation)
+	timers_menu = PopupMenu.new()
+	timers_menu.id_pressed.connect(_on_pick_automation)
 	moedas_menu = PopupMenu.new()
 	moedas_menu.id_pressed.connect(_on_pick_automation)
-	automations_menu.add_child(moedas_menu)   # fica sempre na árvore; o item-submenu é (re)criado em _rebuild
 	email_menu = PopupMenu.new()
 	email_menu.id_pressed.connect(_on_pick_automation)
 	whatsapp_menu = PopupMenu.new()
@@ -784,6 +821,8 @@ func _build_menu() -> void:
 	menu.add_submenu_node_item(t("mi_del_acc"), acc_del_menu, MI_DEL_ACC)
 	menu.add_separator()
 	menu.add_submenu_node_item(t("mi_automations"), automations_menu, MI_AUTOMATIONS)
+	menu.add_submenu_node_item(t("mi_timers"), timers_menu, MI_TIMERS)   # agendadas isoladas aqui
+	menu.add_submenu_node_item(t("mi_moedas"), moedas_menu, MI_MOEDAS)   # logo abaixo de ⚙️ Automações
 	menu.add_submenu_node_item(t("mi_notes"), notes_menu, MI_NOTES)
 	menu.add_submenu_node_item(t("mi_emails"), email_menu, MI_EMAIL)
 	menu.add_submenu_node_item(t("mi_whatsapp"), whatsapp_menu, MI_WHATSAPP)
@@ -796,8 +835,9 @@ func _build_menu() -> void:
 	# Mapa submenu -> pai e gancho p/ reposicionar à esquerda quando _cascade_left.
 	_submenu_parent = {
 		pets_menu: menu, pets_del_menu: menu, acc_menu: menu, acc_del_menu: menu,
-		automations_menu: menu, notes_menu: menu, email_menu: menu, whatsapp_menu: menu,
-		lang_menu: menu, donate_menu: menu, moedas_menu: automations_menu, notes_del_menu: notes_menu,
+		automations_menu: menu, timers_menu: menu, notes_menu: menu, email_menu: menu,
+		whatsapp_menu: menu, lang_menu: menu, donate_menu: menu, moedas_menu: menu,
+		notes_del_menu: notes_menu,
 	}
 	for sub in _submenu_parent:
 		(sub as PopupMenu).about_to_popup.connect(_flip_submenu_if_left.bind(sub))
@@ -845,6 +885,8 @@ func _apply_menu_labels() -> void:
 	menu.set_item_text(menu.get_item_index(MI_CHOOSE_ACC), t("mi_choose_acc"))
 	menu.set_item_text(menu.get_item_index(MI_DEL_ACC), t("mi_del_acc"))
 	menu.set_item_text(menu.get_item_index(MI_AUTOMATIONS), t("mi_automations"))
+	menu.set_item_text(menu.get_item_index(MI_TIMERS), t("mi_timers"))
+	menu.set_item_text(menu.get_item_index(MI_MOEDAS), t("mi_moedas"))
 	menu.set_item_text(menu.get_item_index(MI_NOTES), t("mi_notes"))
 	menu.set_item_text(menu.get_item_index(MI_EMAIL), t("mi_emails"))
 	menu.set_item_text(menu.get_item_index(MI_WHATSAPP), t("mi_whatsapp"))
@@ -936,26 +978,32 @@ func _refresh_acc_menu_checks() -> void:
 ## Sem nenhuma automação válida, o item "⚙️ Automações" do menu fica desabilitado.
 func _rebuild_automations_menu() -> void:
 	automations_menu.clear()
+	timers_menu.clear()
 	moedas_menu.clear()
 	email_menu.clear()
 	whatsapp_menu.clear()
 	automation_ids.clear()
 	automation_item_menu.clear()
+	# Toggle "🔔 Alerta de som" no TOPO de cada submenu, antes do contador (WhatsApp/Gmail).
+	whatsapp_menu.add_check_item(t("mi_sound_alert"), SND_WHATSAPP)
+	whatsapp_menu.set_item_checked(whatsapp_menu.get_item_index(SND_WHATSAPP), whatsapp_sound_on)
+	whatsapp_menu.add_separator()
+	email_menu.add_check_item(t("mi_sound_alert"), SND_GMAIL)
+	email_menu.set_item_checked(email_menu.get_item_index(SND_GMAIL), gmail_sound_on)
+	email_menu.add_separator()
 	var list := _scan_automations()
 	var n_auto := 0
+	var n_timers := 0
 	var n_email := 0
 	var n_moedas := 0
 	var n_whatsapp := 0
-	# Submenu "💱 Moedas" no topo de Automações (só aparece se houver alguma cotação).
-	for a in list:
-		if automation_groups.get(a["path"], "") == "moedas":
-			automations_menu.add_submenu_node_item(t("mi_moedas"), moedas_menu, MI_MOEDAS)
-			break
 	var next_id := 100
 	for a in list:
 		var path: String = a["path"]
 		var sched: Dictionary = a["sched"]
 		var group: String = automation_groups.get(path, "")
+		# Roteamento: grupos dedicados primeiro; do grupo padrão, as AGENDADAS (com
+		# SCHEDULE) vão para ⏱️ Temporizadores e as avulsas ficam em ⚙️ Automações.
 		var target: PopupMenu = automations_menu
 		if group == "email":
 			target = email_menu
@@ -963,6 +1011,8 @@ func _rebuild_automations_menu() -> void:
 			target = moedas_menu
 		elif group == "whatsapp":
 			target = whatsapp_menu
+		elif not sched.is_empty():
+			target = timers_menu
 		# Rótulo: nome + (frequência, se agendada) + (badge, se houver).
 		var label: String = a["name"]
 		if not sched.is_empty():
@@ -971,10 +1021,18 @@ func _rebuild_automations_menu() -> void:
 			var bk: String = automation_badge_keys[path]
 			if automation_badges.has(bk):
 				label += " — %s %s" % [automation_badges[bk], t("unread")]
-		# Ícone à esquerda (cor de ICON_COLOR) — usado por e-mail e WhatsApp.
+		# Ícone à esquerda. Provedores (e-mail/WhatsApp) usam a cor de ICON_COLOR;
+		# os Temporizadores ganham um relógio e as avulsas um ▶ (play) — todo item
+		# do menu recebe um ícone adequado.
 		var icon: Texture2D = null
-		if automation_icon_colors.has(path):
+		if automation_flags.has(path):
+			icon = _flag_icon(automation_flags[path])
+		elif automation_icon_colors.has(path):
 			icon = _provider_icon(automation_icon_colors[path])
+		elif target == timers_menu:
+			icon = _clock_icon()
+		elif target == automations_menu:
+			icon = _run_icon()
 		# Agendadas viram item marcável (✓ = ligada); avulsas, item comum.
 		if not sched.is_empty():
 			if icon != null:
@@ -995,10 +1053,14 @@ func _rebuild_automations_menu() -> void:
 			n_moedas += 1
 		elif group == "whatsapp":
 			n_whatsapp += 1
+		elif target == timers_menu:
+			n_timers += 1
 		else:
 			n_auto += 1
 		next_id += 1
-	menu.set_item_disabled(menu.get_item_index(MI_AUTOMATIONS), n_auto == 0 and n_moedas == 0)
+	menu.set_item_disabled(menu.get_item_index(MI_AUTOMATIONS), n_auto == 0)
+	menu.set_item_disabled(menu.get_item_index(MI_TIMERS), n_timers == 0)
+	menu.set_item_disabled(menu.get_item_index(MI_MOEDAS), n_moedas == 0)
 	menu.set_item_disabled(menu.get_item_index(MI_EMAIL), n_email == 0)
 	menu.set_item_disabled(menu.get_item_index(MI_WHATSAPP), n_whatsapp == 0)
 
@@ -1018,6 +1080,151 @@ func _provider_icon(color: Color) -> Texture2D:
 	var tex := ImageTexture.create_from_image(img)
 	_icon_cache[hex] = tex
 	return tex
+
+## Ícone de relógio (Temporizadores): anel + dois ponteiros. Cacheado por "clock".
+func _clock_icon() -> Texture2D:
+	if _icon_cache.has("clock"):
+		return _icon_cache["clock"]
+	var sz := 16
+	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var c := Vector2(sz / 2.0, sz / 2.0)
+	var col := Color("e67e22")          # laranja
+	var r := sz / 2.0 - 1.0
+	for y in sz:
+		for x in sz:
+			var d := Vector2(x + 0.5, y + 0.5).distance_to(c)
+			if d <= r and d >= r - 2.0:  # anel
+				img.set_pixel(x, y, col)
+	_line_img(img, c, c + Vector2(0.0, -4.5), col)   # ponteiro dos minutos (12h)
+	_line_img(img, c, c + Vector2(3.0, 0.5), col)    # ponteiro das horas
+	var tex := ImageTexture.create_from_image(img)
+	_icon_cache["clock"] = tex
+	return tex
+
+## Ícone de "executar" (▶) para automações avulsas. Cacheado por "run".
+func _run_icon() -> Texture2D:
+	if _icon_cache.has("run"):
+		return _icon_cache["run"]
+	var sz := 16
+	var img := Image.create(sz, sz, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	var col := Color("27ae60")          # verde
+	for x in range(4, 13):
+		var hh := 5.0 * float(12 - x) / 8.0   # triângulo apontando p/ a direita
+		for y in range(int(round(8.0 - hh)), int(round(8.0 + hh)) + 1):
+			if y >= 0 and y < sz:
+				img.set_pixel(x, y, col)
+	var tex := ImageTexture.create_from_image(img)
+	_icon_cache["run"] = tex
+	return tex
+
+## Risca uma linha de `a` a `b` numa Image (amostragem simples), p/ os ícones.
+func _line_img(img: Image, a: Vector2, b: Vector2, col: Color) -> void:
+	var steps := int(a.distance_to(b)) + 1
+	for i in steps + 1:
+		var p := a.lerp(b, float(i) / float(steps))
+		var x := int(round(p.x))
+		var y := int(round(p.y))
+		if x >= 0 and x < img.get_width() and y >= 0 and y < img.get_height():
+			img.set_pixel(x, y, col)
+
+## Preenche o retângulo [x0,x1) × [y0,y1) de uma Image (recorte seguro), p/ as bandeiras.
+func _rect_img(img: Image, x0: int, y0: int, x1: int, y1: int, col: Color) -> void:
+	for y in range(y0, y1):
+		for x in range(x0, x1):
+			if x >= 0 and x < img.get_width() and y >= 0 and y < img.get_height():
+				img.set_pixel(x, y, col)
+
+## Ícone de bandeira (22×15, textura) para os itens de 💱 Moedas — os emojis de
+## bandeira (regional indicators) não são desenhados nos PopupMenu, então usamos
+## bandeirinhas simplificadas em pixel. Cacheado por "flag_<code>".
+func _flag_icon(code: String) -> Texture2D:
+	var key := "flag_" + code
+	if _icon_cache.has(key):
+		return _icon_cache[key]
+	var w := 22
+	var h := 15
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	img.fill(Color(0, 0, 0, 0))
+	match code:
+		"us": _flag_us(img)
+		"eu": _flag_eu(img)
+		"gb": _flag_gb(img)
+		"jp": _flag_jp(img)
+		"cn": _flag_cn(img)
+		_:   _rect_img(img, 1, 1, w - 1, h - 1, Color(0.6, 0.6, 0.6))
+	# Borda sutil para a bandeira "saltar" do fundo do menu.
+	var bcol := Color(0, 0, 0, 0.35)
+	for x in w:
+		img.set_pixel(x, 0, bcol); img.set_pixel(x, h - 1, bcol)
+	for y in h:
+		img.set_pixel(0, y, bcol); img.set_pixel(w - 1, y, bcol)
+	var tex := ImageTexture.create_from_image(img)
+	_icon_cache[key] = tex
+	return tex
+
+## EUA: faixas vermelhas/brancas + cantão azul com "estrelinhas" brancas.
+func _flag_us(img: Image) -> void:
+	var red := Color("b22234"); var white := Color("ffffff"); var blue := Color("3c3b6e")
+	for y in range(1, 14):
+		var col := red if (int((y - 1) / 2) % 2 == 0) else white
+		_rect_img(img, 1, y, 21, y + 1, col)
+	_rect_img(img, 1, 1, 10, 8, blue)
+	for sy in [2, 4, 6]:
+		for sx in [2, 4, 6, 8]:
+			img.set_pixel(sx, sy, white)
+
+## União Europeia: campo azul + anel de "estrelas" amarelas.
+func _flag_eu(img: Image) -> void:
+	_rect_img(img, 1, 1, 21, 14, Color("003399"))
+	var cx := 11.0; var cy := 7.5; var r := 4.6
+	for i in 12:
+		var a := TAU * float(i) / 12.0
+		var px := int(round(cx + cos(a) * r))
+		var py := int(round(cy + sin(a) * r * 0.82))
+		if px >= 1 and px < 21 and py >= 1 and py < 14:
+			img.set_pixel(px, py, Color("ffcc00"))
+
+## Reino Unido (Union Jack simplificado): cruz + saltire branco/vermelho sobre azul.
+func _flag_gb(img: Image) -> void:
+	var blue := Color("012169"); var white := Color("ffffff"); var red := Color("c8102e")
+	_rect_img(img, 1, 1, 21, 14, blue)
+	# Saltire branco (X) com leve espessura.
+	_line_img(img, Vector2(1, 1), Vector2(20, 13), white)
+	_line_img(img, Vector2(2, 1), Vector2(20, 12), white)
+	_line_img(img, Vector2(20, 1), Vector2(1, 13), white)
+	_line_img(img, Vector2(19, 1), Vector2(1, 12), white)
+	# Cruz branca (St. George).
+	_rect_img(img, 9, 1, 13, 14, white)
+	_rect_img(img, 1, 6, 21, 10, white)
+	# Cruz vermelha por cima.
+	_rect_img(img, 10, 1, 12, 14, red)
+	_rect_img(img, 1, 7, 21, 9, red)
+	# Diagonais vermelhas finas (deslocadas p/ o branco aparecer ao lado).
+	_line_img(img, Vector2(2, 1), Vector2(20, 12), red)
+	_line_img(img, Vector2(20, 2), Vector2(2, 13), red)
+
+## Japão: campo branco + círculo vermelho central.
+func _flag_jp(img: Image) -> void:
+	_rect_img(img, 1, 1, 21, 14, Color("ffffff"))
+	var c := Vector2(11.0, 7.5); var rr := 4.0
+	for y in range(1, 14):
+		for x in range(1, 21):
+			if Vector2(x + 0.5, y + 0.5).distance_to(c) <= rr:
+				img.set_pixel(x, y, Color("bc002d"))
+
+## China: campo vermelho + estrela grande (aprox.) e estrelinhas amarelas.
+func _flag_cn(img: Image) -> void:
+	_rect_img(img, 1, 1, 21, 14, Color("de2910"))
+	var yel := Color("ffde00")
+	# Estrela grande (cruz preenchida) no quadrante superior esquerdo.
+	_rect_img(img, 3, 4, 8, 5, yel)
+	_rect_img(img, 5, 2, 6, 7, yel)
+	img.set_pixel(4, 3, yel); img.set_pixel(6, 3, yel)
+	# Quatro estrelinhas ao redor.
+	for p in [[9, 2], [11, 4], [11, 7], [9, 9]]:
+		img.set_pixel(p[0], p[1], yel)
 
 # ------------------------------------------------------------------ notas (📝 Notas)
 ## (Re)constrói o submenu 📝 Notas: ações fixas (nova/colar) + a lista de notas salvas
@@ -1051,7 +1258,7 @@ func _rebuild_notes_menu() -> void:
 func _note_preview(text: String) -> String:
 	var one := text.strip_edges().replace("\n", " ").replace("\t", " ")
 	if one.length() > 30:
-		one = one.substr(0, 30).strip_edges() + "…"
+		one = one.substr(0, 30).strip_edges() + "..."
 	return "🗒️ " + one
 
 ## Clique no submenu Notas: ações fixas ou (id 100+) copiar a nota para a transferência.
@@ -1064,6 +1271,7 @@ func _on_pick_note(id: int) -> void:
 		var i: int = note_ids[id]
 		if i >= 0 and i < notes.size():
 			DisplayServer.clipboard_set(notes[i])
+			play_action_anim("react")
 			say(t("note_copied"))
 
 ## Clique em 🗑️ Excluir nota: remove a nota e regrava o disco.
@@ -1084,6 +1292,7 @@ func _paste_note_from_clipboard() -> void:
 		say(t("note_clip_empty"))
 		return
 	_add_note(txt)
+	play_action_anim("save")
 	say(t("note_pasted"))
 
 ## Acrescenta uma nota, persiste e reconstrói o submenu.
@@ -1121,6 +1330,7 @@ func _on_note_confirmed() -> void:
 		say(t("note_empty_input"))
 		return
 	_add_note(txt)
+	play_action_anim("save")
 	say(t("note_saved"))
 
 ## Persiste a lista de notas (JSON simples — um array de strings).
@@ -1147,6 +1357,7 @@ func _scan_automations() -> Array:
 	automation_badge_keys.clear()
 	automation_cred_keys.clear()
 	automation_icon_colors.clear()
+	automation_flags.clear()
 	var dir := DirAccess.open(AUTOMACOES_DIR)
 	if dir == null:
 		return out                     # pasta ausente => nenhuma automação
@@ -1175,6 +1386,8 @@ func _scan_automations() -> Array:
 					automation_cred_keys[path] = str(consts["CRED_KEY"])
 				if consts.has("ICON_COLOR"):
 					automation_icon_colors[path] = Color(str(consts["ICON_COLOR"]))
+				if consts.has("ICON_FLAG"):
+					automation_flags[path] = str(consts["ICON_FLAG"]).to_lower()
 				out.append({"name": nm, "path": path, "sched": sched})   # sched == {} quando não há agendamento
 		fn = dir.get_next()
 	dir.list_dir_end()
@@ -1243,6 +1456,17 @@ func _trim_num(v: float) -> String:
 	return "%.1f" % v
 
 func _on_pick_automation(id: int) -> void:
+	# Toggles de alerta sonoro (não são automações; vivem no topo dos submenus).
+	if id == SND_WHATSAPP:
+		whatsapp_sound_on = not whatsapp_sound_on
+		whatsapp_menu.set_item_checked(whatsapp_menu.get_item_index(SND_WHATSAPP), whatsapp_sound_on)
+		_save_settings()
+		return
+	if id == SND_GMAIL:
+		gmail_sound_on = not gmail_sound_on
+		email_menu.set_item_checked(email_menu.get_item_index(SND_GMAIL), gmail_sound_on)
+		_save_settings()
+		return
 	if not automation_ids.has(id):
 		return
 	var path := String(automation_ids[id])
@@ -1399,8 +1623,83 @@ func http_get_auth(url: String, user: String, password: String, cb: Callable) ->
 # ------------------------------------------------------------------ badges de automação
 ## Define o texto do badge (ex.: contador de não-lidos) de uma automação, por chave
 ## (const BADGE_KEY). Aparece no rótulo do item na próxima vez que o menu é montado.
+## Quando o contador AUMENTA (chegou mensagem nova) e o alerta sonoro está ligado,
+## toca o som correspondente — telefone (WhatsApp) ou correio (Gmail).
 func set_automation_badge(key: String, text: String) -> void:
+	var prev := str(automation_badges.get(key, ""))
 	automation_badges[key] = text
+	if prev != "" and prev.is_valid_int() and text.is_valid_int() and int(text) > int(prev):
+		if key == "whatsapp" and whatsapp_sound_on:
+			_play_alert(_ring_player)
+		elif key == "email_gmail" and gmail_sound_on:
+			_play_alert(_chime_player)
+
+# ------------------------------------------------------------------ áudio (alertas)
+## Cria os dois AudioStreamPlayer e sintetiza os sons em código (sem arquivos de
+## áudio no projeto, para o build exportado não depender de assets externos).
+func _build_audio() -> void:
+	_ring_player = AudioStreamPlayer.new()
+	_ring_player.stream = _build_ring_sound()
+	_ring_player.volume_db = -8.0     # "baixo som" de telefone
+	add_child(_ring_player)
+	_chime_player = AudioStreamPlayer.new()
+	_chime_player.stream = _build_chime_sound()
+	_chime_player.volume_db = -8.0    # "baixo som" de correio
+	add_child(_chime_player)
+
+## Toca um alerta — só se ainda não estiver tocando, para não se sobrepor a si mesmo.
+func _play_alert(player: AudioStreamPlayer) -> void:
+	if player and not player.playing:
+		player.play()
+
+## Empacota amostras float [-1,1] num AudioStreamWAV PCM 16-bit mono.
+func _make_wav(samples: PackedFloat32Array, rate: int) -> AudioStreamWAV:
+	var bytes := PackedByteArray()
+	bytes.resize(samples.size() * 2)
+	for i in samples.size():
+		bytes.encode_s16(i * 2, int(clampf(samples[i], -1.0, 1.0) * 32767.0))
+	var wav := AudioStreamWAV.new()
+	wav.format = AudioStreamWAV.FORMAT_16_BITS
+	wav.mix_rate = rate
+	wav.stereo = false
+	wav.data = bytes
+	return wav
+
+## Telefone tocando: dois toques curtos (par de tons 440+480 Hz) com uma pausa,
+## imitando a cadência "trim-trim" de um telefone.
+func _build_ring_sound() -> AudioStreamWAV:
+	var rate := 22050
+	var samples := PackedFloat32Array()
+	var pattern := [[0.30, true], [0.12, false], [0.30, true]]   # toque, pausa, toque
+	for seg in pattern:
+		var dur: float = seg[0]
+		var on: bool = seg[1]
+		var n := int(dur * rate)
+		for i in n:
+			var t := float(i) / rate
+			var v := 0.0
+			if on:
+				v = (sin(TAU * 440.0 * t) + sin(TAU * 480.0 * t)) * 0.5
+				var env := 1.0                       # micro fade p/ não estalar
+				if t < 0.01: env = t / 0.01
+				elif t > dur - 0.01: env = (dur - t) / 0.01
+				v *= env * 0.7
+			samples.append(v)
+	return _make_wav(samples, rate)
+
+## Entrega de correio: um "ding-dong" de duas notas com decaimento de sino.
+func _build_chime_sound() -> AudioStreamWAV:
+	var rate := 22050
+	var samples := PackedFloat32Array()
+	for f in [660.0, 520.0]:                          # ding (agudo) → dong (grave)
+		var dur := 0.45
+		var n := int(dur * rate)
+		for i in n:
+			var t := float(i) / rate
+			var env: float = exp(-5.0 * t)            # decaimento exponencial (sino)
+			var v := (sin(TAU * f * t) + 0.3 * sin(TAU * f * 2.0 * t)) * env
+			samples.append(v * 0.7)
+	return _make_wav(samples, rate)
 
 # ------------------------------------------------------------------ credenciais
 ## Caminho do arquivo de credencial de uma automação: user://cred_<key>.json (gitignored).
@@ -1543,88 +1842,6 @@ func _on_cred_canceled() -> void:
 	cred_pending_key = ""
 	cred_pending_cb = Callable()
 
-# ------------------------------------------------------------------ IMAP (e-mail)
-## Conta e-mails NÃO LIDOS via IMAP sobre TLS e chama cb.call(ok: bool, count: int).
-## Usa LOGIN + STATUS INBOX (UNSEEN). Pensado para App Passwords (Gmail/Outlook).
-## É assíncrono (await) — roda sobre este nó, que está na árvore.
-func imap_unread(host: String, port: int, user: String, password: String, cb: Callable) -> void:
-	var tcp := StreamPeerTCP.new()
-	if tcp.connect_to_host(host, port) != OK:
-		cb.call(false, 0); return
-	while tcp.get_status() == StreamPeerTCP.STATUS_CONNECTING:
-		tcp.poll()
-		await get_tree().process_frame
-	if tcp.get_status() != StreamPeerTCP.STATUS_CONNECTED:
-		cb.call(false, 0); return
-	var tls := StreamPeerTLS.new()
-	if tls.connect_to_stream(tcp, host, TLSOptions.client()) != OK:
-		cb.call(false, 0); return
-	while tls.get_status() == StreamPeerTLS.STATUS_HANDSHAKING:
-		tls.poll()
-		await get_tree().process_frame
-	if tls.get_status() != StreamPeerTLS.STATUS_CONNECTED:
-		cb.call(false, 0); return
-	# App Passwords (Gmail/Outlook) são exibidas em 4 grupos de 4 ("abcd efgh ijkl mnop"),
-	# mas o valor real são os 16 caracteres SEM espaços — colar com espaços faz o LOGIN
-	# falhar. Remove espaços/tabs para aceitar a senha colada como o site mostra.
-	var pass_clean := password.replace(" ", "").replace("\t", "")
-	await _imap_read_until(tls, "")                       # saudação "* OK ..."
-	_imap_send(tls, 'a1 LOGIN "%s" "%s"' % [_imap_escape(user), _imap_escape(pass_clean)])
-	var login_resp: String = await _imap_read_until(tls, "a1 ")
-	if not login_resp.to_upper().contains("A1 OK"):
-		_imap_send(tls, "a3 LOGOUT")
-		cb.call(false, 0); return
-	_imap_send(tls, "a2 STATUS INBOX (UNSEEN)")
-	var status_resp: String = await _imap_read_until(tls, "a2 ")
-	_imap_send(tls, "a3 LOGOUT")
-	cb.call(true, _imap_parse_unseen(status_resp))
-
-func _imap_send(tls: StreamPeerTLS, line: String) -> void:
-	tls.put_data((line + "\r\n").to_utf8_buffer())
-
-## Lê do socket TLS até aparecer uma linha começando com `tag` (ou, se tag=="", até a
-## primeira linha completa). Devolve todo o texto acumulado. Tem timeout de segurança.
-func _imap_read_until(tls: StreamPeerTLS, tag: String) -> String:
-	var acc := ""
-	var frames := 0
-	while frames < 1800:                                  # ~30s de teto a 60fps
-		tls.poll()
-		var n := tls.get_available_bytes()
-		if n > 0:
-			var chunk = tls.get_data(n)
-			if chunk[0] == OK:
-				acc += (chunk[1] as PackedByteArray).get_string_from_utf8()
-		if tag == "":
-			if acc.contains("\n"):
-				return acc
-		else:
-			for ln in acc.split("\n"):
-				if ln.strip_edges().to_upper().begins_with(tag.strip_edges().to_upper()):
-					return acc
-		if tls.get_status() != StreamPeerTLS.STATUS_CONNECTED and n == 0:
-			return acc
-		frames += 1
-		await get_tree().process_frame
-	return acc
-
-## Extrai o número de "UNSEEN n" da resposta de STATUS (ou 0 se não achar).
-func _imap_parse_unseen(resp: String) -> int:
-	var up := resp.to_upper()
-	var i := up.find("UNSEEN")
-	if i < 0:
-		return 0
-	var rest := resp.substr(i + 6)
-	var digits := ""
-	for ch in rest:
-		if ch >= "0" and ch <= "9":
-			digits += ch
-		elif digits != "":
-			break
-	return int(digits) if digits != "" else 0
-
-func _imap_escape(s: String) -> String:
-	return s.replace("\\", "\\\\").replace("\"", "\\\"")
-
 func _build_save_dialog() -> void:
 	save_dialog = ConfirmationDialog.new()
 	save_dialog.ok_button_text = t("btn_save")
@@ -1673,6 +1890,7 @@ func _on_pick_pet(id: int) -> void:
 		say("%s ✨" % pet_menu_ids[id])
 	suggested_pet_name = ""        # escolha explícita: sem sugestão de nome gerado
 	_refresh_pets_menu_checks()
+	play_action_anim("choose")
 	_save_settings()   # persiste a escolha para a próxima abertura
 	queue_redraw()
 	_relayout()
@@ -1692,6 +1910,7 @@ func _on_pick_acc(id: int) -> void:
 		say("%s 🎀" % acc_menu_ids[id])
 	suggested_acc_name = ""        # escolha explícita: sem sugestão de nome gerado
 	_refresh_acc_menu_checks()
+	play_action_anim("choose")
 	_save_settings()   # persiste a escolha para a próxima abertura
 	queue_redraw()
 
@@ -1732,6 +1951,7 @@ func _on_delete_confirmed() -> void:
 		queue_redraw()
 		_relayout()
 		_rebuild_pets_menu()
+		play_action_anim("sad")
 		say(t("pet_deleted") % delete_name)
 	else:
 		if not saved_accessories.has(delete_name):
@@ -1745,6 +1965,7 @@ func _on_delete_confirmed() -> void:
 		_save_settings()
 		queue_redraw()
 		_rebuild_acc_menu()
+		play_action_anim("sad")
 		say(t("acc_deleted") % delete_name)
 
 func _set_random_pet(on: bool) -> void:
@@ -1770,6 +1991,7 @@ func _generate_pet() -> void:
 	suggested_pet_name = _suggest_name("pet")
 	_refresh_pets_menu_checks()
 	say(t("welcome_pet") % suggested_pet_name)
+	play_action_anim("newpet")
 	queue_redraw()
 	_relayout()
 
@@ -1780,6 +2002,7 @@ func _generate_acc() -> void:
 	suggested_acc_name = _suggest_name("acc")
 	_refresh_acc_menu_checks()
 	say(t("congrats_acc") % suggested_acc_name)
+	play_action_anim("newacc")
 	queue_redraw()
 
 ## Monta um nome sugestivo combinando substantivo + adjetivo dos bancos do idioma
@@ -1858,6 +2081,7 @@ func _on_save_confirmed() -> void:
 		_save_pets_to_disk()
 		_rebuild_pets_menu()
 		_save_settings()
+		play_action_anim("save")
 		say(t("pet_saved") % nm)
 	else:
 		_set_random_acc(false)         # ao confirmar, desmarca "Gerar acessórios"
@@ -1866,6 +2090,7 @@ func _on_save_confirmed() -> void:
 		_save_accessories_to_disk()
 		_rebuild_acc_menu()
 		_save_settings()
+		play_action_anim("save")
 		say(t("acc_saved") % nm)
 
 ## Renomeia o item salvo atualmente ativo, preservando a ordem no dropdown e
@@ -2044,6 +2269,7 @@ func _save_settings() -> void:
 			"anchor_x": anchor.x, "anchor_y": anchor.y,
 			"pet": current_pet_name, "acc": current_acc_name,
 			"show_acc": show_accessories, "lang": lang, "status": show_status,
+			"wa_sound": whatsapp_sound_on, "gmail_sound": gmail_sound_on,
 		}, "  "))
 		f.close()
 
@@ -2068,6 +2294,10 @@ func _load_selection() -> void:
 		show_accessories = bool(parsed["show_acc"])
 	if parsed.has("status"):
 		show_status = bool(parsed["status"])
+	if parsed.has("wa_sound"):
+		whatsapp_sound_on = bool(parsed["wa_sound"])
+	if parsed.has("gmail_sound"):
+		gmail_sound_on = bool(parsed["gmail_sound"])
 	if parsed.has("pet"):
 		var pn := String(parsed["pet"])
 		if pn == "Default":
@@ -2129,6 +2359,17 @@ func _process(delta: float) -> void:
 		y_off = 0.0
 		vy = 0.0
 
+	# Multi-hop: ao aterrissar, dispara o próximo pulo da sequência (se houver).
+	if hop_queue > 0 and y_off == 0.0 and vy == 0.0:
+		hop_queue -= 1
+		vy = -hop_queue_force
+
+	# Avanço da animação de reação (rotação/escala/balanço); encerra ao fim.
+	if anim != "":
+		anim_t += delta
+		if anim_t >= anim_dur:
+			anim = ""
+
 	# Piscar.
 	blink_timer -= delta
 	if blink_timer <= 0.0:
@@ -2177,7 +2418,6 @@ func _process(delta: float) -> void:
 # ----------------------------------------------------- layout dinâmico da janela
 ## Redimensiona a janela para caber a fala atual e mantém o pet ancorado.
 func _relayout() -> void:
-	var scr := DisplayServer.screen_get_usable_rect()
 	var band := 0.0
 	# Espaço acima do pet: pelo menos o headroom do pulo; mais, se a fala precisar.
 	var top_space := float(HOP_HEADROOM)
@@ -2216,12 +2456,11 @@ func _relayout() -> void:
 	speech.size = Vector2(float(win_w) - 2.0 * SPEECH_PAD_X, band)
 
 	get_window().size = Vector2i(win_w, win_h)
-	# `anchor` = centro-inferior do PET (não inclui o rodapé), p/ o pet não pular ao
-	# ligar/desligar o Status.
-	var pos := anchor - Vector2i(int(win_w / 2.0), int(pet_bottom))
-	pos.x = clampi(pos.x, scr.position.x, scr.position.x + scr.size.x - win_w)
-	pos.y = clampi(pos.y, scr.position.y, scr.position.y + scr.size.y - win_h)
-	get_window().position = pos
+	# `anchor` = centro-inferior do PET. A posição na tela vem SÓ da âncora, sem reclampar
+	# pelo tamanho da janela: assim uma fala grande que excede a janela NÃO desloca o pet —
+	# o balão pode transbordar a borda da tela, mas o pet fica fixo. (A âncora já é mantida
+	# dentro da tela ao arrastar/carregar; as animações de pulo continuam normais.)
+	get_window().position = anchor - Vector2i(int(win_w / 2.0), int(pet_bottom))
 	queue_redraw()
 
 # ------------------------------------------------------------------ desenho
@@ -2264,9 +2503,47 @@ func _draw() -> void:
 	var bh := body_h * bh_mul * (1.0 + br)
 	var head_top := 108.0 + by - bh                        # topo do "crânio"
 
-	# Sombra (fica no chão, encolhe quando ele pula).
+	# Sombra (fica no chão, encolhe quando ele pula) — desenhada com a transform base,
+	# ANTES da transform animada, para não rodar/escalar junto com o corpo.
 	var sh := 1.0 + y_off * 0.0035               # y_off é negativo no ar
 	_ellipse(Vector2(100, 178), Vector2(46.0 * sh, 7.0), Color(0, 0, 0, 0.10))
+
+	# Transform da animação de reação: rotação/escala/balanço em torno de um pivô
+	# (pés ou centro). Em repouso (anim == "") é a identidade — nada muda.
+	if anim != "":
+		var p := clampf(anim_t / anim_dur, 0.0, 1.0)
+		var a_rot := 0.0
+		var a_sx := 1.0
+		var a_sy := 1.0
+		var a_dx := 0.0
+		var pivot := Vector2(100.0, 150.0)
+		match anim:
+			"spin", "spin_jump":
+				a_rot = TAU * p; pivot = Vector2(100.0, 110.0)
+			"backflip":
+				a_rot = -TAU * p; pivot = Vector2(100.0, 110.0)
+			"wiggle":
+				a_dx = sin(p * TAU * 2.0) * 10.0; a_rot = sin(p * TAU * 2.0) * 0.18
+				pivot = Vector2(100.0, 160.0)
+			"dance":
+				a_dx = sin(p * TAU * 2.0) * 12.0; a_rot = sin(p * TAU * 2.0) * 0.22
+				pivot = Vector2(100.0, 160.0)
+			"tilt":
+				a_rot = sin(p * PI) * 0.35; pivot = Vector2(100.0, 160.0)
+			"nod":
+				a_sy = 1.0 - sin(p * PI) * 0.18; a_sx = 1.0 + sin(p * PI) * 0.12
+				pivot = Vector2(100.0, 162.0)
+			"squish":
+				a_sy = 1.0 - sin(p * PI) * 0.28; a_sx = 1.0 + sin(p * PI) * 0.22
+				pivot = Vector2(100.0, 162.0)
+		var base := Transform2D(0.0, Vector2(pet_x, pet_y))
+		base.x *= PET_SCALE
+		base.y *= PET_SCALE
+		var rs := Transform2D(a_rot, Vector2.ZERO)
+		rs.x *= a_sx
+		rs.y *= a_sy
+		var about := Transform2D(0.0, Vector2(a_dx, 0.0) + pivot) * rs * Transform2D(0.0, -pivot)
+		draw_set_transform_matrix(base * about)
 
 	# Asas e rabo (camadas mais atrás, por trás do corpo).
 	if c.get("wings", "none") != "none":
@@ -3073,7 +3350,7 @@ func feed() -> void:
 	hunger = clampf(hunger - 25.0, 0.0, 100.0)
 	happy = clampf(happy + 8.0, 0.0, 100.0)
 	say(ta("feed").pick_random())
-	hop()
+	play_action_anim("feed")
 
 func pet() -> void:
 	if not _can_act("pet"):
@@ -3081,7 +3358,7 @@ func pet() -> void:
 	stat_pet = STAT_MAX           # enche a barra de Carinho
 	happy = clampf(happy + 15.0, 0.0, 100.0)
 	say(ta("pet_react").pick_random())
-	hop(220.0)
+	play_action_anim("pet")
 
 func play() -> void:
 	if not _can_act("play"):
@@ -3090,17 +3367,43 @@ func play() -> void:
 	happy = clampf(happy + 12.0, 0.0, 100.0)
 	hunger = clampf(hunger + 10.0, 0.0, 100.0)
 	say(ta("play").pick_random())
-	hop(420.0)
+	play_action_anim("play")
 
 func _react() -> void:
 	if not _can_act("react"):
 		return
 	happy = clampf(happy + 5.0, 0.0, 100.0)
 	say(t("hi_react"))
-	hop()
+	play_action_anim("react")
 
 func hop(force := 320.0) -> void:
 	vy = -force
+
+## Sorteia e dispara uma das animações associadas à `action` (ver ACTION_ANIMS).
+## É como cada item de menu distinto ganha uma reação variada do pet.
+func play_action_anim(action: String) -> void:
+	var pool: Array = ACTION_ANIMS.get(action, ["hop"])
+	play_anim(pool.pick_random())
+
+## Inicia a animação `name`: define duração e, p/ as de salto, dispara o(s) pulo(s).
+## A rotação/escala/balanço são calculados por fase no _draw enquanto anim != "".
+func play_anim(name: String) -> void:
+	anim = name
+	anim_t = 0.0
+	hop_queue = 0
+	match name:
+		"hop":        anim_dur = 0.5; hop(320.0)
+		"double_hop": anim_dur = 0.9; hop(300.0); hop_queue = 1; hop_queue_force = 300.0
+		"triple_hop": anim_dur = 1.2; hop(280.0); hop_queue = 2; hop_queue_force = 280.0
+		"spin":       anim_dur = 0.6
+		"spin_jump":  anim_dur = 0.7; hop(380.0)
+		"backflip":   anim_dur = 0.8; hop(440.0)
+		"wiggle":     anim_dur = 0.7
+		"nod":        anim_dur = 0.5
+		"squish":     anim_dur = 0.5
+		"tilt":       anim_dur = 0.6
+		"dance":      anim_dur = 1.1; hop(220.0); hop_queue = 1; hop_queue_force = 220.0
+		_:            anim_dur = 0.5; hop(320.0)
 
 func say(msg: String, hold := 2.5) -> void:
 	speech.text = msg

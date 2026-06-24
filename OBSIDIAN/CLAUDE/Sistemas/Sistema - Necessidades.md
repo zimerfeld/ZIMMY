@@ -12,7 +12,7 @@ persistidas**: começam cheias (100%) a cada abertura.
 ## Barras — `_draw_stat_bars()`
 Desenhadas num **rodapé reservado abaixo do pet** (`STATUS_FOOTER=58px`, adicionado ao
 `win_h` em `_relayout` só quando `show_status`). O `_draw_stat_bars()` reseta o transform
-para **identidade** (px reais — não escala com `PET_SCALE` nem com o pulo) e empilha 3
+para **identidade** (px reais — não escala com `PET_SCALE` nem com o `y_off` do pulo) e empilha 3
 linhas (`row_h=16`, barra `bh=8`): trilho `Color(0,0,0,0.18)` + preenchimento colorido com
 largura = `bw * stat/100` (sem números). O conjunto **ícone+barra tem a largura do pet**
 (`PET_DRAW`) e fica **centralizado sob ele** (a partir de `pet_x`) — **não estica** com o

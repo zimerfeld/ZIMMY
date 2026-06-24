@@ -1,9 +1,10 @@
 # Cotação da Libra Esterlina (GBP) em Real, via AwesomeAPI (grátis, sem chave).
 extends RefCounted
 
-const AUTOMATION_NAME := "Cotação GBP 💷"
-const AUTOMATION_NAME_EN := "GBP rate 💷"
+const AUTOMATION_NAME := "Cotação GBP"
+const AUTOMATION_NAME_EN := "GBP rate"
 const MENU_GROUP := "moedas"      # vai para o submenu 💱 Moedas (dentro de Automações)
+const ICON_FLAG := "gb"           # bandeira (textura) à esquerda do item — ver _flag_icon()
 
 func run(zimmy) -> void:
 	zimmy.notify(zimmy.lang_text("buscando GBP... 🌐", "fetching GBP... 🌐"))

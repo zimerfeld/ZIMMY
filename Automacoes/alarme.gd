@@ -1,4 +1,5 @@
-# Alarme em um horário fixo: o Zimmy pula, avisa na tela e dá um bipe.
+# Alarme em um horário fixo: o Zimmy avisa na tela e dá um bipe.
+# (O pet mantém posição fixa — zimmy.hop() é um no-op, mantido por compatibilidade.)
 # Para vários alarmes, copie este arquivo com outro nome e outro horário
 # (ex.: alarme_almoco.gd com SCHEDULE := "daily@12:00").
 extends RefCounted

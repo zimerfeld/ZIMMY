@@ -27,12 +27,15 @@ In the `.exe` the window may start opaque; that is why the flag + clear color ar
 ## Dynamic layout — `_relayout()` (`zimmy.gd:546`)
 The window has the **pet at the bottom** and a transparent band above:
 - `PET_DRAW = 150` (= `PET_BOX * PET_SCALE`, pet 25% smaller) — see [[Sistema - Render (_draw) (EN)]].
-- `HOP_HEADROOM = 80` — space above so the jump does not get clipped ([[Sistema - Animação (EN)]]).
+- `HOP_HEADROOM = 80` — transparent band reserved above the pet so the jump is not clipped
+  ([[Sistema - Animação (EN)]]).
 - `top_space = max(speech_band + SPEECH_GAP, HOP_HEADROOM)`.
 - `win_h = top_space + PET_DRAW`; `pet_y = top_space`;
   `pet_x = (win_w - PET_DRAW)/2` (centered).
 - The window is **anchored by its bottom-center** (`anchor`), so the pet does not
-  shift when it speaks/jumps. The final position is **clamped** to the screen.
+  shift when it speaks. The final position comes **only from the anchor**, **without
+  re-clamping by the window size** — a large speech bubble can overflow to the screen edge,
+  but the pet stays anchored (see [[Fluxo - Arrastar e Posição (EN)]]).
 
 ## Limitations
 - The whole window (including the transparent band) captures clicks — there is no

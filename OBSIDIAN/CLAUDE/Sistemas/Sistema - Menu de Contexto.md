@@ -1,6 +1,6 @@
 ---
 tags: [sistema, ui, menu, zimmy-pet]
-atualizado: 2026-06-24
+atualizado: 2026-06-25
 ---
 
 # 🧭 Sistema - Menu de Contexto
@@ -34,6 +34,7 @@ submenus é nativo (cada submenu é uma **janela do SO**, `gui_embed_subwindows 
 ```
 📊 Status (16, check, OFF padrão, persistido) → mostra/oculta as barras
 🦴 Alimentar (0)   🤚 Carinho (1)   🎾 Brincar (2)   ← mesmo grupo (sem separador)
+🔊 Alertas de som ▸ (22) → submenu sounds_menu (1 toggle por ação: Alimentar/Carinho/Brincar)
 ──
 🐶 Gerar pets (3, check)
 🎲 Gerar acessórios (10, check)
@@ -168,6 +169,27 @@ código (sem arquivos de áudio) via `AudioStreamWAV` nas funções
 dois nós `AudioStreamPlayer` (`_ring_player`/`_chime_player`). A reprodução é disparada dentro
 de `set_automation_badge(key, text)` ao detectar aumento numérico do badge das chaves
 `whatsapp` ou `email_gmail`.
+
+## 🔊 Alertas de som das ações (Alimentar/Carinho/Brincar)
+Submenu **🔊 Alertas de som** (`sounds_menu`, item `MI_SOUNDS := 22`, **logo abaixo de
+🎾 Brincar**; chave de tradução `mi_sounds`) com **um checkbox por ação**: `🦴 Alimentar`
+(`SND_FEED := 1`), `🤚 Carinho` (`SND_PET := 2`), `🎾 Brincar` (`SND_PLAY := 3`) — ids
+próprios do submenu (não colidem com os das automações), handler `_on_pick_sound`. Cada
+toggle (`sound_feed_on` / `sound_pet_on` / `sound_play_on`, **padrão ligado**, persistidos
+em settings.json como `feed_sound` / `pet_sound` / `play_sound`) governa **dois** gatilhos do
+mesmo som:
+- **ao executar a ação** — `feed()` / `pet()` / `play()` tocam o player no fim
+  ([[Entrada - Funções de Ação]]);
+- **lembrete de necessidade baixa** — no decaimento (`_process`), quando a barra **cruza
+  `STAT_LOW = 20` para baixo** (só na transição, uma vez por cruzamento) — ver
+  [[Sistema - Necessidades]].
+
+Sons **sintetizados em código** (`AudioStreamWAV`), no mesmo estilo dos de WhatsApp/Gmail:
+`_build_feed_sound` (duas mordidinhas graves), `_build_pet_sound` (ronron — tom grave com
+tremolo) e `_build_play_sound` (arpejo alegre ascendente), criados em `_build_audio` e
+tocados por `_feed_player` / `_pet_player` / `_play_player` (via `_play_alert`). Os rótulos
+são reaplicados no idioma em `_apply_menu_labels`; o submenu entra no mapa `_submenu_parent`
+(cascata p/ a esquerda).
 
 ## Submenu 💬 WhatsApp (conversas não lidas)
 Drop-in `whatsapp.gd` (`MENU_GROUP = "whatsapp"` → submenu top-level `💬 WhatsApp`,

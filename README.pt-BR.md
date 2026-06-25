@@ -96,7 +96,8 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 - **📊 Status** (check) — liga/desliga as **barras de status** abaixo do pet
   (Alimentar/Carinho/Brincar). Vem **desligado** por padrão; a escolha é **persistida** em
   `user://settings.json` (chave `status`).
-- **🦴 Alimentar / 🤚 Carinho / 🎾 Brincar** — interações que mudam humor/fome.
+- **🦴 Alimentar / 🤚 Carinho / 🎾 Brincar** — interações que mudam humor/fome. Cada uma também toca um **som próprio** (uma mordidinha, um ronron, um arpejo alegre) quando o alerta daquela ação está ligado.
+- **🔊 Alertas de som ▸** — submenu logo abaixo das ações, com uma **caixa por ação** (🦴 Alimentar / 🤚 Carinho / 🎾 Brincar, todas **ligadas** por padrão, **persistidas** em `user://settings.json`). Cada toggle governa **dois** gatilhos: o som tocado ao fazer a ação **e** um lembrete que toca quando a barra daquela necessidade **cai para 20% (baixa)**. Os sons são sintetizados em código (sem arquivos de áudio), como os alertas de WhatsApp/Gmail.
 - **🐶 Gerar pets** (check) — liga/desliga a geração contínua **do pet**: a cada ~10 s o
   Zimmy vira um pet aleatório. Além das cores, varia as **formas** e quais
   **elementos** o compõem (orelhas redondas ou pontudas, antenas, nariz, cílios,
@@ -196,7 +197,7 @@ Cada barra **perde 1 ponto a cada 30 minutos**; fazer a ação correspondente
 (Alimentar/Carinho/Brincar) reabastece a barra para 100%. Quando uma barra chega a **0**,
 o pet faz uma cara: **Alimentar = fome, boca aberta**; **Carinho = necessitado, chorando**;
 **Brincar = chateado, olhos fechados**. Quando **as três** chegam a 0, o Zimmy **fecha a
-própria janela e encerra o processo**.
+própria janela e encerra o processo**. Com o **🔊 Alerta de som** daquela ação ligado, um som de lembrete também toca no instante em que a barra **cruza 20%** para baixo (uma vez por cruzamento).
 
 ## Idioma
 

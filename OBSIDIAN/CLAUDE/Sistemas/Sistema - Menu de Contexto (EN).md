@@ -1,6 +1,6 @@
 ---
 tags: [sistema, ui, menu, zimmy-pet]
-atualizado: 2026-06-24
+atualizado: 2026-06-25
 lang: en
 ---
 
@@ -34,6 +34,7 @@ mouse-over capture between submenus is native (each is an **OS window**,
 ```
 📊 Status (16, check, OFF default, persisted) → shows/hides the bars
 🦴 Feed (0)   🤚 Pet (1)   🎾 Play (2)   ← same group (no separator)
+🔊 Sound alerts ▸ (22) → submenu sounds_menu (1 toggle per action: Feed/Pet/Play)
 ──
 🎲 Generate pets (3, check)
 🎲 Generate accessories (10, check)
@@ -167,6 +168,26 @@ audio files) via `AudioStreamWAV` in `_build_audio`/`_build_ring_sound`/`_build_
 `_make_wav`/`_play_alert`, played by two `AudioStreamPlayer` nodes
 (`_ring_player`/`_chime_player`). Playback is triggered inside `set_automation_badge(key,
 text)` upon detecting a numeric increase of the badge for the `whatsapp` or `email_gmail` keys.
+
+## 🔊 Sound alerts for the actions (Feed/Pet/Play)
+The **🔊 Sound alerts** submenu (`sounds_menu`, item `MI_SOUNDS := 22`, **right below
+🎾 Play**; translation key `mi_sounds`) has **one checkbox per action**: `🦴 Feed`
+(`SND_FEED := 1`), `🤚 Pet` (`SND_PET := 2`), `🎾 Play` (`SND_PLAY := 3`) — its own submenu
+ids (no clash with automation ids), handler `_on_pick_sound`. Each toggle (`sound_feed_on` /
+`sound_pet_on` / `sound_play_on`, **on by default**, persisted in settings.json as
+`feed_sound` / `pet_sound` / `play_sound`) governs **two** triggers of the same sound:
+- **when you do the action** — `feed()` / `pet()` / `play()` play the player at the end
+  ([[Entrada - Funções de Ação (EN)]]);
+- **low-need reminder** — in the decay step (`_process`), when the bar **crosses
+  `STAT_LOW = 20` going down** (only on the transition, once per crossing) — see
+  [[Sistema - Necessidades (EN)]].
+
+Sounds are **synthesized in code** (`AudioStreamWAV`), in the same style as the WhatsApp/Gmail
+ones: `_build_feed_sound` (two low munches), `_build_pet_sound` (a purr — low tone with
+tremolo) and `_build_play_sound` (a cheerful rising arpeggio), created in `_build_audio` and
+played by `_feed_player` / `_pet_player` / `_play_player` (via `_play_alert`). Labels are
+reapplied per language in `_apply_menu_labels`; the submenu joins the `_submenu_parent` map
+(leftward cascade).
 
 ## 💬 WhatsApp submenu (unread chats)
 Drop-in `whatsapp.gd` (`MENU_GROUP = "whatsapp"` → top-level `💬 WhatsApp` submenu,

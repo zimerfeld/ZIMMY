@@ -104,6 +104,7 @@ var hunger := 40.0
 # abertura (não são persistidas). Caem 1 ponto a cada STAT_DECAY_PERIOD sem a ação. ---
 const STAT_MAX := 100.0
 const STAT_DECAY_PERIOD := 1800.0          # 30 min em segundos: -1 ponto por ciclo
+const STAT_LOW := 20.0                     # ao cruzar p/ baixo deste valor dispara o alerta sonoro de necessidade
 const COL_FEED := Color("ffffff")          # branco (Alimentar)
 const COL_PET := Color("f1c40f")           # amarelo (Carinho)
 const COL_PLAY := Color("e84365")          # rosa avermelhado (Brincar)
@@ -137,6 +138,16 @@ var whatsapp_sound_on := true      # toca um "telefone" quando chega conversa no
 var gmail_sound_on := true         # toca um "correio" quando chega e-mail novo
 var _ring_player: AudioStreamPlayer    # som de telefone tocando (WhatsApp)
 var _chime_player: AudioStreamPlayer   # som de entrega de correio (Gmail)
+
+# --- alertas sonoros das ações (Alimentar / Carinho / Brincar) ---
+# Cada toggle governa DOIS gatilhos: o som tocado ao executar a ação e o alerta
+# quando a necessidade correspondente cruza STAT_LOW para baixo. Persistidos.
+var sound_feed_on := true
+var sound_pet_on := true
+var sound_play_on := true
+var _feed_player: AudioStreamPlayer    # "nhac nhac" ao alimentar / lembrete de fome
+var _pet_player: AudioStreamPlayer     # ronronado ao fazer carinho / lembrete de carência
+var _play_player: AudioStreamPlayer    # "boing" alegre ao brincar / lembrete de tédio
 
 # --- animação ---
 var bob := 0.0          # respiração (seno)
@@ -198,6 +209,7 @@ var pets_del_menu: PopupMenu
 var acc_del_menu: PopupMenu
 var lang_menu: PopupMenu
 var donate_menu: PopupMenu         # submenu ❤️ Doação / Donate (GitHub Sponsors, Ko-fi)
+var sounds_menu: PopupMenu         # submenu 🔊 Alertas de som: 1 toggle por ação (Alimentar/Carinho/Brincar)
 var notes_menu: PopupMenu          # submenu 📝 Notas
 var notes_del_menu: PopupMenu      # subsubmenu 🗑️ Excluir nota
 var _cascade_left := false         # true = abrir os submenus para a ESQUERDA (pet à direita, sem espaço à direita)
@@ -244,10 +256,15 @@ const MI_NOTES_DEL := 3  # 🗑️ Excluir nota ▸ (subsubmenu)
 const MI_WHATSAPP := 19  # submenu 💬 WhatsApp (contador de conversas não lidas)
 const MI_DONATE := 20    # submenu ❤️ Doação / Donate (acima de Sair)
 const MI_TIMERS := 21    # submenu ⏱️ Temporizadores: automações agendadas (logo abaixo de ⚙️ Automações)
+const MI_SOUNDS := 22    # submenu 🔊 Alertas de som (logo abaixo de 🎾 Brincar)
 # IDs dos toggles "🔔 Alerta de som" dentro dos submenus 💬 WhatsApp e 📧 E-mails.
 # Ficam abaixo de 100 (onde começam os IDs das automações) para não colidirem.
 const SND_WHATSAPP := 50
 const SND_GMAIL := 51
+# IDs dos toggles dentro do submenu 🔊 Alertas de som (menu próprio; 1/2/3 não colidem).
+const SND_FEED := 1
+const SND_PET := 2
+const SND_PLAY := 3
 # ids internos do submenu ❤️ Doação (abrem links no navegador)
 const DONATE_SPONSORS := 1   # GitHub Sponsors
 const DONATE_KOFI := 2       # Ko-fi
@@ -284,6 +301,7 @@ const STRINGS := {
 	"mi_emails":     {"pt": "📧 E-mails",            "en": "📧 E-mails"},
 	"mi_whatsapp":   {"pt": "💬 WhatsApp",           "en": "💬 WhatsApp"},
 	"mi_sound_alert":{"pt": "🔊 Alerta de som",      "en": "🔊 Sound alert"},
+	"mi_sounds":     {"pt": "🔊 Alertas de som",     "en": "🔊 Sound alerts"},
 	"mi_donate":     {"pt": "❤️ Doação",             "en": "❤️ Donate"},
 	"mi_language":   {"pt": "🌐 Idioma",             "en": "🌐 Language"},
 	"mi_quit":       {"pt": "Sair",                  "en": "Quit"},
@@ -800,6 +818,14 @@ func _build_menu() -> void:
 	donate_menu.add_icon_item(_provider_icon(Color("ea4aaa")), "GitHub Sponsors", DONATE_SPONSORS)
 	donate_menu.add_icon_item(_provider_icon(Color("ff5e2b")), "Ko-fi", DONATE_KOFI)
 	donate_menu.id_pressed.connect(_on_pick_donate)
+	sounds_menu = PopupMenu.new()
+	sounds_menu.add_check_item(t("mi_feed"), SND_FEED)
+	sounds_menu.add_check_item(t("mi_pet"), SND_PET)
+	sounds_menu.add_check_item(t("mi_play"), SND_PLAY)
+	sounds_menu.set_item_checked(sounds_menu.get_item_index(SND_FEED), sound_feed_on)
+	sounds_menu.set_item_checked(sounds_menu.get_item_index(SND_PET), sound_pet_on)
+	sounds_menu.set_item_checked(sounds_menu.get_item_index(SND_PLAY), sound_play_on)
+	sounds_menu.id_pressed.connect(_on_pick_sound)
 
 	menu = PopupMenu.new()
 	menu.add_check_item(t("mi_status"), MI_STATUS)   # mesmo grupo de Alimentar/Carinho/Brincar
@@ -807,6 +833,7 @@ func _build_menu() -> void:
 	menu.add_item(t("mi_feed"), MI_FEED)
 	menu.add_item(t("mi_pet"), MI_PET)
 	menu.add_item(t("mi_play"), MI_PLAY)
+	menu.add_submenu_node_item(t("mi_sounds"), sounds_menu, MI_SOUNDS)   # alertas de som das 3 ações
 	menu.add_separator()
 	menu.add_check_item(t("mi_random"), MI_RANDOM)
 	menu.add_check_item(t("mi_random_acc"), MI_RANDOM_ACC)
@@ -837,6 +864,7 @@ func _build_menu() -> void:
 		pets_menu: menu, pets_del_menu: menu, acc_menu: menu, acc_del_menu: menu,
 		automations_menu: menu, timers_menu: menu, notes_menu: menu, email_menu: menu,
 		whatsapp_menu: menu, lang_menu: menu, donate_menu: menu, moedas_menu: menu,
+		sounds_menu: menu,
 		notes_del_menu: notes_menu,
 	}
 	for sub in _submenu_parent:
@@ -855,6 +883,24 @@ func _on_pick_donate(id: int) -> void:
 	match id:
 		DONATE_SPONSORS: OS.shell_open(DONATE_SPONSORS_URL)
 		DONATE_KOFI: OS.shell_open(DONATE_KOFI_URL)
+
+## Clique num toggle do submenu 🔊 Alertas de som: liga/desliga o alerta daquela
+## ação — vale tanto p/ o som ao executá-la quanto p/ o lembrete de necessidade
+## baixa — e persiste a escolha.
+func _on_pick_sound(id: int) -> void:
+	match id:
+		SND_FEED:
+			sound_feed_on = not sound_feed_on
+			sounds_menu.set_item_checked(sounds_menu.get_item_index(SND_FEED), sound_feed_on)
+		SND_PET:
+			sound_pet_on = not sound_pet_on
+			sounds_menu.set_item_checked(sounds_menu.get_item_index(SND_PET), sound_pet_on)
+		SND_PLAY:
+			sound_play_on = not sound_play_on
+			sounds_menu.set_item_checked(sounds_menu.get_item_index(SND_PLAY), sound_play_on)
+		_:
+			return
+	_save_settings()
 
 ## Marca (✓) o idioma ativo no submenu de idioma.
 func _refresh_lang_checks() -> void:
@@ -876,6 +922,10 @@ func _apply_menu_labels() -> void:
 	menu.set_item_text(menu.get_item_index(MI_FEED), t("mi_feed"))
 	menu.set_item_text(menu.get_item_index(MI_PET), t("mi_pet"))
 	menu.set_item_text(menu.get_item_index(MI_PLAY), t("mi_play"))
+	menu.set_item_text(menu.get_item_index(MI_SOUNDS), t("mi_sounds"))
+	sounds_menu.set_item_text(sounds_menu.get_item_index(SND_FEED), t("mi_feed"))
+	sounds_menu.set_item_text(sounds_menu.get_item_index(SND_PET), t("mi_pet"))
+	sounds_menu.set_item_text(sounds_menu.get_item_index(SND_PLAY), t("mi_play"))
 	menu.set_item_text(menu.get_item_index(MI_RANDOM), t("mi_random"))
 	menu.set_item_text(menu.get_item_index(MI_RANDOM_ACC), t("mi_random_acc"))
 	menu.set_item_text(menu.get_item_index(MI_SHOW_ACC), t("mi_show_acc"))
@@ -1646,6 +1696,20 @@ func _build_audio() -> void:
 	_chime_player.stream = _build_chime_sound()
 	_chime_player.volume_db = -8.0    # "baixo som" de correio
 	add_child(_chime_player)
+	# Sons das ações (Alimentar/Carinho/Brincar): tocam ao executar a ação e como
+	# lembrete quando a necessidade fica baixa. Também sintetizados em código.
+	_feed_player = AudioStreamPlayer.new()
+	_feed_player.stream = _build_feed_sound()
+	_feed_player.volume_db = -8.0
+	add_child(_feed_player)
+	_pet_player = AudioStreamPlayer.new()
+	_pet_player.stream = _build_pet_sound()
+	_pet_player.volume_db = -8.0
+	add_child(_pet_player)
+	_play_player = AudioStreamPlayer.new()
+	_play_player.stream = _build_play_sound()
+	_play_player.volume_db = -8.0
+	add_child(_play_player)
 
 ## Toca um alerta — só se ainda não estiver tocando, para não se sobrepor a si mesmo.
 func _play_alert(player: AudioStreamPlayer) -> void:
@@ -1698,6 +1762,51 @@ func _build_chime_sound() -> AudioStreamWAV:
 			var t := float(i) / rate
 			var env: float = exp(-5.0 * t)            # decaimento exponencial (sino)
 			var v := (sin(TAU * f * t) + 0.3 * sin(TAU * f * 2.0 * t)) * env
+			samples.append(v * 0.7)
+	return _make_wav(samples, rate)
+
+## Alimentar: duas "mordidinhas" curtas e graves (mastigada) — par de blips ~190 Hz.
+func _build_feed_sound() -> AudioStreamWAV:
+	var rate := 22050
+	var samples := PackedFloat32Array()
+	for _munch in 2:                                   # duas mordidas
+		var dur := 0.13
+		var n := int(dur * rate)
+		for i in n:
+			var t := float(i) / rate
+			var env: float = exp(-13.0 * t)            # ataque seco que decai rápido (mordida)
+			var v := (sin(TAU * 190.0 * t) + 0.5 * sin(TAU * 95.0 * t)) * env
+			samples.append(v * 0.7)
+		var gap := int(0.06 * rate)                    # pausinha entre as duas mordidas
+		for _j in gap:
+			samples.append(0.0)
+	return _make_wav(samples, rate)
+
+## Carinho: ronronado quente — tom grave (~72 Hz) com tremolo (~26 Hz) e envelope suave.
+func _build_pet_sound() -> AudioStreamWAV:
+	var rate := 22050
+	var samples := PackedFloat32Array()
+	var dur := 0.7
+	var n := int(dur * rate)
+	for i in n:
+		var t := float(i) / rate
+		var env: float = sin(PI * t / dur)             # sobe e desce (não começa/termina seco)
+		var tremolo: float = 0.5 + 0.5 * sin(TAU * 26.0 * t)   # o "rrrr" do ronron
+		var v := sin(TAU * 72.0 * t) * tremolo * env
+		samples.append(v * 0.8)
+	return _make_wav(samples, rate)
+
+## Brincar: arpejo alegre p/ cima (sol-dó-mi-dó agudo), cada nota com decaimento curto.
+func _build_play_sound() -> AudioStreamWAV:
+	var rate := 22050
+	var samples := PackedFloat32Array()
+	for f in [392.0, 523.0, 659.0, 784.0]:             # sol → dó → mi → dó agudo
+		var dur := 0.12
+		var n := int(dur * rate)
+		for i in n:
+			var t := float(i) / rate
+			var env: float = exp(-6.0 * t)
+			var v := sin(TAU * f * t) * env
 			samples.append(v * 0.7)
 	return _make_wav(samples, rate)
 
@@ -2270,6 +2379,7 @@ func _save_settings() -> void:
 			"pet": current_pet_name, "acc": current_acc_name,
 			"show_acc": show_accessories, "lang": lang, "status": show_status,
 			"wa_sound": whatsapp_sound_on, "gmail_sound": gmail_sound_on,
+			"feed_sound": sound_feed_on, "pet_sound": sound_pet_on, "play_sound": sound_play_on,
 		}, "  "))
 		f.close()
 
@@ -2298,6 +2408,12 @@ func _load_selection() -> void:
 		whatsapp_sound_on = bool(parsed["wa_sound"])
 	if parsed.has("gmail_sound"):
 		gmail_sound_on = bool(parsed["gmail_sound"])
+	if parsed.has("feed_sound"):
+		sound_feed_on = bool(parsed["feed_sound"])
+	if parsed.has("pet_sound"):
+		sound_pet_on = bool(parsed["pet_sound"])
+	if parsed.has("play_sound"):
+		sound_play_on = bool(parsed["play_sound"])
 	if parsed.has("pet"):
 		var pn := String(parsed["pet"])
 		if pn == "Default":
@@ -2338,9 +2454,19 @@ func _process(delta: float) -> void:
 	stat_decay_timer += delta
 	if stat_decay_timer >= STAT_DECAY_PERIOD:
 		stat_decay_timer = 0.0
+		var before_feed := stat_feed
+		var before_pet := stat_pet
+		var before_play := stat_play
 		stat_feed = maxf(stat_feed - 1.0, 0.0)
 		stat_pet = maxf(stat_pet - 1.0, 0.0)
 		stat_play = maxf(stat_play - 1.0, 0.0)
+		# Alerta sonoro só na TRANSIÇÃO para baixo de STAT_LOW (não a cada ciclo abaixo dele).
+		if sound_feed_on and before_feed > STAT_LOW and stat_feed <= STAT_LOW:
+			_play_alert(_feed_player)
+		if sound_pet_on and before_pet > STAT_LOW and stat_pet <= STAT_LOW:
+			_play_alert(_pet_player)
+		if sound_play_on and before_play > STAT_LOW and stat_play <= STAT_LOW:
+			_play_alert(_play_player)
 		if stat_feed <= 0.0 and stat_pet <= 0.0 and stat_play <= 0.0:
 			get_tree().quit()
 
@@ -3351,6 +3477,8 @@ func feed() -> void:
 	happy = clampf(happy + 8.0, 0.0, 100.0)
 	say(ta("feed").pick_random())
 	play_action_anim("feed")
+	if sound_feed_on:
+		_play_alert(_feed_player)
 
 func pet() -> void:
 	if not _can_act("pet"):
@@ -3359,6 +3487,8 @@ func pet() -> void:
 	happy = clampf(happy + 15.0, 0.0, 100.0)
 	say(ta("pet_react").pick_random())
 	play_action_anim("pet")
+	if sound_pet_on:
+		_play_alert(_pet_player)
 
 func play() -> void:
 	if not _can_act("play"):
@@ -3368,6 +3498,8 @@ func play() -> void:
 	hunger = clampf(hunger + 10.0, 0.0, 100.0)
 	say(ta("play").pick_random())
 	play_action_anim("play")
+	if sound_play_on:
+		_play_alert(_play_player)
 
 func _react() -> void:
 	if not _can_act("react"):

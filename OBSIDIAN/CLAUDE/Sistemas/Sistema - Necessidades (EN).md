@@ -1,6 +1,6 @@
 ---
 tags: [sistema, necessidades, gameplay, zimmy-pet]
-atualizado: 2026-06-21
+atualizado: 2026-06-25
 lang: en
 ---
 
@@ -29,6 +29,14 @@ Every `STAT_DECAY_PERIOD = 1800s` (30 min) each bar loses **1 point**
 (`stat_decay_timer`). Doing the matching action refills **only that** bar to 100
 (`feed()`/`pet()`/`play()` in [[Entrada - Funções de Ação (EN)]]). When **all three** hit
 zero, `get_tree().quit()` **closes the window and ends the process**.
+
+**Low-need sound alert**: still in the decay step, when a bar **crosses `STAT_LOW = 20`
+going down** (only on the **transition** — it stores the previous value and compares, so it
+plays once per crossing, not every cycle below the threshold), Zimmy plays that action's
+sound (`_feed_player`/`_pet_player`/`_play_player`), as long as the matching toggle is on
+(`sound_feed_on`/`sound_pet_on`/`sound_play_on`). It is **the same sound** played when you do
+the action; the **🔊 Sound alerts** submenu (`MI_SOUNDS`) controls both triggers. See
+[[Sistema - Menu de Contexto (EN)]] and [[Entrada - Funções de Ação (EN)]].
 
 ## Need face — `_need_expression()`
 With no speech, if a bar is at 0 the face changes (priority hungry > needy > bored), via

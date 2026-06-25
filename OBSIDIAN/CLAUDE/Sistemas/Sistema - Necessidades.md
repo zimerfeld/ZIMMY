@@ -1,6 +1,6 @@
 ---
 tags: [sistema, necessidades, gameplay, zimmy-pet]
-atualizado: 2026-06-21
+atualizado: 2026-06-25
 ---
 
 # 📊 Sistema - Necessidades (Alimentar/Carinho/Brincar)
@@ -29,6 +29,14 @@ A cada `STAT_DECAY_PERIOD = 1800s` (30 min) cada barra perde **1 ponto**
 (`stat_decay_timer`). Fazer a ação correspondente reabastece **só aquela** barra para 100
 (`feed()`/`pet()`/`play()` em [[Entrada - Funções de Ação]]). Quando **as três** zeram,
 `get_tree().quit()` **fecha a janela e encerra o processo**.
+
+**Alerta sonoro de necessidade baixa**: ainda no decaimento, quando uma barra **cruza
+`STAT_LOW = 20` para baixo** (só na **transição** — guarda o valor anterior e compara, então
+toca uma vez por cruzamento, não a cada ciclo abaixo do limite), o Zimmy toca o som daquela
+ação (`_feed_player`/`_pet_player`/`_play_player`), desde que o toggle correspondente esteja
+ligado (`sound_feed_on`/`sound_pet_on`/`sound_play_on`). É **o mesmo som** tocado ao executar
+a ação; o submenu **🔊 Alertas de som** (`MI_SOUNDS`) controla os dois gatilhos. Ver
+[[Sistema - Menu de Contexto]] e [[Entrada - Funções de Ação]].
 
 ## Rosto de necessidade — `_need_expression()`
 Sem fala, se uma barra está em 0 o rosto muda (prioridade fome > carente > entediado),

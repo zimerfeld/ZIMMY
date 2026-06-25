@@ -1,6 +1,6 @@
 ---
 tags: [endpoint, menu, zimmy-pet]
-atualizado: 2026-06-24
+atualizado: 2026-06-25
 lang: en
 ---
 
@@ -15,6 +15,7 @@ Endpoints triggered by the context menu. `MI_*` ids dispatched in `_on_menu(id)`
 | 0 | `MI_FEED` | 🦴 Alimentar | `feed()` |
 | 1 | `MI_PET` | 🤚 Carinho | `pet()` |
 | 2 | `MI_PLAY` | 🎾 Brincar | `play()` |
+| 22 | `MI_SOUNDS` | 🔊 Alertas de som ▸ | submenu `sounds_menu` → `_on_pick_sound` (1 toggle per action: Feed/Pet/Play; right below 🎾 Play) |
 | 3 | `MI_RANDOM` | 🐶 Gerar pets | `_set_random_pet(!on)` |
 | 10 | `MI_RANDOM_ACC` | 🎲 Gerar acessórios | `_set_random_acc(!on)` |
 | 4 | `MI_SHOW_ACC` | 👓 Mostrar acessórios | `_set_show_accessories(!on)` |
@@ -57,6 +58,12 @@ Endpoints triggered by the context menu. `MI_*` ids dispatched in `_on_menu(id)`
   opening: default-group scripts with `SCHEDULE`/`SCHEDULE_SECONDS` go to ⏱️ Timers (clock
   icon), the one-off ones stay in ⚙️ Automations (▶ play icon); items with `MENU_GROUP`
   (currencies/email/whatsapp) remain in their own submenus even when scheduled.
+- `_on_pick_sound(id)` (the `sounds_menu` submenu, **🔊 Sound alerts**): `SND_FEED=1` /
+  `SND_PET=2` / `SND_PLAY=3` flip `sound_feed_on` / `sound_pet_on` / `sound_play_on` (on by
+  default, persisted in settings.json as `feed_sound` / `pet_sound` / `play_sound`). Each
+  toggle applies to the sound played **when you do the action** and to the **reminder** when
+  the need crosses `STAT_LOW=20` going down. See [[Sistema - Menu de Contexto (EN)]] and
+  [[Sistema - Necessidades (EN)]].
 
 > **Save vs Rename**: `MI_SAVE_PET`/`MI_SAVE_ACC` change to "Renomear" (same icon)
 > when the displayed item is already saved — `_refresh_save_labels()` adjusts the label before

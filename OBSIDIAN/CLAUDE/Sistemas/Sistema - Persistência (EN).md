@@ -1,6 +1,6 @@
 ---
 tags: [sistema, persistencia, dados, zimmy-pet]
-atualizado: 2026-06-21
+atualizado: 2026-06-25
 lang: en
 ---
 
@@ -13,7 +13,7 @@ Three JSON files in `user://` (on Windows:
 |---|---|---|
 | `pets.json` | `PETS_FILE` | `{ name: pet_config }` |
 | `accessories.json` | `ACC_FILE` | `{ name: accessory_config }` |
-| `settings.json` | `SETTINGS_FILE` | `{ anchor_x, anchor_y, pet, acc, show_acc, lang, status, wa_sound, gmail_sound }` (position + active choice + language + status-bars display + WhatsApp/Gmail sound alerts) |
+| `settings.json` | `SETTINGS_FILE` | `{ anchor_x, anchor_y, pet, acc, show_acc, lang, status, wa_sound, gmail_sound, feed_sound, pet_sound, play_sound }` (position + active choice + language + status-bars display + WhatsApp/Gmail sound alerts + Feed/Pet/Play action sound alerts) |
 | `schedules.json` | `SCHEDULES_FILE` | `{ automation_path: true }` (scheduled, turned on) |
 | `cred_<key>.json` | `CRED_PREFIX` | `{ user, pass }` per automation (e-mail), **encrypted** (AES). **Gitignored**, never commit |
 

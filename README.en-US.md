@@ -95,7 +95,8 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 
 - **📊 Status** (check) — toggles the **status bars** below the pet (Feed/Pet/Play). It is
   **off by default**; the choice is **persisted** in `user://settings.json` (`status` key).
-- **🦴 Feed / 🤚 Pet / 🎾 Play** — interactions that change mood/hunger.
+- **🦴 Feed / 🤚 Pet / 🎾 Play** — interactions that change mood/hunger. Each one also plays its **own sound** (a munch, a purr, a playful arpeggio) when the alert for that action is on.
+- **🔊 Sound alerts ▸** — submenu right below the actions with one **checkbox per action** (🦴 Feed / 🤚 Pet / 🎾 Play, all **on** by default, **persisted** in `user://settings.json`). Each toggle governs **both** the sound played when you do the action **and** a reminder that plays when the matching need bar **drops to 20% (low)**. The sounds are synthesized in code (no audio files), just like the WhatsApp/Gmail alerts.
 - **🐶 Random pets** (check) — toggles continuous generation **of the pet**: every ~10 s
   Zimmy turns into a random pet. Besides colors, it varies the **shapes** and which
   **elements** make him up (round or pointy ears, antennas, nose, eyelashes, cheeks,
@@ -195,7 +196,7 @@ persisted.
 Each bar **drops 1 point every 30 minutes**; doing the matching action (Feed/Pet/Play)
 refills its bar to 100%. When a bar hits **0**, the pet shows a face: **Feed = hungry,
 mouth open**; **Pet = needy, crying**; **Play = bored, eyes closed**. When **all three**
-reach 0, Zimmy **closes its own window and ends the process**.
+reach 0, Zimmy **closes its own window and ends the process**. With the **🔊 Sound alert** for an action on, a reminder sound also plays the moment its bar **crosses 20%** going down (once per crossing).
 
 ## Language
 

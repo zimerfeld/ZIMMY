@@ -1,6 +1,6 @@
 ---
 tags: [sistema, persistencia, dados, zimmy-pet]
-atualizado: 2026-06-21
+atualizado: 2026-06-25
 ---
 
 # 💾 Sistema - Persistência
@@ -12,7 +12,7 @@ Três arquivos JSON em `user://` (no Windows:
 |---|---|---|
 | `pets.json` | `PETS_FILE` | `{ nome: config_pet }` |
 | `accessories.json` | `ACC_FILE` | `{ nome: config_acessório }` |
-| `settings.json` | `SETTINGS_FILE` | `{ anchor_x, anchor_y, pet, acc, show_acc, lang, status, wa_sound, gmail_sound }` (posição + escolha ativa + idioma + exibição das barras de status + alertas de som de WhatsApp/Gmail) |
+| `settings.json` | `SETTINGS_FILE` | `{ anchor_x, anchor_y, pet, acc, show_acc, lang, status, wa_sound, gmail_sound, feed_sound, pet_sound, play_sound }` (posição + escolha ativa + idioma + exibição das barras de status + alertas de som de WhatsApp/Gmail + alertas de som das ações Alimentar/Carinho/Brincar) |
 | `schedules.json` | `SCHEDULES_FILE` | `{ caminho_automação: true }` (agendadas ligadas) |
 | `cred_<key>.json` | `CRED_PREFIX` | `{ user, pass }` por automação (e-mail), **criptografado** (AES). **Gitignored**, nunca versionar |
 

@@ -19,14 +19,11 @@ atualizado: 2026-07-01
 - **Regras/memória relevantes:** exportar `.exe` como passo final ([[Build e Export]]); fechar `ZimmyPet.exe` e o editor Godot antes de mexer no código; manter contagem de clones/downloads.
 
 ## 🔴 P0 — destravar
-- [ ] **P0-1 · Commitar a reestruturação do cofre** (`OBSIDIAN/CLAUDE/` → `OBSIDIAN/`).
-  - Estado: 62 arquivos aparecem como deletados + 9 novos não rastreados; é só uma **movimentação de pasta** ainda não registrada no git.
-  - Fazer: `git add -A OBSIDIAN` e commitar (docs/chore). Conferir que nenhuma nota se perdeu no caminho.
-  - **Feito quando:** `git status` limpo para `OBSIDIAN/` e as notas abrem sem link quebrado.
+- [x] **P0-1 · Commitar a reestruturação do cofre** (`OBSIDIAN/CLAUDE/` → `OBSIDIAN/`) — feito em 2026-07-01, commit `bdf60c6`: 62 renomeações (92–100%, histórico preservado) + `_Backlog.md`; `git status` limpo para `OBSIDIAN/`.
 - [x] **P0-2 · Corrigir caminho obsoleto** — feito em 2026-07-01: `...\OBSIDIAN\CLAUDE` → `...\OBSIDIAN` em [[_Memória do Claude]] (PT/EN) e [[Repositório e Branches]] (PT/EN).
 
 ## 🟠 P1 — próxima leva
-- [ ] **P1-1 · Fechar o buraco de documentação do cofre.** Features **já no README** mas **sem nota de sistema** no cofre (a [[Home]] lista só os sistemas antigos):
+- [x] **P1-1 · Fechar o buraco de documentação do cofre.** Feito em 2026-07-01: criadas [[Sistema - Automações e Agendador]], [[Sistema - Moedas]] e [[Sistema - E-mails]] (par PT + (EN)), com refs `zimmy.gd:linha` verificadas e ligadas na [[Home]] (PT/EN). Detalhes originais abaixo, para referência:
   - `Sistema - Automações e Agendador` — pasta `Automacoes/`, submenu **⚙️ Automações** (avulsas) + **⏱️ Temporizadores** (agendadas, `const SCHEDULE`/`SCHEDULE_SECONDS`, persistidas em `user://schedules.json`). Scripts: `alarme.gd`, `auto_alimentar.gd`, `comemoracao_hora_cheia.gd`, `desligar_pc.gd`, `cancelar_desligamento.gd`, `lembrete_pomodoro.gd`, `whatsapp.gd`, `email_gmail.gd`.
   - `Sistema - Moedas` — submenu **💱 Moedas** (`MENU_GROUP := "moedas"`, ícones de bandeira pixel `ICON_FLAG`), scripts `cotacao_usd/eur/gbp/jpy/cny.gd`.
   - `Sistema - E-mails` — submenu **📧 E-mails** (Gmail, contador de não lidos, alerta sonoro `🔊`).

@@ -38,6 +38,9 @@ Comece por [[_Backlog]] — backlog priorizado e autossuficiente (P0/P1/P2) para
 - [[Sistema - Necessidades]] — barras Alimentar/Carinho/Brincar, decaimento, fechamento
 - [[Sistema - Persistência]] — `user://` JSON (pets, acessórios, posição)
 - [[Sistema - Menu de Contexto]] — PopupMenu, submenus, diálogos
+- [[Sistema - Automações e Agendador]] — pasta `Automacoes/`, ⚙️ Automações + ⏱️ Temporizadores
+- [[Sistema - Moedas]] — submenu 💱 Moedas, cotações (`cotacao_*.gd`)
+- [[Sistema - E-mails]] — submenu 📧 E-mails (Gmail) + 💬 WhatsApp, badge e som
 
 ## 🔀 Fluxos
 - [[Fluxo - Inicialização]] (`_ready`)

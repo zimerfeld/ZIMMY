@@ -31,12 +31,12 @@ atualizado: 2026-07-01
   - Seguir a convenção do cofre: criar **par PT + (EN)** de cada nota e **linká-las na [[Home]]** (seção 🧩 Sistemas). Verificar linhas de `zimmy.gd` antes de citar `arquivo:linha`.
   - **Feito quando:** todo submenu do README tem nota espelho no cofre e a Home aponta pra elas.
 - [x] **P1-2 · Atualizar contagem de clones/downloads** — feito em 2026-07-01. `gh` já estava instalado **e autenticado** (não estava mais bloqueado). Snapshot (clones 14d): ZIMARO 790 · Tree 532 · ZIMMY 318 · CommitMsg 293 (downloads de release = 0 nos 4). Registrado em `contagem de downloads.txt` e em [[Adoção e Métricas]] (PT/EN). **Nota:** clones é janela móvel de 14 dias (não acumulado); o total histórico/NuGet é responsabilidade do projeto zimerfeld.com.
-- [ ] **P1-3 · Exportar release `.exe`** (regra: build ao terminar). Confirmar que `build/` está em sincronia com o `zimmy.gd` atual. **Antes:** fechar `ZimmyPet.exe` e o editor Godot (senão o export trava no lock). Preset `Windows Desktop` já versionado em [[export_presets.cfg]]. Ver [[Build e Export]].
+- [x] **P1-3 · Exportar release `.exe`** — feito em 2026-07-01: `build/ZimmyPet.exe` (~100 MB) exportado via CLI headless do Godot 4.6.2 (preset `Windows Desktop`), **exit 0, sem erros/warnings**. Nenhuma instância estava aberta. `build/` é gitignored (o `.exe` não é versionado). Ver [[Build e Export]].
 
 ## 🟡 P2 — crescimento / quando sobrar
-- [ ] **P2-1 · Divulgação bilíngue** (PT + EN, regra global) das features novas: **Temporizadores/Agendador**, **Moedas**, **E-mails/Gmail**, **Alarme**. Gerar as duas versões do texto.
-- [ ] **P2-2 · Avaliar canais de distribuição** (mentalidade de investidor): publicar no **itch.io** e/ou página de release mais rica para ampliar alcance e clones. Avaliar esforço × retorno.
-- [ ] **P2-3 · Ideias de produto** (validar antes): mais automações úteis (clima, agenda/calendário, lembretes recorrentes), sons opcionais, temas de pet sazonais. Anotar aqui as que valerem a pena antes de codar.
+- [x] **P2-1 · Divulgação bilíngue** — feito em 2026-07-01: copy PT+EN (anúncio curto, post longo e micro-posts por feature) em [[Divulgação — Posts]]. Falta só **publicar** nos canais.
+- [~] **P2-2 · Avaliar canais de distribuição** — análise feita em [[Distribuição e Crescimento]] (itch.io = maior ROI → depois Reddit/vídeo → Store/Product Hunt). **Pendente a execução:** publicar página no itch.io com o `.exe` e GIFs.
+- [x] **P2-3 · Ideias de produto** — priorizadas por atratividade × esforço em [[Distribuição e Crescimento]] (topo: clima 🔥 e lembretes recorrentes do usuário 🔥). Validar antes de codar.
 
 ## 🔗 Ver também
 [[Home]] · [[_Memória do Claude]] · [[Repositório e Branches]] · [[Build e Export]] · [[zimmy.gd]]

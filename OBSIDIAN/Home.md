@@ -60,4 +60,4 @@ Comece por [[_Backlog]] — backlog priorizado e autossuficiente (P0/P1/P2) para
 - [[tools - make_icon.py]] · [[Arquivo - README]]
 
 ## 📚 Referências
-- [[Repositório e Branches]] · [[Build e Export]] · [[Glossário de Configs]]
+- [[Repositório e Branches]] · [[Build e Export]] · [[Glossário de Configs]] · [[Adoção e Métricas]]

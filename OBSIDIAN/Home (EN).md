@@ -58,4 +58,4 @@ See [[_Memória do Claude (EN)]] for the convention on notes, links and updates.
 - [[tools - make_icon.py (EN)]] · [[Arquivo - README (EN)]]
 
 ## 📚 References
-- [[Repositório e Branches (EN)]] · [[Build e Export (EN)]] · [[Glossário de Configs (EN)]]
+- [[Repositório e Branches (EN)]] · [[Build e Export (EN)]] · [[Glossário de Configs (EN)]] · [[Adoção e Métricas (EN)]]

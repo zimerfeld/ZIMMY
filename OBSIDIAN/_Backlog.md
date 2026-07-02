@@ -30,9 +30,7 @@ atualizado: 2026-07-01
   - API de automação: `run(zimmy)`, `zimmy.notify()` (fila ~5 s) vs `say()` (2,5 s). Base: `Automacoes/LEIAME.md` e README §Automations.
   - Seguir a convenção do cofre: criar **par PT + (EN)** de cada nota e **linká-las na [[Home]]** (seção 🧩 Sistemas). Verificar linhas de `zimmy.gd` antes de citar `arquivo:linha`.
   - **Feito quando:** todo submenu do README tem nota espelho no cofre e a Home aponta pra elas.
-- [ ] **P1-2 · Atualizar contagem de clones/downloads** (regra global de portfólio). Hoje está **bloqueado**: `gh` não instalado (ver `contagem de downloads.txt`).
-  - Fazer: `winget install --id GitHub.cli`, reabrir terminal, `gh auth login` (ou `winpty gh auth login` no Git Bash), depois `gh api repos/zimerfeld/ZIMMY/traffic/clones` e somar clones+downloads. Repetir para `GitExtensions.ZimerfeldTree`, `GitExtensions.ZimerfeldCommitMsg`, `ZIMARO`.
-  - **Feito quando:** valor mais recente registrado ao lado de cada produto (e refletido onde o portfólio consome).
+- [x] **P1-2 · Atualizar contagem de clones/downloads** — feito em 2026-07-01. `gh` já estava instalado **e autenticado** (não estava mais bloqueado). Snapshot (clones 14d): ZIMARO 790 · Tree 532 · ZIMMY 318 · CommitMsg 293 (downloads de release = 0 nos 4). Registrado em `contagem de downloads.txt` e em [[Adoção e Métricas]] (PT/EN). **Nota:** clones é janela móvel de 14 dias (não acumulado); o total histórico/NuGet é responsabilidade do projeto zimerfeld.com.
 - [ ] **P1-3 · Exportar release `.exe`** (regra: build ao terminar). Confirmar que `build/` está em sincronia com o `zimmy.gd` atual. **Antes:** fechar `ZimmyPet.exe` e o editor Godot (senão o export trava no lock). Preset `Windows Desktop` já versionado em [[export_presets.cfg]]. Ver [[Build e Export]].
 
 ## 🟡 P2 — crescimento / quando sobrar

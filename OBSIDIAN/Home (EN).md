@@ -37,6 +37,7 @@ See [[_Memória do Claude (EN)]] for the convention on notes, links and updates.
 - [[Sistema - Persistência (EN)]] — `user://` JSON (pets, accessories, position)
 - [[Sistema - Menu de Contexto (EN)]] — PopupMenu, submenus, dialogs
 - [[Sistema - Automações e Agendador (EN)]] — `Automacoes/` folder, ⚙️ Automations + ⏱️ Timers
+- [[Sistema - Lembretes (EN)]] — ⏰ user-created recurring reminders (no `.gd` editing)
 - [[Sistema - Moedas (EN)]] — 💱 Currencies submenu, quotes (`cotacao_*.gd`)
 - [[Sistema - E-mails (EN)]] — 📧 E-mails (Gmail) + 💬 WhatsApp submenu, badge and sound
 

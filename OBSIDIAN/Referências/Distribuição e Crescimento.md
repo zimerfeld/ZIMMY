@@ -41,8 +41,9 @@ Ordenadas por **atratividade × esforço** (bang-for-buck no topo):
    Open-Meteo (grátis/sem chave), geolocalização por IP com fallback (ipapi.co → ip-api.com) ou
    `LAT`/`LON` fixos; fala emoji + descrição bilíngue + temperatura localizada. Ver
    [[Sistema - Automações e Agendador]].
-2. **Lembretes recorrentes personalizados** — o usuário cria um lembrete pelo menu (sem editar
-   `.gd`). Transforma o agendador em feature de usuário final. *Alto apelo, médio esforço.* 🔥
+2. ✅ **Lembretes recorrentes personalizados** — **implementado em 2026-07-02**: submenu
+   **⏰ Lembretes** com diálogo (mensagem + dropdown de frequência + hora), persistido em
+   `user://reminders.json`, sem editar `.gd`. Ver [[Sistema - Lembretes]].
 3. **Sons/humor ambiente** — pequenos sons opcionais e reações por horário. *Médio/baixo.*
 4. **Temas sazonais de pet** (Natal, Halloween…) — gancho de recorrência e divulgação. *Baixo.*
 5. **Agenda/Calendário** (Google Calendar) — avisa próximo evento. *Alto apelo, alto esforço*

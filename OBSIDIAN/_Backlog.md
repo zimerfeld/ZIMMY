@@ -34,6 +34,7 @@ atualizado: 2026-07-01
 - [x] **P1-3 · Exportar release `.exe`** — feito em 2026-07-01: `build/ZimmyPet.exe` (~100 MB) exportado via CLI headless do Godot 4.6.2 (preset `Windows Desktop`), **exit 0, sem erros/warnings**. Nenhuma instância estava aberta. `build/` é gitignored (o `.exe` não é versionado). Ver [[Build e Export]].
 
 ## ✅ Feito recente
+- [x] **Feature Lembretes recorrentes do usuário** — 2026-07-02: submenu **⏰ Lembretes** nativo (sem editar `.gd`) — diálogo com mensagem + dropdown de frequência (15/30 min, 1 h, hourly, `daily@HH:MM`) + campo de hora; itens marcáveis (liga/desliga), excluir; persistido em `user://reminders.json`; disparo pelo mesmo relógio do agendador (parser `_parse_schedule_str` extraído e compartilhado). Compilado (`--check-only`), **testado em runtime** (18/18 asserts, incl. firing) e smoke test do app OK. Documentado em README (raiz+PT+EN) e [[Sistema - Lembretes]] (PT/EN). Era a ideia #2 de [[Distribuição e Crescimento]].
 - [x] **Feature Clima** — 2026-07-01: `Automacoes/clima.gd` (Open-Meteo grátis/sem chave, geolocalização por IP com fallback, bilíngue). Sintaxe validada (`--check-only`) e **testada em runtime** (harness headless → "☀️ céu limpo — 21,2°C em Rio de Janeiro"). Documentado em README (raiz+PT+EN), LEIAME e [[Sistema - Automações e Agendador]]. Foi a ideia #1 de [[Distribuição e Crescimento]].
 
 ## 🟡 P2 — crescimento / quando sobrar

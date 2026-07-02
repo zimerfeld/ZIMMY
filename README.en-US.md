@@ -157,6 +157,12 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   `user://schedules.json`. Examples: `alarme.gd` (daily@08:00), `auto_alimentar.gd` (20s),
   `comemoracao_hora_cheia.gd` (hourly), `desligar_pc.gd` (daily@23:00),
   `lembrete_pomodoro.gd` (25m). It is **disabled** when there are no scheduled automations.
+- **⏰ Reminders ▸** — **user-created** recurring reminders, with **no `.gd` editing**.
+  **➕ New reminder…** opens a dialog: a **message** plus a **frequency dropdown** (every
+  15/30 min, 1 h, on the hour, or **daily at HH:MM** — a time field appears for the daily
+  option). Each reminder is a **checkable** item (✓ = on) that **speaks its message** on
+  schedule; **🗑️ Delete ▸** removes it. Persisted in `user://reminders.json` and fired by
+  the same clock as the scheduler.
 - **💱 Currencies ▸** — its own submenu in the main menu, **below ⚙️ Automations / ⏱️ Timers**,
   grouping the currency quotes (`MENU_GROUP := "moedas"`). Each item shows a small **flag icon on
   the left** — a pixel-drawn texture (`ICON_FLAG := "us"/"eu"/"gb"/"jp"/"cn"`), because flag emoji

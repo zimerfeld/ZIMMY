@@ -61,4 +61,4 @@ Comece por [[_Backlog]] — backlog priorizado e autossuficiente (P0/P1/P2) para
 
 ## 📚 Referências
 - [[Repositório e Branches]] · [[Build e Export]] · [[Glossário de Configs]] · [[Adoção e Métricas]]
-- [[Divulgação — Posts]] · [[Distribuição e Crescimento]] — growth (posts bilíngues, canais, ideias)
+- [[Divulgação — Posts]] · [[Distribuição e Crescimento]] · [[itch.io — Página]] — growth (posts bilíngues, canais, ideias, página itch.io)

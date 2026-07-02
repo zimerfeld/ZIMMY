@@ -276,6 +276,7 @@ para funcionar tanto no clique quanto no disparo agendado.
 | Lembrete Pomodoro ☕ | `lembrete_pomodoro.gd` | a cada 25min — lembra de pausar |
 | Comemorar hora cheia 🎉 | `comemoracao_hora_cheia.gd` | `hourly` — comemora cada virada de hora |
 | Cotação USD/EUR/GBP/JPY/CNY 💱 | `cotacao_*.gd` | avulsas — cotação da moeda em BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), grátis). As 5 moedas de maior influência (cesta SDR) ficam agrupadas no submenu **💱 Moedas** no menu principal (`MENU_GROUP := "moedas"`), cada item com uma **bandeirinha (ícone) à esquerda** (textura de `ICON_FLAG`) |
+| Clima 🌤️ | `clima.gd` | avulsa — tempo atual via [Open-Meteo](https://open-meteo.com/) (grátis, sem chave); detecta a localização pelo IP (fallback ipapi.co → ip-api.com) ou defina `LAT`/`LON` para fixar sua cidade |
 | Desligar PC 🔌 | `desligar_pc.gd` | `daily@23:00` — desliga o Windows com 60s de aviso |
 | Cancelar desligamento ❌ | `cancelar_desligamento.gd` | avulsa — aborta o desligamento (`shutdown /a`) |
 | Alarme ⏰ | `alarme.gd` | `daily@08:00` — avisa e dá um bipe |

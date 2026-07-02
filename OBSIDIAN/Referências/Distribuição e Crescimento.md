@@ -37,8 +37,10 @@ funil** para os outros produtos Zimerfeld.
 
 ## 💡 P2-3 · Ideias de produto (validar antes de codar)
 Ordenadas por **atratividade × esforço** (bang-for-buck no topo):
-1. **Clima/tempo** — automação `cotacao`-like que fala a previsão (reusa `http_get_json`).
-   *Alto apelo, baixo esforço* (mesmo padrão das moedas). 🔥
+1. ✅ **Clima/tempo** — **implementado em 2026-07-01** (`Automacoes/clima.gd`): tempo atual via
+   Open-Meteo (grátis/sem chave), geolocalização por IP com fallback (ipapi.co → ip-api.com) ou
+   `LAT`/`LON` fixos; fala emoji + descrição bilíngue + temperatura localizada. Ver
+   [[Sistema - Automações e Agendador]].
 2. **Lembretes recorrentes personalizados** — o usuário cria um lembrete pelo menu (sem editar
    `.gd`). Transforma o agendador em feature de usuário final. *Alto apelo, médio esforço.* 🔥
 3. **Sons/humor ambiente** — pequenos sons opcionais e reações por horário. *Médio/baixo.*

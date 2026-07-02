@@ -74,6 +74,7 @@ formatters `fmt_num` / `fmt_pct` / `fmt_money_brl` / `fmt_quote_date` (comma vs 
 `alarme.gd` (daily@08:00), `auto_alimentar.gd` (20s), `comemoracao_hora_cheia.gd`
 (hourly), `desligar_pc.gd` (daily@23:00) + `cancelar_desligamento.gd`,
 `lembrete_pomodoro.gd` (25m), `email_gmail.gd` ([[Sistema - E-mails (EN)]]), `whatsapp.gd`,
-`cotacao_usd/eur/gbp/jpy/cny.gd` ([[Sistema - Moedas (EN)]]). Template: `exemplo_automacao.gd.example`.
+`cotacao_usd/eur/gbp/jpy/cny.gd` ([[Sistema - Moedas (EN)]]), `clima.gd` (current weather via
+Open-Meteo, free/keyless; IP geolocation with fallback). Template: `exemplo_automacao.gd.example`.
 
 Related: [[Entrada - Itens do Menu (EN)]], [[Entrada - Funções de Ação (EN)]], [[Home (EN)]].

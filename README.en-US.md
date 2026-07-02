@@ -277,6 +277,7 @@ the `HTTPRequest` under the hood. In the *closure* use only `zimmy` and local va
 | Pomodoro reminder ☕ | `lembrete_pomodoro.gd` | every 25min — reminds you to take a break |
 | Celebrate full hour 🎉 | `comemoracao_hora_cheia.gd` | `hourly` — celebrates each turn of the hour |
 | USD/EUR/GBP/JPY/CNY quote 💱 | `cotacao_*.gd` | one-off — currency quote in BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), free). The 5 most influential currencies (SDR basket) are grouped into the **💱 Currencies** submenu in the main menu (`MENU_GROUP := "moedas"`), each item with a small **flag icon on the left** (texture from `ICON_FLAG`) |
+| Weather 🌤️ | `clima.gd` | one-off — current weather via [Open-Meteo](https://open-meteo.com/) (free, no key); auto-detects location by IP (fallback ipapi.co → ip-api.com) or set `LAT`/`LON` to pin your city |
 | Shut down PC 🔌 | `desligar_pc.gd` | `daily@23:00` — shuts down Windows with a 60s warning |
 | Cancel shutdown ❌ | `cancelar_desligamento.gd` | one-off — aborts the shutdown (`shutdown /a`) |
 | Alarm ⏰ | `alarme.gd` | `daily@08:00` — warns and gives a beep |

@@ -125,7 +125,7 @@ dentro do `zimmy` em `set_automation_badge(...)` — a automação só precisa a
 ## Exemplos inclusos
 
 `auto_alimentar`, `lembrete_pomodoro`, `comemoracao_hora_cheia`, `cotacao_usd/eur/gbp/jpy/cny`,
-`desligar_pc`, `cancelar_desligamento`, `alarme`, `email_gmail`, `whatsapp`.
+`clima`, `desligar_pc`, `cancelar_desligamento`, `alarme`, `email_gmail`, `whatsapp`.
 
 ### Exemplo mínimo (`extends RefCounted`)
 

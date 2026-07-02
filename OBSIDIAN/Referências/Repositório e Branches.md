@@ -26,7 +26,7 @@ icon.png / zimmy.ico# ícones (editor / .exe)
 tools/make_icon.py  # gera os ícones -> [[tools - make_icon.py]]
 README.md           # docs (fonte da verdade) -> [[Arquivo - README]]
 build/ZimmyPet.exe  # binário exportado (gerado)
-OBSIDIAN/CLAUDE/    # este cofre
+OBSIDIAN/          # este cofre
 ```
 
 Veja [[Build e Export]] para gerar o `.exe`.

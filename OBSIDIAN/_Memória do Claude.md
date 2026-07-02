@@ -5,8 +5,10 @@ atualizado: 2026-06-20
 
 # 🧠 _Memória do Claude
 
+> Para **retomar o trabalho**, veja [[_Backlog]] (prioridades P0/P1/P2).
+
 Este cofre Obsidian é a **memória técnica** do projeto Zimmy Pet, criada e mantida
-pelo Claude. Fica em `C:\GODOT\ZIMMY\OBSIDIAN\CLAUDE`.
+pelo Claude. Fica em `C:\GODOT\ZIMMY\OBSIDIAN`.
 
 ## Convenções
 - **Uma ideia por nota**, com frontmatter (`tags`, `atualizado`).

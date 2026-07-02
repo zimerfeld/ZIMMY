@@ -23,6 +23,9 @@ Canais de doação configurados no repositório (badges no topo do README + bot�
 ## 🧠 Como usar este cofre
 Veja [[_Memória do Claude]] para a convenção de notas, links e atualização.
 
+## 🗂️ Retomar o projeto
+Comece por [[_Backlog]] — backlog priorizado e autossuficiente (P0/P1/P2) para continuar em qualquer chat novo.
+
 ## 🧩 Sistemas
 - [[Sistema - Janela Overlay]] — transparência, always-on-top, layout dinâmico
 - [[Sistema - Pets]] — config, geração procedural, formas e elementos

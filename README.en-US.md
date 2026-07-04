@@ -157,6 +157,12 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   `user://schedules.json`. Examples: `alarme.gd` (daily@08:00), `auto_alimentar.gd` (20s),
   `comemoracao_hora_cheia.gd` (hourly), `desligar_pc.gd` (daily@23:00),
   `lembrete_pomodoro.gd` (25m). It is **disabled** when there are no scheduled automations.
+- **⏰ Reminders ▸** — **user-created** recurring reminders, with **no `.gd` editing**.
+  **➕ New reminder…** opens a dialog: a **message** plus a **frequency dropdown** (every
+  15/30 min, 1 h, on the hour, or **daily at HH:MM** — a time field appears for the daily
+  option). Each reminder is a **checkable** item (✓ = on) that **speaks its message** on
+  schedule; **🗑️ Delete ▸** removes it. Persisted in `user://reminders.json` and fired by
+  the same clock as the scheduler.
 - **💱 Currencies ▸** — its own submenu in the main menu, **below ⚙️ Automations / ⏱️ Timers**,
   grouping the currency quotes (`MENU_GROUP := "moedas"`). Each item shows a small **flag icon on
   the left** — a pixel-drawn texture (`ICON_FLAG := "us"/"eu"/"gb"/"jp"/"cn"`), because flag emoji
@@ -277,6 +283,7 @@ the `HTTPRequest` under the hood. In the *closure* use only `zimmy` and local va
 | Pomodoro reminder ☕ | `lembrete_pomodoro.gd` | every 25min — reminds you to take a break |
 | Celebrate full hour 🎉 | `comemoracao_hora_cheia.gd` | `hourly` — celebrates each turn of the hour |
 | USD/EUR/GBP/JPY/CNY quote 💱 | `cotacao_*.gd` | one-off — currency quote in BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), free). The 5 most influential currencies (SDR basket) are grouped into the **💱 Currencies** submenu in the main menu (`MENU_GROUP := "moedas"`), each item with a small **flag icon on the left** (texture from `ICON_FLAG`) |
+| Weather 🌤️ | `clima.gd` | one-off — current weather via [Open-Meteo](https://open-meteo.com/) (free, no key); auto-detects location by IP (fallback ipapi.co → ip-api.com) or set `LAT`/`LON` to pin your city |
 | Shut down PC 🔌 | `desligar_pc.gd` | `daily@23:00` — shuts down Windows with a 60s warning |
 | Cancel shutdown ❌ | `cancelar_desligamento.gd` | one-off — aborts the shutdown (`shutdown /a`) |
 | Alarm ⏰ | `alarme.gd` | `daily@08:00` — warns and gives a beep |

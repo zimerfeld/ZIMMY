@@ -1,16 +1,19 @@
-O gh não está instalado nesse terminal. No Windows, o caminho mais simples é instalar e reabrir o Git Bash:
+CONTAGEM DE ADOCAO (clones + downloads) — repos open source do portfolio (owner: zimerfeld)
+============================================================================================
 
-winget install --id GitHub.cli --source winget
+Metrica: GitHub Traffic "clones" (janela MOVEL de 14 dias) + downloads de assets de release.
+Comando por repo:
+  gh api repos/zimerfeld/<repo>/traffic/clones          (requer push access; so ultimos 14 dias)
+  gh api repos/zimerfeld/<repo>/releases --jq '[.[].assets[].download_count]|add // 0'
 
+Obs.: os 4 repos nao publicam assets de release no GitHub (downloads = 0); a metrica viva e clones.
+      GitExtensions.* sao pacotes NuGet — para adocao all-time via NuGet, ver o projeto zimerfeld.com.
 
-Depois feche e abra o terminal e rode:
-
-gh auth login
-
-gh api repos/zimerfeld/ZIMMY/traffic/clones
-
-Como você está no MINGW64 (Git Bash/MinTTY), se o login interativo der problema use um destes jeitos:
-
-winpty gh auth login
-
-gh api repos/zimerfeld/ZIMMY/traffic/clones
+--------------------------------------------------------------------------------------------
+Snapshot 2026-07-01
+--------------------------------------------------------------------------------------------
+Repo                                 Clones(14d)  Uniques  Downloads  Total(clones+dl)
+ZIMARO                                       790      331          0               790
+GitExtensions.ZimerfeldTree                  532      214          0               532
+ZIMMY                                        318      131          0               318
+GitExtensions.ZimerfeldCommitMsg             293      140          0               293

@@ -36,6 +36,10 @@ See [[_Memória do Claude (EN)]] for the convention on notes, links and updates.
 - [[Sistema - Necessidades (EN)]] — Feed/Pet/Play bars, decay, shutdown
 - [[Sistema - Persistência (EN)]] — `user://` JSON (pets, accessories, position)
 - [[Sistema - Menu de Contexto (EN)]] — PopupMenu, submenus, dialogs
+- [[Sistema - Automações e Agendador (EN)]] — `Automacoes/` folder, ⚙️ Automations + ⏱️ Timers
+- [[Sistema - Lembretes (EN)]] — ⏰ user-created recurring reminders (no `.gd` editing)
+- [[Sistema - Moedas (EN)]] — 💱 Currencies submenu, quotes (`cotacao_*.gd`)
+- [[Sistema - E-mails (EN)]] — 📧 E-mails (Gmail) + 💬 WhatsApp submenu, badge and sound
 
 ## 🔀 Flows
 - [[Fluxo - Inicialização (EN)]] (`_ready`)
@@ -55,4 +59,4 @@ See [[_Memória do Claude (EN)]] for the convention on notes, links and updates.
 - [[tools - make_icon.py (EN)]] · [[Arquivo - README (EN)]]
 
 ## 📚 References
-- [[Repositório e Branches (EN)]] · [[Build e Export (EN)]] · [[Glossário de Configs (EN)]]
+- [[Repositório e Branches (EN)]] · [[Build e Export (EN)]] · [[Glossário de Configs (EN)]] · [[Adoção e Métricas (EN)]]

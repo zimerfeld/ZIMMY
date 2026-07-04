@@ -23,6 +23,9 @@ Canais de doação configurados no repositório (badges no topo do README + bot�
 ## 🧠 Como usar este cofre
 Veja [[_Memória do Claude]] para a convenção de notas, links e atualização.
 
+## 🗂️ Retomar o projeto
+Comece por [[_Backlog]] — backlog priorizado e autossuficiente (P0/P1/P2) para continuar em qualquer chat novo.
+
 ## 🧩 Sistemas
 - [[Sistema - Janela Overlay]] — transparência, always-on-top, layout dinâmico
 - [[Sistema - Pets]] — config, geração procedural, formas e elementos
@@ -35,6 +38,10 @@ Veja [[_Memória do Claude]] para a convenção de notas, links e atualização.
 - [[Sistema - Necessidades]] — barras Alimentar/Carinho/Brincar, decaimento, fechamento
 - [[Sistema - Persistência]] — `user://` JSON (pets, acessórios, posição)
 - [[Sistema - Menu de Contexto]] — PopupMenu, submenus, diálogos
+- [[Sistema - Automações e Agendador]] — pasta `Automacoes/`, ⚙️ Automações + ⏱️ Temporizadores
+- [[Sistema - Lembretes]] — ⏰ lembretes recorrentes criados pelo usuário (sem editar `.gd`)
+- [[Sistema - Moedas]] — submenu 💱 Moedas, cotações (`cotacao_*.gd`)
+- [[Sistema - E-mails]] — submenu 📧 E-mails (Gmail) + 💬 WhatsApp, badge e som
 
 ## 🔀 Fluxos
 - [[Fluxo - Inicialização]] (`_ready`)
@@ -54,4 +61,5 @@ Veja [[_Memória do Claude]] para a convenção de notas, links e atualização.
 - [[tools - make_icon.py]] · [[Arquivo - README]]
 
 ## 📚 Referências
-- [[Repositório e Branches]] · [[Build e Export]] · [[Glossário de Configs]]
+- [[Repositório e Branches]] · [[Build e Export]] · [[Glossário de Configs]] · [[Adoção e Métricas]]
+- [[Divulgação — Posts]] · [[Distribuição e Crescimento]] · [[itch.io — Página]] — growth (posts bilíngues, canais, ideias, página itch.io)

@@ -43,6 +43,7 @@ const ACC_FILE := "user://accessories.json"
 const SETTINGS_FILE := "user://settings.json"   # guarda a última posição na tela
 const SCHEDULES_FILE := "user://schedules.json" # quais automações agendadas estão ligadas
 const NOTES_FILE := "user://notes.json"         # bloquinho de notas de texto (lista de strings)
+const REMINDERS_FILE := "user://reminders.json" # lembretes recorrentes criados pelo usuário
 const AUTOMACOES_DIR := "res://Automacoes/"   # scripts de automação (drop-in) — ver Automacoes/LEIAME.md
 const RANDOM_PERIOD := 10.0  # segundos entre gerações aleatórias de pets/acessórios (quando ligado)
 const PET_COLOR_KEYS := ["body_color", "belly_color", "ear_color", "cheek_color",
@@ -219,6 +220,22 @@ var note_edit: TextEdit            # campo multilinha do diálogo de nova nota
 var notes: Array = []              # lista de notas (strings), persistida em notes.json
 var note_ids: Dictionary = {}      # id do item no submenu Notas -> índice em `notes`
 var note_del_ids: Dictionary = {}  # id do item em Excluir nota -> índice em `notes`
+# --- lembretes recorrentes do usuário (⏰ Lembretes) ---
+var reminders_menu: PopupMenu          # submenu ⏰ Lembretes
+var reminders_del_menu: PopupMenu      # subsubmenu 🗑️ Excluir lembrete
+var reminders_dialog: ConfirmationDialog
+var reminder_text_edit: LineEdit       # mensagem do lembrete
+var reminder_freq_opt: OptionButton    # frequência (presets)
+var reminder_time_row: HBoxContainer   # linha da hora (só visível em "diariamente")
+var reminder_time_edit: LineEdit       # hora HH:MM p/ o preset diário
+var reminder_msg_label: Label          # rótulos re-traduzíveis do diálogo
+var reminder_freq_label: Label
+var reminder_time_label: Label
+var reminders: Array = []          # [{text, sched, on}] — persistido em reminders.json
+var reminder_defs: Array = []      # paralelo a `reminders`: def de agendamento já parseada
+var reminder_rt: Dictionary = {}   # índice do lembrete ligado -> {accum, last_day, last_hour}
+var reminder_ids: Dictionary = {}  # id do item no submenu -> índice em `reminders`
+var reminder_del_ids: Dictionary = {}  # id do item em Excluir -> índice em `reminders`
 var save_dialog: ConfirmationDialog
 var name_edit: LineEdit
 var save_mode := "pet"      # "pet" ou "acc" — o que o diálogo de salvar grava
@@ -257,6 +274,10 @@ const MI_WHATSAPP := 19  # submenu 💬 WhatsApp (contador de conversas não lid
 const MI_DONATE := 20    # submenu ❤️ Doação / Donate (acima de Sair)
 const MI_TIMERS := 21    # submenu ⏱️ Temporizadores: automações agendadas (logo abaixo de ⚙️ Automações)
 const MI_SOUNDS := 22    # submenu 🔊 Alertas de som (logo abaixo de 🎾 Brincar)
+const MI_REMINDERS := 23 # submenu ⏰ Lembretes (recorrentes do usuário; logo abaixo de ⏱️ Temporizadores)
+# ids internos do submenu ⏰ Lembretes (espaço próprio; os lembretes usam 100+)
+const REM_NEW := 1       # ➕ Novo lembrete...
+const REM_DEL := 3       # 🗑️ Excluir lembrete ▸ (subsubmenu)
 # IDs dos toggles "🔔 Alerta de som" dentro dos submenus 💬 WhatsApp e 📧 E-mails.
 # Ficam abaixo de 100 (onde começam os IDs das automações) para não colidirem.
 const SND_WHATSAPP := 50
@@ -375,6 +396,27 @@ const STRINGS := {
 	"note_deleted":   {"pt": "nota excluída 🗑️",      "en": "note deleted 🗑️"},
 	"note_clip_empty":{"pt": "área de transferência vazia 🤔","en": "clipboard is empty 🤔"},
 	"note_empty_input":{"pt": "nota vazia 🤔",        "en": "empty note 🤔"},
+	# lembretes (⏰ Lembretes)
+	"mi_reminders":   {"pt": "⏰ Lembretes",          "en": "⏰ Reminders"},
+	"rem_new":        {"pt": "➕ Novo lembrete...",   "en": "➕ New reminder..."},
+	"rem_delete":     {"pt": "🗑️ Excluir lembrete",   "en": "🗑️ Delete reminder"},
+	"rem_empty":      {"pt": "(nenhum lembrete)",     "en": "(no reminders)"},
+	"rem_new_title":  {"pt": "Novo lembrete",         "en": "New reminder"},
+	"rem_msg_label":  {"pt": "Mensagem:",             "en": "Message:"},
+	"rem_freq_label": {"pt": "Frequência:",           "en": "Frequency:"},
+	"rem_time_label": {"pt": "Hora (HH:MM):",         "en": "Time (HH:MM):"},
+	"rem_ph":         {"pt": "ex: Beber água 💧",     "en": "e.g. Drink water 💧"},
+	"rem_freq_15m":   {"pt": "A cada 15 minutos",     "en": "Every 15 minutes"},
+	"rem_freq_30m":   {"pt": "A cada 30 minutos",     "en": "Every 30 minutes"},
+	"rem_freq_1h":    {"pt": "A cada 1 hora",         "en": "Every 1 hour"},
+	"rem_freq_hourly":{"pt": "De hora em hora (:00)", "en": "On the hour (:00)"},
+	"rem_freq_daily": {"pt": "Diariamente às...",     "en": "Daily at..."},
+	"rem_saved":      {"pt": "lembrete criado ⏰",     "en": "reminder created ⏰"},
+	"rem_deleted":    {"pt": "lembrete excluído 🗑️",   "en": "reminder deleted 🗑️"},
+	"rem_on":         {"pt": "⏰ lembrete ligado: %s", "en": "⏰ reminder on: %s"},
+	"rem_off":        {"pt": "⏸️ lembrete desligado: %s","en": "⏸️ reminder off: %s"},
+	"rem_empty_input":{"pt": "mensagem vazia 🤔",     "en": "empty message 🤔"},
+	"rem_bad_time":   {"pt": "hora inválida (use HH:MM) 🙈","en": "invalid time (use HH:MM) 🙈"},
 	"login_incomplete":{"pt": "login incompleto 🙈", "en": "incomplete login 🙈"},
 	"hi_react":       {"pt": "oi! 👋",               "en": "hi! 👋"},
 	"sched_on":       {"pt": "⏱️ %s ligada (%s)",    "en": "⏱️ %s on (%s)"},
@@ -777,6 +819,7 @@ func _ready() -> void:
 
 	_load_schedules()   # antes de montar o menu, para os checkboxes refletirem o estado
 	_load_notes()       # idem: notas salvas já aparecem no submenu 📝 Notas
+	_load_reminders()   # idem: lembretes salvos já aparecem (e ligados) no submenu ⏰ Lembretes
 	_build_audio()      # sintetiza e prepara os sons de alerta (WhatsApp / Gmail)
 	_build_menu()
 	_build_save_dialog()
@@ -810,6 +853,11 @@ func _build_menu() -> void:
 	notes_del_menu = PopupMenu.new()
 	notes_del_menu.id_pressed.connect(_on_del_note)
 	notes_menu.add_child(notes_del_menu)   # fica sempre na árvore; o item-submenu é (re)criado em _rebuild
+	reminders_menu = PopupMenu.new()
+	reminders_menu.id_pressed.connect(_on_pick_reminder)
+	reminders_del_menu = PopupMenu.new()
+	reminders_del_menu.id_pressed.connect(_on_del_reminder)
+	reminders_menu.add_child(reminders_del_menu)   # idem Notas: mantém na árvore
 	lang_menu = PopupMenu.new()
 	lang_menu.add_radio_check_item("Português (Brasil)", LANG_PT)
 	lang_menu.add_radio_check_item("English (US)", LANG_EN)
@@ -849,6 +897,7 @@ func _build_menu() -> void:
 	menu.add_separator()
 	menu.add_submenu_node_item(t("mi_automations"), automations_menu, MI_AUTOMATIONS)
 	menu.add_submenu_node_item(t("mi_timers"), timers_menu, MI_TIMERS)   # agendadas isoladas aqui
+	menu.add_submenu_node_item(t("mi_reminders"), reminders_menu, MI_REMINDERS)  # lembretes do usuário
 	menu.add_submenu_node_item(t("mi_moedas"), moedas_menu, MI_MOEDAS)   # logo abaixo de ⚙️ Automações
 	menu.add_submenu_node_item(t("mi_notes"), notes_menu, MI_NOTES)
 	menu.add_submenu_node_item(t("mi_emails"), email_menu, MI_EMAIL)
@@ -864,18 +913,21 @@ func _build_menu() -> void:
 		pets_menu: menu, pets_del_menu: menu, acc_menu: menu, acc_del_menu: menu,
 		automations_menu: menu, timers_menu: menu, notes_menu: menu, email_menu: menu,
 		whatsapp_menu: menu, lang_menu: menu, donate_menu: menu, moedas_menu: menu,
-		sounds_menu: menu,
+		sounds_menu: menu, reminders_menu: menu,
 		notes_del_menu: notes_menu,
+		reminders_del_menu: reminders_menu,
 	}
 	for sub in _submenu_parent:
 		(sub as PopupMenu).about_to_popup.connect(_flip_submenu_if_left.bind(sub))
 	_build_cred_dialog()
 	_build_delete_dialog()
 	_build_notes_dialog()
+	_build_reminders_dialog()
 	_rebuild_pets_menu()
 	_rebuild_acc_menu()
 	_rebuild_automations_menu()
 	_rebuild_notes_menu()
+	_rebuild_reminders_menu()
 	_refresh_lang_checks()
 
 ## Clique numa opção de doação: abre o link do provedor no navegador padrão.
@@ -936,6 +988,7 @@ func _apply_menu_labels() -> void:
 	menu.set_item_text(menu.get_item_index(MI_DEL_ACC), t("mi_del_acc"))
 	menu.set_item_text(menu.get_item_index(MI_AUTOMATIONS), t("mi_automations"))
 	menu.set_item_text(menu.get_item_index(MI_TIMERS), t("mi_timers"))
+	menu.set_item_text(menu.get_item_index(MI_REMINDERS), t("mi_reminders"))
 	menu.set_item_text(menu.get_item_index(MI_MOEDAS), t("mi_moedas"))
 	menu.set_item_text(menu.get_item_index(MI_NOTES), t("mi_notes"))
 	menu.set_item_text(menu.get_item_index(MI_EMAIL), t("mi_emails"))
@@ -948,6 +1001,7 @@ func _apply_menu_labels() -> void:
 	_rebuild_acc_menu()                    # sentinelas "Selecione..."/"Nenhum"
 	_rebuild_automations_menu()            # nomes das automações no idioma atual
 	_rebuild_notes_menu()                  # rótulos do submenu 📝 Notas no idioma atual
+	_rebuild_reminders_menu()              # rótulos do submenu ⏰ Lembretes no idioma atual
 
 ## (Re)constrói o dropdown de pets: "Selecione..." (0) e "Default" (1) no topo.
 func _rebuild_pets_menu() -> void:
@@ -1398,6 +1452,243 @@ func _load_notes() -> void:
 		for v in parsed:
 			notes.append(str(v))
 
+# ------------------------------------------------------------------ ⏰ Lembretes
+# Lembretes recorrentes criados pelo usuário SEM editar .gd: nativos, persistidos em
+# user://reminders.json e disparados pelo mesmo relógio do agendador (_tick_reminders).
+
+## (Re)constrói o submenu ⏰ Lembretes: "Novo", a lista (marcável = ligado) e "Excluir ▸".
+func _rebuild_reminders_menu() -> void:
+	reminders_menu.clear()
+	reminders_del_menu.clear()
+	reminder_ids.clear()
+	reminder_del_ids.clear()
+	reminders_menu.add_item(t("rem_new"), REM_NEW)
+	reminders_menu.add_separator()
+	if reminders.is_empty():
+		var idx := reminders_menu.get_item_count()
+		reminders_menu.add_item(t("rem_empty"))
+		reminders_menu.set_item_disabled(idx, true)
+	else:
+		var rid := 100
+		for i in reminders.size():
+			var r: Dictionary = reminders[i]
+			reminders_menu.add_check_item(_reminder_label(r), rid)
+			reminders_menu.set_item_checked(reminders_menu.get_item_index(rid), bool(r.get("on", false)))
+			reminder_ids[rid] = i
+			reminders_del_menu.add_item(_reminder_label(r), rid)
+			reminder_del_ids[rid] = i
+			rid += 1
+	reminders_menu.add_separator()
+	reminders_menu.add_submenu_node_item(t("rem_delete"), reminders_del_menu, REM_DEL)
+	reminders_menu.set_item_disabled(reminders_menu.get_item_index(REM_DEL), reminders.is_empty())
+
+## Rótulo completo de um lembrete no menu: "⏰ <mensagem> · <frequência>".
+func _reminder_label(r: Dictionary) -> String:
+	var def := _parse_schedule_str(str(r.get("sched", "")))
+	var freq := str(def.get("label", "?")) if not def.is_empty() else "?"
+	return "⏰ %s · %s" % [_reminder_short(r), freq]
+
+## Prévia curta da mensagem do lembrete (uma linha, truncada) — usada em rótulos/falas.
+func _reminder_short(r: Dictionary) -> String:
+	var one := str(r.get("text", "")).strip_edges().replace("\n", " ").replace("\t", " ")
+	if one.length() > 24:
+		one = one.substr(0, 24).strip_edges() + "..."
+	return one
+
+## Clique no submenu ⏰ Lembretes: "Novo" abre o diálogo; um lembrete (id 100+) liga/desliga.
+func _on_pick_reminder(id: int) -> void:
+	if id == REM_NEW:
+		_open_reminder_dialog()
+		return
+	if reminder_ids.has(id):
+		var i: int = reminder_ids[id]
+		if i < 0 or i >= reminders.size():
+			return
+		var on := not bool(reminders[i].get("on", false))
+		reminders[i]["on"] = on
+		_save_reminders()
+		_refresh_reminder_defs()
+		_rebuild_reminders_menu()
+		say((t("rem_on") if on else t("rem_off")) % _reminder_short(reminders[i]))
+
+## Clique em 🗑️ Excluir lembrete: remove o lembrete e regrava o disco.
+func _on_del_reminder(id: int) -> void:
+	if not reminder_del_ids.has(id):
+		return
+	var i: int = reminder_del_ids[id]
+	if i >= 0 and i < reminders.size():
+		reminders.remove_at(i)
+		_save_reminders()
+		_refresh_reminder_defs()
+		_rebuild_reminders_menu()
+		say(t("rem_deleted"))
+
+## Recalcula os descritores de agendamento (paralelos a `reminders`) e zera o runtime
+## dos que estão ligados. Chamado após carregar/adicionar/excluir/alternar um lembrete.
+func _refresh_reminder_defs() -> void:
+	reminder_defs.clear()
+	reminder_rt.clear()
+	for i in reminders.size():
+		reminder_defs.append(_parse_schedule_str(str(reminders[i].get("sched", ""))))
+		if bool(reminders[i].get("on", false)):
+			reminder_rt[i] = {"accum": 0.0, "last_day": -1, "last_hour": -1}
+
+## Percorre os lembretes ligados e dispara os que atingiram a frequência (igual ao
+## agendador das automações). Chamado a cada frame por _process.
+func _tick_reminders(delta: float) -> void:
+	var now := Time.get_datetime_dict_from_system()
+	var cur_min: int = int(now.hour) * 60 + int(now.minute)
+	for i in reminders.size():
+		if not bool(reminders[i].get("on", false)):
+			continue
+		if i >= reminder_defs.size():
+			continue
+		var def: Dictionary = reminder_defs[i]
+		if def.is_empty():
+			continue
+		if not reminder_rt.has(i):
+			reminder_rt[i] = {"accum": 0.0, "last_day": -1, "last_hour": -1}
+		var rt: Dictionary = reminder_rt[i]
+		match def["kind"]:
+			"interval":
+				rt["accum"] += delta
+				if rt["accum"] >= float(def["every"]):
+					rt["accum"] = 0.0
+					_fire_reminder(i)
+			"hourly":
+				if int(now.minute) == 0 and rt.get("last_hour", -1) != int(now.hour):
+					rt["last_hour"] = int(now.hour)
+					_fire_reminder(i)
+			"daily":
+				if cur_min == int(def["at_minute"]) and rt.get("last_day", -1) != int(now.day):
+					rt["last_day"] = int(now.day)
+					_fire_reminder(i)
+
+## Dispara um lembrete: fala a mensagem na fila (notify, ~5 s), como as automações.
+func _fire_reminder(i: int) -> void:
+	if i < 0 or i >= reminders.size():
+		return
+	notify("⏰ " + str(reminders[i].get("text", "")))
+
+## Diálogo de novo lembrete: mensagem + frequência (dropdown) + hora (só p/ "diariamente").
+func _build_reminders_dialog() -> void:
+	reminders_dialog = ConfirmationDialog.new()
+	reminders_dialog.set_flag(Window.FLAG_ALWAYS_ON_TOP, true)
+	var vb := VBoxContainer.new()
+	vb.custom_minimum_size = Vector2(340, 0)
+	reminder_msg_label = Label.new()
+	vb.add_child(reminder_msg_label)
+	reminder_text_edit = LineEdit.new()
+	vb.add_child(reminder_text_edit)
+	reminder_freq_label = Label.new()
+	vb.add_child(reminder_freq_label)
+	reminder_freq_opt = OptionButton.new()
+	reminder_freq_opt.item_selected.connect(_on_reminder_freq_changed)
+	vb.add_child(reminder_freq_opt)
+	reminder_time_row = HBoxContainer.new()
+	reminder_time_label = Label.new()
+	reminder_time_row.add_child(reminder_time_label)
+	reminder_time_edit = LineEdit.new()
+	reminder_time_edit.custom_minimum_size = Vector2(80, 0)
+	reminder_time_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	reminder_time_row.add_child(reminder_time_edit)
+	vb.add_child(reminder_time_row)
+	reminders_dialog.add_child(vb)
+	reminders_dialog.confirmed.connect(_on_reminder_confirmed)
+	add_child(reminders_dialog)
+
+## Abre o diálogo de novo lembrete (rótulos/opções no idioma atual).
+func _open_reminder_dialog() -> void:
+	reminders_dialog.title = t("rem_new_title")
+	reminders_dialog.ok_button_text = t("btn_save")
+	reminders_dialog.cancel_button_text = t("btn_cancel")
+	reminder_msg_label.text = t("rem_msg_label")
+	reminder_freq_label.text = t("rem_freq_label")
+	reminder_time_label.text = t("rem_time_label")
+	reminder_text_edit.placeholder_text = t("rem_ph")
+	reminder_text_edit.text = ""
+	reminder_freq_opt.clear()
+	reminder_freq_opt.add_item(t("rem_freq_15m"))    # 0
+	reminder_freq_opt.add_item(t("rem_freq_30m"))    # 1
+	reminder_freq_opt.add_item(t("rem_freq_1h"))     # 2
+	reminder_freq_opt.add_item(t("rem_freq_hourly")) # 3
+	reminder_freq_opt.add_item(t("rem_freq_daily"))  # 4
+	reminder_freq_opt.select(1)
+	reminder_time_edit.text = "08:00"
+	_on_reminder_freq_changed(1)
+	var scr := DisplayServer.screen_get_usable_rect()
+	reminders_dialog.size = Vector2i(400, 300)
+	reminders_dialog.position = scr.position + (scr.size - reminders_dialog.size) / 2
+	reminders_dialog.popup()
+	reminder_text_edit.grab_focus()
+
+## Mostra o campo de hora apenas quando o preset escolhido é "diariamente" (índice 4).
+func _on_reminder_freq_changed(idx: int) -> void:
+	reminder_time_row.visible = (idx == 4)
+
+## Confirma o diálogo: monta a string de frequência do preset, valida e cria o lembrete.
+func _on_reminder_confirmed() -> void:
+	var txt := reminder_text_edit.text.strip_edges()
+	if txt == "":
+		say(t("rem_empty_input"))
+		return
+	var sched := ""
+	match reminder_freq_opt.selected:
+		0: sched = "15m"
+		1: sched = "30m"
+		2: sched = "1h"
+		3: sched = "hourly"
+		4:
+			var hm := _parse_hhmm(reminder_time_edit.text)
+			if hm.is_empty():
+				say(t("rem_bad_time"))
+				return
+			sched = "daily@%02d:%02d" % [hm["h"], hm["m"]]
+		_: sched = "30m"
+	if _parse_schedule_str(sched).is_empty():
+		say(t("rem_bad_time"))
+		return
+	reminders.append({"text": txt, "sched": sched, "on": true})
+	_save_reminders()
+	_refresh_reminder_defs()
+	_rebuild_reminders_menu()
+	play_action_anim("save")
+	say(t("rem_saved"))
+
+## Valida uma hora "HH:MM" -> {h, m} (ou {} se inválida).
+func _parse_hhmm(s: String) -> Dictionary:
+	var parts := s.strip_edges().split(":")
+	if parts.size() != 2:
+		return {}
+	if not (parts[0].is_valid_int() and parts[1].is_valid_int()):
+		return {}
+	var h := int(parts[0])
+	var m := int(parts[1])
+	if h < 0 or h > 23 or m < 0 or m > 59:
+		return {}
+	return {"h": h, "m": m}
+
+## Persiste os lembretes (array de {text, sched, on}).
+func _save_reminders() -> void:
+	var f := FileAccess.open(REMINDERS_FILE, FileAccess.WRITE)
+	if f:
+		f.store_string(JSON.stringify(reminders, "  "))
+		f.close()
+
+## Carrega os lembretes salvos (reminders.json) e recalcula os descritores.
+func _load_reminders() -> void:
+	var parsed = _read_json(REMINDERS_FILE)
+	if parsed is Array:
+		reminders = []
+		for v in parsed:
+			if v is Dictionary and v.has("text") and v.has("sched"):
+				reminders.append({
+					"text": str(v["text"]),
+					"sched": str(v["sched"]),
+					"on": bool(v.get("on", true)),
+				})
+	_refresh_reminder_defs()
+
 ## Lista os scripts .gd de res://Automacoes/ como [{name, path, sched}], ordenados pelo
 ## nome. Também (re)preenche schedule_defs com as automações que declaram frequência.
 func _scan_automations() -> Array:
@@ -1465,9 +1756,16 @@ func _parse_schedule(gd) -> Dictionary:
 	var consts: Dictionary = (gd as GDScript).get_script_constant_map()
 	var raw := ""
 	if consts.has("SCHEDULE"):
-		raw = str(consts["SCHEDULE"]).strip_edges().to_lower()
+		raw = str(consts["SCHEDULE"])
 	elif consts.has("SCHEDULE_SECONDS"):
 		raw = str(consts["SCHEDULE_SECONDS"])
+	return _parse_schedule_str(raw)
+
+## Converte uma string de frequência ("30s"/"5m"/"2h"/"hourly"/"daily@HH:MM"/número em
+## segundos) num descritor {kind, every, at_minute, label}. Usado tanto pelas automações
+## (const SCHEDULE) quanto pelos lembretes do usuário (⏰ Lembretes). {} se inválida/vazia.
+func _parse_schedule_str(raw: String) -> Dictionary:
+	raw = raw.strip_edges().to_lower()
 	if raw == "":
 		return {}
 	if raw.is_valid_float():                       # número puro => segundos
@@ -2525,6 +2823,10 @@ func _process(delta: float) -> void:
 	# Automações agendadas (auto-alimentar, lembretes, comemorações...).
 	if not schedule_defs.is_empty():
 		_tick_schedules(delta)
+
+	# Lembretes recorrentes criados pelo usuário (⏰ Lembretes).
+	if not reminders.is_empty():
+		_tick_reminders(delta)
 
 	# Necessidades com o tempo.
 	hunger = clampf(hunger + delta * 0.7, 0.0, 100.0)

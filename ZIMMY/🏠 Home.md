@@ -2,7 +2,7 @@
 tipo: moc
 projeto: ZIMMY
 lang: pt-BR
-atualizado: 2026-07-04
+atualizado: 2026-07-05
 tags: [moc, home, zimmy-pet]
 ---
 
@@ -15,6 +15,8 @@ tags: [moc, home, zimmy-pet]
 > procedural em Godot 4 que também virou um assistente leve. Este cofre é mantido pelo
 > Claude e **espelha o README** (fonte da verdade); ao mudar comportamento, atualiza-se a
 > nota afetada e o README juntos.
+> Fica em `C:\GODOT\ZIMMY\ZIMMY` — a pasta do cofre foi renomeada de `OBSIDIAN/` para o
+> nome do projeto (`ZIMMY/`). Ver [[🧭 Como usar este cofre]].
 
 ## ⚡ Resumo executivo
 - **O que é:** bichinho de desktop gratuito e **open source** para Windows — janela overlay

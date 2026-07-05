@@ -18,7 +18,7 @@ tags: [meta, backlog, zimmy-pet]
 - **Repo:** https://github.com/zimerfeld/ZIMMY · **branch:** `develop`
 - **Latest commit:** `1013cf8` (LICENSE removal) — before: `41a19e1` Alarm (43 files), Timers/Currencies/E-mails.
 - **Engine:** Godot 4.6.2, GDScript. All code in [[📄 zimmy.gd (EN)]] (~3,567 lines, procedural `_draw()`, no sprites).
-- **Dirty tree (important):** the vault was **moved from `OBSIDIAN/CLAUDE/` → `OBSIDIAN/`** and the change **is not committed** (62 files as `D` + 9 new `??`). See **P0-1**.
+- **Dirty tree (important):** the vault was **renamed from `OBSIDIAN/` → `ZIMMY/`** (project name) and the change **is not committed yet** (`OBSIDIAN/` folder as `D` + new `ZIMMY/` `??`). Script/doc references already updated — see **Recently done**.
 - **Relevant rules/memory:** export the `.exe` as the final step ([[🚀 Export e Publicação (Prod) (EN)|Export and Publishing]]); close `ZimmyPet.exe` and the Godot editor before touching the code; keep the clones/downloads count.
 
 ## 🔴 P0 — unblock
@@ -37,6 +37,7 @@ tags: [meta, backlog, zimmy-pet]
 - [x] **P1-3 · Export the release `.exe`** — done on 2026-07-01: `build/ZimmyPet.exe` (~100 MB) exported via Godot 4.6.2 headless CLI (`Windows Desktop` preset), **exit 0, no errors/warnings**. No instance was open. `build/` is gitignored (the `.exe` is not versioned). See [[🚀 Export e Publicação (Prod) (EN)|Export and Publishing]].
 
 ## ✅ Recently done
+- [x] **Rename the vault `OBSIDIAN/` → `ZIMMY/`** — 2026-07-05: vault folder renamed to the project name. References updated in `.claude/build-if-changed.ps1` (exclusion changed from `\OBSIDIAN\` to `\ZIMMY\ZIMMY\`, since the project root is also `...\ZIMMY`), in [[🧭 Como usar este cofre (EN)|How to use this vault]] (PT/EN, path `C:\GODOT\ZIMMY\ZIMMY`) and in the [[📚 Repositório e Branches (EN)|Repository and Branches]] tree (PT/EN). The user's global vault (`C:\Users\Renat\OBSIDIAN`) is a different thing and was not touched.
 - [x] **User recurring reminders feature** — 2026-07-02: native **⏰ Reminders** submenu (without editing `.gd`) — dialog with message + frequency dropdown (15/30 min, 1 h, hourly, `daily@HH:MM`) + time field; checkable items (on/off), delete; persisted in `user://reminders.json`; fired by the same scheduler clock (extracted, shared `_parse_schedule_str` parser). Compiled (`--check-only`), **runtime-tested** (18/18 asserts, incl. firing) and app smoke test OK. Documented in README (root+PT+EN) and [[⏰ Sistema - Lembretes (EN)|Reminders system]] (PT/EN). It was idea #2 from [[🚀 Distribuição e Crescimento (EN)|Distribution and Growth]].
 - [x] **Weather feature** — 2026-07-01: `Automacoes/clima.gd` (Open-Meteo free/no key, IP geolocation with fallback, bilingual). Syntax validated (`--check-only`) and **runtime-tested** (headless harness → "☀️ clear sky — 21.2°C in Rio de Janeiro"). Documented in README (root+PT+EN), LEIAME and [[⚙️ Sistema - Automações e Agendador (EN)|Automations & Scheduler system]]. It was idea #1 from [[🚀 Distribuição e Crescimento (EN)|Distribution and Growth]].
 

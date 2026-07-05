@@ -11,7 +11,7 @@ tags: [meta, zimmy-pet]
 > Para **retomar o trabalho**, veja [[📌 Backlog]] (prioridades P0/P1/P2).
 
 Este cofre Obsidian é a **memória técnica** do projeto Zimmy Pet, criada e mantida
-pelo Claude. Fica em `C:\GODOT\ZIMMY\OBSIDIAN`.
+pelo Claude. Fica em `C:\GODOT\ZIMMY\ZIMMY`.
 
 ## 📐 Convenções
 - **Uma ideia por nota**, com frontmatter padrão (`tipo`, `projeto`, `lang`, `atualizado`, `tags`).

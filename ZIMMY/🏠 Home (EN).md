@@ -2,7 +2,7 @@
 tipo: moc
 projeto: ZIMMY
 lang: en-US
-atualizado: 2026-07-04
+atualizado: 2026-07-05
 tags: [moc, home, zimmy-pet]
 ---
 
@@ -15,6 +15,8 @@ tags: [moc, home, zimmy-pet]
 > in Godot 4 that also became a light assistant. This vault is maintained by Claude and
 > **mirrors the README** (source of truth); when behavior changes, the affected note and the
 > README are updated together.
+> It lives at `C:\GODOT\ZIMMY\ZIMMY` — the vault folder was renamed from `OBSIDIAN/` to the
+> project name (`ZIMMY/`). See [[🧭 Como usar este cofre (EN)|How to use this vault]].
 
 ## ⚡ Executive summary
 - **What it is:** a free, **open-source** desktop pet for Windows — a transparent, borderless,

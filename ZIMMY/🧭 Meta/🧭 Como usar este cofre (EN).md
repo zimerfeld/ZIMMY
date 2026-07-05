@@ -11,7 +11,7 @@ tags: [meta, zimmy-pet]
 > To **resume work**, see [[📌 Backlog (EN)|Backlog]] (P0/P1/P2 priorities).
 
 This Obsidian vault is the **technical memory** of the Zimmy Pet project, created and maintained
-by Claude. It lives at `C:\GODOT\ZIMMY\OBSIDIAN`.
+by Claude. It lives at `C:\GODOT\ZIMMY\ZIMMY`.
 
 ## 📐 Conventions
 - **One idea per note**, with standard frontmatter (`tipo`, `projeto`, `lang`, `atualizado`, `tags`).

@@ -11,14 +11,10 @@
             "id": "7a31963bed8474ca",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "🧡 Home.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "🧡 Home"
+              "title": "New tab"
             }
           }
         ]
@@ -178,11 +174,16 @@
       "daily-notes:Open today's daily note": false,
       "templates:Insert template": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false
+      "bases:Create new base": false,
+      "custom-sort:Toggle custom sorting": false
     }
   },
   "active": "7a31963bed8474ca",
   "lastOpenFiles": [
+    "🏠 Home (EN).md.tmp.11728.56c705d4879e",
+    "📌 Backlog (EN).md.tmp.11728.2e58f34ec938",
+    "📌 Backlog.md.tmp.11728.d531cf8505cd",
+    "📚 Conhecimento/📚 Repositório e Branches.md.tmp.11728.0fdf9fabdd6c",
     "🧡 Home (EN).md",
     "🧡 Home.md",
     "🧠 _Memória do Claude (EN).md.tmp.28720.f982e462b198",
@@ -209,7 +210,6 @@
     "🗝️ Arquivos-Chave/📄 export_presets.cfg.md",
     "🗝️ Arquivos-Chave/📄 export_presets.cfg (EN).md",
     "🗝️ Arquivos-Chave/📄 Arquivo - README.md",
-    "🗝️ Arquivos-Chave/📄 Arquivo - README (EN).md",
-    "🔌 Pontos de Entrada/🚪 Entrada - Itens do Menu.md"
+    "🗝️ Arquivos-Chave/📄 Arquivo - README (EN).md"
   ]
 }

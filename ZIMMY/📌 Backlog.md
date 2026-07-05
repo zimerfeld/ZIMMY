@@ -18,7 +18,7 @@ tags: [meta, backlog, zimmy-pet]
 - **Repo:** https://github.com/zimerfeld/ZIMMY · **branch:** `develop`
 - **Último commit:** `1013cf8` (Remoção de LICENSE) — antes: `41a19e1` Alarme (43 arquivos), Temporizadores/Moedas/E-mails.
 - **Engine:** Godot 4.6.2, GDScript. Código todo em [[📄 zimmy.gd]] (~3.567 linhas, `_draw()` procedural, sem sprites).
-- **Árvore suja (importante):** o cofre foi **movido de `OBSIDIAN/CLAUDE/` → `OBSIDIAN/`** e a mudança **não está commitada** (62 arquivos como `D` + 9 novos `??`). Ver **P0-1**.
+- **Árvore suja (importante):** o cofre foi **renomeado de `OBSIDIAN/` → `ZIMMY/`** (nome do projeto) e a mudança **ainda não está commitada** (pasta `OBSIDIAN/` como `D` + `ZIMMY/` novo `??`). Referências de scripts/docs já atualizadas — ver **Feito recente**.
 - **Regras/memória relevantes:** exportar `.exe` como passo final ([[🚀 Export e Publicação (Prod)]]); fechar `ZimmyPet.exe` e o editor Godot antes de mexer no código; manter contagem de clones/downloads.
 
 ## 🔴 P0 — destravar
@@ -37,6 +37,7 @@ tags: [meta, backlog, zimmy-pet]
 - [x] **P1-3 · Exportar release `.exe`** — feito em 2026-07-01: `build/ZimmyPet.exe` (~100 MB) exportado via CLI headless do Godot 4.6.2 (preset `Windows Desktop`), **exit 0, sem erros/warnings**. Nenhuma instância estava aberta. `build/` é gitignored (o `.exe` não é versionado). Ver [[🚀 Export e Publicação (Prod)]].
 
 ## ✅ Feito recente
+- [x] **Renomear o cofre `OBSIDIAN/` → `ZIMMY/`** — 2026-07-05: pasta do cofre renomeada para o nome do projeto. Referências atualizadas em `.claude/build-if-changed.ps1` (exclusão passou de `\OBSIDIAN\` para `\ZIMMY\ZIMMY\`, pois o projeto raiz também é `...\ZIMMY`), em [[🧭 Como usar este cofre]] (PT/EN, caminho `C:\GODOT\ZIMMY\ZIMMY`) e na árvore de [[📚 Repositório e Branches]] (PT/EN). O cofre global do usuário (`C:\Users\Renat\OBSIDIAN`) é outra coisa e não foi tocado.
 - [x] **Feature Lembretes recorrentes do usuário** — 2026-07-02: submenu **⏰ Lembretes** nativo (sem editar `.gd`) — diálogo com mensagem + dropdown de frequência (15/30 min, 1 h, hourly, `daily@HH:MM`) + campo de hora; itens marcáveis (liga/desliga), excluir; persistido em `user://reminders.json`; disparo pelo mesmo relógio do agendador (parser `_parse_schedule_str` extraído e compartilhado). Compilado (`--check-only`), **testado em runtime** (18/18 asserts, incl. firing) e smoke test do app OK. Documentado em README (raiz+PT+EN) e [[⏰ Sistema - Lembretes]] (PT/EN). Era a ideia #2 de [[🚀 Distribuição e Crescimento]].
 - [x] **Feature Clima** — 2026-07-01: `Automacoes/clima.gd` (Open-Meteo grátis/sem chave, geolocalização por IP com fallback, bilíngue). Sintaxe validada (`--check-only`) e **testada em runtime** (harness headless → "☀️ céu limpo — 21,2°C em Rio de Janeiro"). Documentado em README (raiz+PT+EN), LEIAME e [[⚙️ Sistema - Automações e Agendador]]. Foi a ideia #1 de [[🚀 Distribuição e Crescimento]].
 

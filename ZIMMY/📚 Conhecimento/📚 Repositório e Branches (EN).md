@@ -29,7 +29,7 @@ icon.png / zimmy.ico# icons (editor / .exe)
 tools/make_icon.py  # generates the icons -> [[📄 tools - make_icon.py (EN)]]
 README.md           # docs (source of truth) -> [[📄 Arquivo - README (EN)]]
 build/ZimmyPet.exe  # exported binary (generated)
-OBSIDIAN/          # this vault
+ZIMMY/              # this vault (Obsidian memory)
 ```
 
 See [[🚀 Export e Publicação (Prod) (EN)]] to generate the `.exe`.

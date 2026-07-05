@@ -9,7 +9,10 @@ $godot = 'C:\GODOT\Godot_v4.6.2-stable_win64.exe\Godot_v4.6.2-stable_win64_conso
 
 # Fontes do projeto: .gd/.tscn/.json + config (project.godot, export_presets.cfg),
 # ignorando caches/saídas que não definem o app.
-$exclude = @('\.godot\', '\build\', '\.claude\', '\OBSIDIAN\')
+# Nota: o cofre Obsidian foi renomeado de OBSIDIAN\ para ZIMMY\ (nome do projeto).
+# Como o projeto raiz tambem e ...\ZIMMY, exclui-se o caminho aninhado \ZIMMY\ZIMMY\
+# para nao excluir os fontes do proprio projeto.
+$exclude = @('\.godot\', '\build\', '\.claude\', '\ZIMMY\ZIMMY\')
 $files = Get-ChildItem -Path $proj -Recurse -File -Include *.gd, *.tscn, *.json, *.godot, *.cfg -ErrorAction SilentlyContinue |
   Where-Object { $p = $_.FullName; -not ($exclude | Where-Object { $p -like "*$_*" }) }
 

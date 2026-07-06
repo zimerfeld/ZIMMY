@@ -2,7 +2,7 @@
 tipo: arquivo-chave
 projeto: ZIMMY
 lang: en-US
-atualizado: 2026-07-04
+atualizado: 2026-07-06
 tags: [arquivo, docs, zimmy-pet]
 caminho: README.md
 ---
@@ -23,6 +23,7 @@ README, not the other way around). In Portuguese.
 - **Dynamic speech bubble** — see [[💬 Sistema - Balão de Fala (EN)]].
 - **Evolution ideas** (click-through, walking on its own, sprites, rename/remove
   pets, launch from ZIMARO).
+- **License** — CC BY-NC-ND 4.0 · © 2026 Renato Zimerfeld (links to `LICENSE.md`).
 
 ## 🧹 Maintenance rule
 When changing user-visible behavior, update the README **and** this vault

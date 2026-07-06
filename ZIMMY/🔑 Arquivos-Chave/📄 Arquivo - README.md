@@ -2,7 +2,7 @@
 tipo: arquivo-chave
 projeto: ZIMMY
 lang: pt-BR
-atualizado: 2026-07-04
+atualizado: 2026-07-06
 tags: [arquivo, docs, zimmy-pet]
 caminho: README.md
 ---
@@ -23,6 +23,7 @@ README, não o contrário). Em português.
 - **Balão de fala dinâmico** — ver [[💬 Sistema - Balão de Fala]].
 - **Ideias de evolução** (click-through, caminhar sozinho, sprites, renomear/remover
   pets, lançar pela ZIMARO).
+- **Licença** — CC BY-NC-ND 4.0 · © 2026 Renato Zimerfeld (link para `LICENSE.md`).
 
 ## 🧹 Regra de manutenção
 Ao mudar comportamento visível ao usuário, atualizar o README **e** este cofre

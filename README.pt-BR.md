@@ -489,3 +489,7 @@ faz o Zimmy mostrar raiva/nojo/tristeza/indiferença no rosto, não só no texto
 - **AnimatedSprite2D**: trocar o `_draw()` por sprites/spritesheets se quiser arte mais rica.
 - **Renomear/remover pets salvos**: hoje o dropdown só adiciona; o Default é fixo.
 - **Lançar pelo jogo**: `OS.create_process()` a partir de outro app para abrir o pet junto.
+
+## Licença
+
+© 2026 Renato Zimerfeld. Este trabalho está licenciado sob a **Licença Creative Commons Atribuição-NãoComercial-SemDerivações 4.0 Internacional (CC BY-NC-ND 4.0)** — você pode compartilhá-lo para fins não comerciais com a devida atribuição, mas **não** pode usá-lo comercialmente nem distribuir versões modificadas. Veja [LICENSE.md](LICENSE.md) para os termos completos.

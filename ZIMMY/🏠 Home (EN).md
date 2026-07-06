@@ -2,7 +2,7 @@
 tipo: moc
 projeto: ZIMMY
 lang: en-US
-atualizado: 2026-07-05
+atualizado: 2026-07-06
 tags: [moc, home, zimmy-pet]
 ---
 
@@ -100,3 +100,6 @@ tags: [moc, home, zimmy-pet]
 
 ## 📌 Resume
 - [[📌 Backlog (EN)|Backlog]] — **start here** when resuming the project in another session.
+
+## ⚖️ License
+- **CC BY-NC-ND 4.0** (Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International) · © 2026 Renato Zimerfeld — non-commercial sharing with credit; **no commercial use** and **no derivatives**. Source of truth: `LICENSE.md` at the repo root; named in the READMEs (`README.md`, `README.en-US.md`, `README.pt-BR.md`). Historical note: commit `1013cf8` removed the LICENSE, which was **re-added** — the current state is CC BY-NC-ND 4.0.

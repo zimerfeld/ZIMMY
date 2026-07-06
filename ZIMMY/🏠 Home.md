@@ -2,7 +2,7 @@
 tipo: moc
 projeto: ZIMMY
 lang: pt-BR
-atualizado: 2026-07-05
+atualizado: 2026-07-06
 tags: [moc, home, zimmy-pet]
 ---
 
@@ -99,3 +99,6 @@ tags: [moc, home, zimmy-pet]
 
 ## 📌 Retomada
 - [[📌 Backlog]] — **comece por aqui** ao retomar o projeto em outra sessão.
+
+## ⚖️ Licença
+- **CC BY-NC-ND 4.0** (Creative Commons Atribuição-NãoComercial-SemDerivações 4.0 Internacional) · © 2026 Renato Zimerfeld — compartilhamento não comercial com atribuição; **sem uso comercial** e **sem derivações**. Fonte da verdade: `LICENSE.md` na raiz; nomeada nos READMEs (`README.md`, `README.en-US.md`, `README.pt-BR.md`). Nota histórica: o commit `1013cf8` removeu o LICENSE, que foi **readicionado** — o estado atual é CC BY-NC-ND 4.0.

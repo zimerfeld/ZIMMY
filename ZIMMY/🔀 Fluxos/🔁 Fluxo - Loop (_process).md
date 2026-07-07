@@ -16,7 +16,7 @@ tags: [fluxo, ciclo-de-vida, zimmy-pet]
 3. **Pulo** — integra `y_off`/`vy` com gravidade 900; trava no chão.
 4. **Piscada** — `blink_timer`/`blink_t`.
 5. **Olhos seguem o cursor** — calcula `pupil_off` a partir do centro real do pet.
-6. **Geração aleatória contínua** — um único `random_timer` (período `RANDOM_PERIOD=10s`)
+6. **Geração aleatória contínua** — um único `random_timer` (período `RANDOM_PERIOD=30s`)
    para pet e acessório; com ambos ligados, trocam juntos ([[🎲 Fluxo - Geração Aleatória]]).
 7. **Agendador de automações** — `_tick_schedules(delta)` dispara as automações
    agendadas ligadas conforme a frequência ([[🧭 Sistema - Menu de Contexto]]).

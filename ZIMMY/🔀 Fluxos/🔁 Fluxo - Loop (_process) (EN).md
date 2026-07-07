@@ -16,7 +16,7 @@ tags: [fluxo, ciclo-de-vida, zimmy-pet]
 3. **Jump** — integrates `y_off`/`vy` with gravity 900; locks on the ground.
 4. **Blink** — `blink_timer`/`blink_t`.
 5. **Eyes follow the cursor** — computes `pupil_off` from the pet's real center.
-6. **Continuous random generation** — a single `random_timer` (period `RANDOM_PERIOD=10s`)
+6. **Continuous random generation** — a single `random_timer` (period `RANDOM_PERIOD=30s`)
    for pet and accessory; with both on, they switch together ([[🎲 Fluxo - Geração Aleatória (EN)]]).
 7. **Automation scheduler** — `_tick_schedules(delta)` triggers the enabled scheduled
    automations according to their frequency ([[🧭 Sistema - Menu de Contexto (EN)]]).

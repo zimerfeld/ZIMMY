@@ -101,7 +101,7 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   `user://settings.json` (chave `status`).
 - **🦴 Alimentar / 🤚 Carinho / 🎾 Brincar** — interações que mudam humor/fome. Cada uma também toca um **som próprio** (uma mordidinha, um ronron, um arpejo alegre) quando o alerta daquela ação está ligado — com **várias variações aleatórias por grupo** (sorteadas dentro do mesmo grupo), então nunca fica repetitivo.
 - **🔊 Alertas de som ▸** — submenu logo abaixo das ações, com uma **caixa por ação** (🦴 Alimentar / 🤚 Carinho / 🎾 Brincar, todas **ligadas** por padrão, **persistidas** em `user://settings.json`). Cada toggle governa **dois** gatilhos: o som tocado ao fazer a ação **e** um lembrete que toca quando a barra daquela necessidade **cai para 20% (baixa)**. Os sons são sintetizados em código (sem arquivos de áudio), como os alertas de WhatsApp/Gmail.
-- **🐶 Gerar pets** (check) — liga/desliga a geração contínua **do pet**: a cada ~10 s o
+- **🐶 Gerar pets** (check) — liga/desliga a geração contínua **do pet**: a cada ~30 s o
   Zimmy vira um pet aleatório. Além das cores, varia as **formas** e quais
   **elementos** o compõem (orelhas redondas ou pontudas, antenas, nariz, cílios,
   bochechas e o estilo da boca). Cada novo pet ganha uma **frase de boas-vindas e um
@@ -109,7 +109,7 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   ao Salvar ou Renomear. Os nomes são **combinatórios** (substantivo + adjetivo, ~900
   combinações por idioma), então quase nunca repetem.
 - **🎲 Gerar acessórios** (check) — independente do anterior: liga/desliga a geração
-  contínua **dos acessórios** (a cada ~10 s sorteia chapéu/óculos/laço/cachecol). Ligar
+  contínua **dos acessórios** (a cada ~30 s sorteia chapéu/óculos/laço/cachecol). Ligar
   também liga automaticamente a exibição de acessórios. Cada novo acessório ganha uma
   **frase de parabenização e um nome sugestivo** que pré-preenche a caixa de texto ao
   Salvar ou Renomear (também **combinatório**, ~900 combinações por idioma).

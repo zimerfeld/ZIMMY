@@ -32,7 +32,7 @@ Pet and accessories have **independent** checkboxes but share a **single timer**
 
 ## 🔁 Continuous generation (in the [[🔁 Fluxo - Loop (_process) (EN)]])
 A single `random_timer` advances while **pet OR accessory** is on; every
-`RANDOM_PERIOD = 10s` it calls `_generate_pet()` and/or `_generate_acc()` (whichever are
+`RANDOM_PERIOD = 30s` it calls `_generate_pet()` and/or `_generate_acc()` (whichever are
 on, on the same tick).
 
 ## 🚫 Interactions that turn it off

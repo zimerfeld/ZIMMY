@@ -93,5 +93,5 @@ default). See [[💾 Sistema - Persistência (EN)]].
 
 ## 🔢 Notable constants ([[📄 zimmy.gd (EN)]])
 `PET_BOX=200`, `PET_SCALE=0.75`, `PET_DRAW=150`, `HOP_HEADROOM=80`,
-`MAX_W=300`, `RANDOM_PERIOD=10.0`, `ACTION_COOLDOWN=1.0`, `MAX_REPEAT=3`,
+`MAX_W=300`, `RANDOM_PERIOD=30.0`, `ACTION_COOLDOWN=1.0`, `MAX_REPEAT=3`,
 `COMPLAIN_COOLDOWN=1.5`.

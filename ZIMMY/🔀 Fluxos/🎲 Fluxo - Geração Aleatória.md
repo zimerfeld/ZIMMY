@@ -33,7 +33,7 @@ temporizador** (`random_timer`): com os dois ligados, trocam **juntos** no mesmo
 
 ## 🔁 Geração contínua (no [[🔁 Fluxo - Loop (_process)]])
 Um único `random_timer` avança quando **pet OU acessório** está ligado; a cada
-`RANDOM_PERIOD = 10s` chama `_generate_pet()` e/ou `_generate_acc()` (os que estiverem
+`RANDOM_PERIOD = 30s` chama `_generate_pet()` e/ou `_generate_acc()` (os que estiverem
 ligados, no mesmo tique).
 
 ## 🚫 Interações que desligam

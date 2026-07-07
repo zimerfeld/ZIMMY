@@ -2,7 +2,7 @@
 tipo: backlog
 projeto: ZIMMY
 lang: en-US
-atualizado: 2026-07-04
+atualizado: 2026-07-07
 tags: [meta, backlog, zimmy-pet]
 ---
 
@@ -14,12 +14,12 @@ tags: [meta, backlog, zimmy-pet]
 > Priority convention: **P0** = do now / unblocks the rest · **P1** = important, next
 > batch · **P2** = when there's spare time / growth.
 
-## 📸 State snapshot (2026-07-01)
-- **Repo:** https://github.com/zimerfeld/ZIMMY · **branch:** `develop`
-- **Latest commit:** `1013cf8` (LICENSE removal) — before: `41a19e1` Alarm (43 files), Timers/Currencies/E-mails.
-- **Engine:** Godot 4.6.2, GDScript. All code in [[📄 zimmy.gd (EN)]] (~3,567 lines, procedural `_draw()`, no sprites).
-- **Dirty tree (important):** the vault was **renamed from `OBSIDIAN/` → `ZIMMY/`** (project name) and the change **is not committed yet** (`OBSIDIAN/` folder as `D` + new `ZIMMY/` `??`). Script/doc references already updated — see **Recently done**.
-- **Relevant rules/memory:** export the `.exe` as the final step ([[🚀 Export e Publicação (Prod) (EN)|Export and Publishing]]); close `ZimmyPet.exe` and the Godot editor before touching the code; keep the clones/downloads count.
+## 📸 State snapshot (2026-07-07)
+- **Repo:** https://github.com/zimerfeld/ZIMMY · **branch:** `develop` (`0ce994e`) · **`main`:** `6b65440` (in sync with origin).
+- **Latest releases:** tags **`202607071044geracao-30s`** (30s generation) and **`202607071024reacoes-e-fala`** (reactions/speech batch). **GitHub Release** published on the 30s tag with `ZimmyPet.exe` attached (Latest).
+- **Engine:** Godot 4.6.2, GDScript. All code in [[📄 zimmy.gd (EN)]] (~4,215 lines, procedural `_draw()`, no sprites).
+- **Clean tree** (aside from Obsidian UI-state churn in `ZIMMY/.obsidian/*`, intentionally kept out of commits).
+- **Relevant rules/memory:** export the `.exe` as the final step ([[🚀 Export e Publicação (Prod) (EN)|Export and Publishing]]); close `ZimmyPet.exe` and the Godot editor before touching the code; keep the clones/downloads count; GitFlow (feature → develop → release → main + tag).
 
 ## 🔴 P0 — unblock
 - [x] **P0-1 · Commit the vault restructure** (`OBSIDIAN/CLAUDE/` → `OBSIDIAN/`) — done on 2026-07-01, commit `bdf60c6`: 62 renames (92–100%, history preserved) + `_Backlog.md`; `git status` clean for `OBSIDIAN/`.
@@ -37,6 +37,15 @@ tags: [meta, backlog, zimmy-pet]
 - [x] **P1-3 · Export the release `.exe`** — done on 2026-07-01: `build/ZimmyPet.exe` (~100 MB) exported via Godot 4.6.2 headless CLI (`Windows Desktop` preset), **exit 0, no errors/warnings**. No instance was open. `build/` is gitignored (the `.exe` is not versioned). See [[🚀 Export e Publicação (Prod) (EN)|Export and Publishing]].
 
 ## ✅ Recently done
+- [x] **"Reactions & speech" batch + 30s generation** — 2026-07-07 (2 releases this session):
+  - **Mouse reactions:** hover → happy/excited expression; **click an eye** → closes until the cursor leaves; **shake the mouse** fast → random animation + expression of **dizzy/nausea/scared** (`react_expr`, `_trigger_shake`). See [[😶‍🌫️ Sistema - Expressões Faciais (EN)|Facial Expressions]] and [[✨ Sistema - Animação (EN)|Animation]].
+  - **Per-group sounds:** Feed/Pet/Play play random variations drawn within the group (`_build_*_sounds` + `_play_group`).
+  - **Fireworks** on the hourly celebration (`zimmy.celebrate()` + `_draw_fireworks`); removed the `auto_alimentar.gd` (20s) automation.
+  - **Unified speech queue:** immediate reactions (`say`, ~2.5s) + notification queue (`notify`, 10s each, no overlap); a user action **jumps the queue** (`urgent_cd`/`_preempt_with`, covers async web); an item waiting **>60s is discarded**. See [[💬 Sistema - Balão de Fala (EN)|Speech Bubble]].
+  - **`RANDOM_PERIOD` 10s → 30s** (random pet/accessory generation more spaced out).
+  - **Reverted at the user's request:** the usage-based dynamic menu reordering (plus `preferences.json` + "Restore defaults" item) — the menus went back to **static**.
+  - **Close-out:** docs synced (3 READMEs + vault notes + `LEIAME.md`); `.exe` re-exported (100 MB, icon via rcedit, smoke-test OK). GitFlow: 2 releases finalized on `main` + tags **`202607071024reacoes-e-fala`** and **`202607071044geracao-30s`** (with `main → develop` backmerge). **GitHub Release** created on the 30s tag with `ZimmyPet.exe` attached (Latest).
+  - **Metrics:** 2026-07-07 adoption snapshot (ZIMARO 706 · Tree 432 · CommitMsg 305 · ZIMMY 257 clones/14d) in `contagem de downloads.txt` and [[📈 Adoção e Métricas (EN)|Adoption & Metrics]]. `ZimmyPet.exe` has been published as a GitHub Release **since 2026-06-25** (release `202606251217`); ZIMMY's *downloads* = **all-time cumulative** of the asset (0 today). This tracking was **automated in the GitAdoptionMeter D1** — new host `github-release`, live at `gitadoptionmeter.com/api/adoption` (field `releaseDownloads`). Details in the GitAdoptionMeter project backlog.
 - [x] **Rename the vault `OBSIDIAN/` → `ZIMMY/`** — 2026-07-05: vault folder renamed to the project name. References updated in `.claude/build-if-changed.ps1` (exclusion changed from `\OBSIDIAN\` to `\ZIMMY\ZIMMY\`, since the project root is also `...\ZIMMY`), in [[🧭 Como usar este cofre (EN)|How to use this vault]] (PT/EN, path `C:\GODOT\ZIMMY\ZIMMY`) and in the [[📚 Repositório e Branches (EN)|Repository and Branches]] tree (PT/EN). The user's global vault (`C:\Users\Renat\OBSIDIAN`) is a different thing and was not touched.
 - [x] **User recurring reminders feature** — 2026-07-02: native **⏰ Reminders** submenu (without editing `.gd`) — dialog with message + frequency dropdown (15/30 min, 1 h, hourly, `daily@HH:MM`) + time field; checkable items (on/off), delete; persisted in `user://reminders.json`; fired by the same scheduler clock (extracted, shared `_parse_schedule_str` parser). Compiled (`--check-only`), **runtime-tested** (18/18 asserts, incl. firing) and app smoke test OK. Documented in README (root+PT+EN) and [[⏰ Sistema - Lembretes (EN)|Reminders system]] (PT/EN). It was idea #2 from [[🚀 Distribuição e Crescimento (EN)|Distribution and Growth]].
 - [x] **Weather feature** — 2026-07-01: `Automacoes/clima.gd` (Open-Meteo free/no key, IP geolocation with fallback, bilingual). Syntax validated (`--check-only`) and **runtime-tested** (headless harness → "☀️ clear sky — 21.2°C in Rio de Janeiro"). Documented in README (root+PT+EN), LEIAME and [[⚙️ Sistema - Automações e Agendador (EN)|Automations & Scheduler system]]. It was idea #1 from [[🚀 Distribuição e Crescimento (EN)|Distribution and Growth]].

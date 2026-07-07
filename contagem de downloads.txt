@@ -6,7 +6,11 @@ Comando por repo:
   gh api repos/zimerfeld/<repo>/traffic/clones          (requer push access; so ultimos 14 dias)
   gh api repos/zimerfeld/<repo>/releases --jq '[.[].assets[].download_count]|add // 0'
 
-Obs.: os 4 repos nao publicam assets de release no GitHub (downloads = 0); a metrica viva e clones.
+Obs.: ZIMMY publica GitHub Release com o ZimmyPet.exe desde 2026-06-25 (1a release: 202606251217;
+      nova release 202607071044geracao-30s em 2026-07-07). O "downloads" do ZIMMY e a soma
+      ACUMULADA (all-time) das baixadas do ZimmyPet.exe em TODAS as releases, desde a 1a
+      publicacao (2026-06-25) ate agora — ao contrario dos clones (janela movel de 14 dias).
+      Hoje esse acumulado = 0 baixadas. Os outros 3 repos nao publicam assets (downloads = 0).
       GitExtensions.* sao pacotes NuGet — para adocao all-time via NuGet, ver o projeto zimerfeld.com.
 
 --------------------------------------------------------------------------------------------
@@ -17,3 +21,19 @@ ZIMARO                                       790      331          0            
 GitExtensions.ZimerfeldTree                  532      214          0               532
 ZIMMY                                        318      131          0               318
 GitExtensions.ZimerfeldCommitMsg             293      140          0               293
+
+--------------------------------------------------------------------------------------------
+Snapshot 2026-07-07
+--------------------------------------------------------------------------------------------
+Repo                                 Clones(14d)  Uniques  Downloads  Total(clones+dl)
+ZIMARO                                       706      271          0               706
+GitExtensions.ZimerfeldTree                  432      167          0               432
+GitExtensions.ZimerfeldCommitMsg             305      146          0               305
+ZIMMY                                        257      107          0               257
+  (downloads do ZIMMY = acumulado all-time do ZimmyPet.exe desde 2026-06-25; hoje = 0)
+
+NOTA 2026-07-07: correcao da data inicial. O ZimmyPet.exe ja e publicado em GitHub Release
+desde 2026-06-25 (release 202606251217) — nao a partir de hoje; hoje saiu a nova release
+202607071044geracao-30s. A metrica "downloads" do ZIMMY = soma ACUMULADA (all-time) das
+baixadas do ZimmyPet.exe em todas as releases, desde a 1a publicacao (2026-06-25) ate agora.
+Valor atual = 0 baixadas (ambas as releases com download_count 0). Total ZIMMY = 257 clones + 0.

@@ -2,7 +2,7 @@
 tipo: backlog
 projeto: ZIMMY
 lang: pt-BR
-atualizado: 2026-07-04
+atualizado: 2026-07-07
 tags: [meta, backlog, zimmy-pet]
 ---
 
@@ -14,12 +14,12 @@ tags: [meta, backlog, zimmy-pet]
 > Convenção de prioridade: **P0** = fazer já / destrava o resto · **P1** = importante,
 > próxima leva · **P2** = quando sobrar tempo / crescimento.
 
-## 📸 Snapshot do estado (2026-07-01)
-- **Repo:** https://github.com/zimerfeld/ZIMMY · **branch:** `develop`
-- **Último commit:** `1013cf8` (Remoção de LICENSE) — antes: `41a19e1` Alarme (43 arquivos), Temporizadores/Moedas/E-mails.
-- **Engine:** Godot 4.6.2, GDScript. Código todo em [[📄 zimmy.gd]] (~3.567 linhas, `_draw()` procedural, sem sprites).
-- **Árvore suja (importante):** o cofre foi **renomeado de `OBSIDIAN/` → `ZIMMY/`** (nome do projeto) e a mudança **ainda não está commitada** (pasta `OBSIDIAN/` como `D` + `ZIMMY/` novo `??`). Referências de scripts/docs já atualizadas — ver **Feito recente**.
-- **Regras/memória relevantes:** exportar `.exe` como passo final ([[🚀 Export e Publicação (Prod)]]); fechar `ZimmyPet.exe` e o editor Godot antes de mexer no código; manter contagem de clones/downloads.
+## 📸 Snapshot do estado (2026-07-07)
+- **Repo:** https://github.com/zimerfeld/ZIMMY · **branch:** `develop` (`0ce994e`) · **`main`:** `6b65440` (em sincronia com o origin).
+- **Últimas releases:** tags **`202607071044geracao-30s`** (geração 30s) e **`202607071024reacoes-e-fala`** (lote de reações/fala). **GitHub Release** publicada na tag de 30s com o `ZimmyPet.exe` anexado (Latest).
+- **Engine:** Godot 4.6.2, GDScript. Código todo em [[📄 zimmy.gd]] (~4.215 linhas, `_draw()` procedural, sem sprites).
+- **Árvore limpa** (à parte do churn de estado do Obsidian em `ZIMMY/.obsidian/*`, deixado fora dos commits de propósito).
+- **Regras/memória relevantes:** exportar `.exe` como passo final ([[🚀 Export e Publicação (Prod)]]); fechar `ZimmyPet.exe` e o editor Godot antes de mexer no código; manter contagem de clones/downloads; GitFlow (feature → develop → release → main + tag).
 
 ## 🔴 P0 — destravar
 - [x] **P0-1 · Commitar a reestruturação do cofre** (`OBSIDIAN/CLAUDE/` → `OBSIDIAN/`) — feito em 2026-07-01, commit `bdf60c6`: 62 renomeações (92–100%, histórico preservado) + `_Backlog.md`; `git status` limpo para `OBSIDIAN/`.
@@ -37,6 +37,15 @@ tags: [meta, backlog, zimmy-pet]
 - [x] **P1-3 · Exportar release `.exe`** — feito em 2026-07-01: `build/ZimmyPet.exe` (~100 MB) exportado via CLI headless do Godot 4.6.2 (preset `Windows Desktop`), **exit 0, sem erros/warnings**. Nenhuma instância estava aberta. `build/` é gitignored (o `.exe` não é versionado). Ver [[🚀 Export e Publicação (Prod)]].
 
 ## ✅ Feito recente
+- [x] **Lote "Reações & fala" + geração 30s** — 2026-07-07 (2 releases nesta sessão):
+  - **Reações ao mouse:** hover → expressão feliz/animada; **clicar num olho** → fecha até o cursor sair; **sacudir o mouse** rápido → animação + expressão aleatória de **tontura/enjoo/susto** (`react_expr`, `_trigger_shake`). Ver [[😶‍🌫️ Sistema - Expressões Faciais]] e [[✨ Sistema - Animação]].
+  - **Sons por grupo:** Alimentar/Carinho/Brincar tocam variações aleatórias sorteadas dentro do grupo (`_build_*_sounds` + `_play_group`).
+  - **Fogos de artifício** na comemoração de hora cheia (`zimmy.celebrate()` + `_draw_fireworks`); removida a automação `auto_alimentar.gd` (20s).
+  - **Fila de fala unificada:** reações imediatas (`say`, ~2,5s) + fila de notificações (`notify`, 10s cada, sem sobrepor); ação do usuário **fura a fila** (`urgent_cd`/`_preempt_with`, cobre web assíncrona); item que espera **>60s é descartado**. Ver [[💬 Sistema - Balão de Fala]].
+  - **`RANDOM_PERIOD` 10s → 30s** (geração aleatória de pet/acessório mais espaçada).
+  - **Revertido a pedido do usuário:** a reorganização dinâmica de menus por uso (e o `preferences.json` + item "Restaurar padrões") — os menus voltaram a ser **estáticos**.
+  - **Close-out:** docs sincronizados (3 READMEs + notas do cofre + `LEIAME.md`); `.exe` reexportado (100 MB, ícone via rcedit, smoke-test OK). GitFlow: 2 releases finalizadas em `main` + tags **`202607071024reacoes-e-fala`** e **`202607071044geracao-30s`** (com backmerge `main → develop`). **GitHub Release** criada na tag de 30s com o `ZimmyPet.exe` anexado (Latest).
+  - **Métricas:** snapshot de adoção 2026-07-07 registrado (ZIMARO 706 · Tree 432 · CommitMsg 305 · ZIMMY 257 clones/14d) em `contagem de downloads.txt` e [[📈 Adoção e Métricas]]; ZIMMY agora publica asset de release → *downloads* deixa de ser sempre 0.
 - [x] **Renomear o cofre `OBSIDIAN/` → `ZIMMY/`** — 2026-07-05: pasta do cofre renomeada para o nome do projeto. Referências atualizadas em `.claude/build-if-changed.ps1` (exclusão passou de `\OBSIDIAN\` para `\ZIMMY\ZIMMY\`, pois o projeto raiz também é `...\ZIMMY`), em [[🧭 Como usar este cofre]] (PT/EN, caminho `C:\GODOT\ZIMMY\ZIMMY`) e na árvore de [[📚 Repositório e Branches]] (PT/EN). O cofre global do usuário (`C:\Users\Renat\OBSIDIAN`) é outra coisa e não foi tocado.
 - [x] **Feature Lembretes recorrentes do usuário** — 2026-07-02: submenu **⏰ Lembretes** nativo (sem editar `.gd`) — diálogo com mensagem + dropdown de frequência (15/30 min, 1 h, hourly, `daily@HH:MM`) + campo de hora; itens marcáveis (liga/desliga), excluir; persistido em `user://reminders.json`; disparo pelo mesmo relógio do agendador (parser `_parse_schedule_str` extraído e compartilhado). Compilado (`--check-only`), **testado em runtime** (18/18 asserts, incl. firing) e smoke test do app OK. Documentado em README (raiz+PT+EN) e [[⏰ Sistema - Lembretes]] (PT/EN). Era a ideia #2 de [[🚀 Distribuição e Crescimento]].
 - [x] **Feature Clima** — 2026-07-01: `Automacoes/clima.gd` (Open-Meteo grátis/sem chave, geolocalização por IP com fallback, bilíngue). Sintaxe validada (`--check-only`) e **testada em runtime** (harness headless → "☀️ céu limpo — 21,2°C em Rio de Janeiro"). Documentado em README (raiz+PT+EN), LEIAME e [[⚙️ Sistema - Automações e Agendador]]. Foi a ideia #1 de [[🚀 Distribuição e Crescimento]].

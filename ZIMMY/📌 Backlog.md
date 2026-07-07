@@ -27,7 +27,7 @@ tags: [meta, backlog, zimmy-pet]
 
 ## 🟠 P1 — próxima leva
 - [x] **P1-1 · Fechar o buraco de documentação do cofre.** Feito em 2026-07-01: criadas [[⚙️ Sistema - Automações e Agendador]], [[💱 Sistema - Moedas]] e [[📧 Sistema - E-mails]] (par PT + (EN)), com refs `zimmy.gd:linha` verificadas e ligadas na [[🏠 Home]] (PT/EN). Detalhes originais abaixo, para referência:
-  - `Sistema - Automações e Agendador` — pasta `Automacoes/`, submenu **⚙️ Automações** (avulsas) + **⏱️ Temporizadores** (agendadas, `const SCHEDULE`/`SCHEDULE_SECONDS`, persistidas em `user://schedules.json`). Scripts: `alarme.gd`, `auto_alimentar.gd`, `comemoracao_hora_cheia.gd`, `desligar_pc.gd`, `cancelar_desligamento.gd`, `lembrete_pomodoro.gd`, `whatsapp.gd`, `email_gmail.gd`.
+  - `Sistema - Automações e Agendador` — pasta `Automacoes/`, submenu **⚙️ Automações** (avulsas) + **⏱️ Temporizadores** (agendadas, `const SCHEDULE`/`SCHEDULE_SECONDS`, persistidas em `user://schedules.json`). Scripts: `alarme.gd`, `comemoracao_hora_cheia.gd` (fogos via `celebrate()`), `desligar_pc.gd`, `cancelar_desligamento.gd`, `lembrete_pomodoro.gd`, `whatsapp.gd`, `email_gmail.gd`.
   - `Sistema - Moedas` — submenu **💱 Moedas** (`MENU_GROUP := "moedas"`, ícones de bandeira pixel `ICON_FLAG`), scripts `cotacao_usd/eur/gbp/jpy/cny.gd`.
   - `Sistema - E-mails` — submenu **📧 E-mails** (Gmail, contador de não lidos, alerta sonoro `🔊`).
   - API de automação: `run(zimmy)`, `zimmy.notify()` (fila ~5 s) vs `say()` (2,5 s). Base: `Automacoes/LEIAME.md` e README §Automations.

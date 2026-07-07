@@ -129,7 +129,7 @@ generates `{kind, every, at_minute, label}`; `_tick_schedules(delta)` (in `_proc
 via `_fire_automation()`; the on/off state persists in `user://schedules.json`
 (`_load_schedules`/`_save_schedules`, `automation_enabled`/`sched_runtime`).
 **Web/system**: automations can use `zimmy.http_get_json(url, cb)` (a helper that
-wraps `HTTPRequest` → JSON) and `OS.execute/create_process`. Examples: `auto_alimentar`,
+wraps `HTTPRequest` → JSON) and `OS.execute/create_process`. Examples:
 `lembrete_pomodoro`, `comemoracao_hora_cheia`, `cotacao_usd/eur/gbp/jpy/cny` (AwesomeAPI,
 the "currency submenu"), `desligar_pc`/`cancelar_desligamento` (`shutdown`), `alarme`.
 

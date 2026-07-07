@@ -2,7 +2,7 @@
 tipo: sistema
 projeto: ZIMMY
 lang: pt-BR
-atualizado: 2026-07-04
+atualizado: 2026-07-07
 tags: [sistema, expressao, rosto, zimmy-pet]
 ---
 
@@ -12,14 +12,14 @@ Enquanto o pet fala, **o rosto espelha a emoção do emoji** da frase. Adicionad
 2026-06-20.
 
 ## 🔍 Como funciona
-- `say(t)` chama `_expression_from_text(t)` e guarda em `expression`.
-- `_expression_from_text` (`zimmy.gd`) varre a frase por emojis conhecidos, em ordem
-  de prioridade, e retorna a expressão (ou `"neutral"`).
-- No [[🎨 Sistema - Render (_draw)]], se há fala (`speech.text != ""`) e
-  `expression != "neutral"`, o rosto padrão é **substituído** por
-  `_draw_expression(expr, ...)` (olhos + boca + extras). Senão, desenha o rosto
-  normal (olhos seguindo o cursor + boca do config + cílios).
-- Ao limpar a fala no [[🔁 Fluxo - Loop (_process)]], `expression` volta a `"neutral"`.
+- `say(t)` guarda a fala; ao ser exibida, o pump calcula `expression` via
+  `_expression_from_text(t)` (varre a frase por emojis conhecidos, em ordem de prioridade,
+  e retorna a expressão ou `"neutral"`).
+- **Prioridade do rosto** no [[🎨 Sistema - Render (_draw)]]:
+  `react_expr` (reação de hover/sacudida) **>** emoji da fala **>** necessidade zerada
+  **>** neutro. A primeira não-neutra vira `_draw_expression(expr, ...)` (olhos + boca +
+  extras); o rosto neutro desenha olhos seguindo o cursor + boca do config + cílios.
+- Ao limpar a fala/reação no [[🔁 Fluxo - Loop (_process)]], `expression` volta a `"neutral"`.
 
 ## 🗺️ Mapa emoji → expressão
 | Expressão | Gatilhos | Rosto |
@@ -40,6 +40,20 @@ Quando uma barra de necessidade zera, o **rosto idle** muda (mesma `_draw_expres
 | `needy` | `stat_pet=0` | **chorando** (duas lágrimas), boca triste |
 | `bored` | `stat_play=0` | **olhos fechados** (—), sobrancelha caída, boca reta |
 Ver [[📊 Sistema - Necessidades]].
+
+## 🖱️ Reações ao mouse (sem menu) — `react_expr` + clique no olho
+Reações disparadas direto pelo cursor (ver [[🚪 Entrada - Eventos de Input]] e
+[[✨ Sistema - Animação]]), com expressão temporária `react_expr` (prioridade máxima):
+| Reação | Gatilho | Rosto |
+|---|---|---|
+| `happy`/`excited` | **hover** — cursor entra sobre o pet | expressão feliz/animada por ~1,1s |
+| `dizzy` | **sacudir** o mouse rápido perto do pet | olhos em **espiral** (@_@) + boca ondulada |
+| `nausea` | idem (sorteado) | olhos semicerrados + **bochechas esverdeadas** + boca ondulada |
+| `scared` | idem (sorteado) | olhos **arregalados** (pupila pequena) + sobrancelhas altas + gota de suor |
+
+**Clique no olho:** clicar sobre um olho fecha aquele olho (`eye_closed_l`/`eye_closed_r`,
+arco ∪) e o mantém fechado **enquanto o cursor fica sobre ele** — reabre ao sair
+(hit-test por elipse no espaço lógico; pupila desenhada por `_draw_pupil`, só no olho aberto).
 
 ## 🤝 Sinergia
 As frases de [[😤 Sistema - Interação e Mau Humor|mau humor]] (`MOOD_NEG`) usam

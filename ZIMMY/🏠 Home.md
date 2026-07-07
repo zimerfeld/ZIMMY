@@ -28,8 +28,13 @@ tags: [moc, home, zimmy-pet]
   alarme/lembretes; **extensível** (jogue um `.gd` em `Automacoes/`); **bilíngue** (PT/EN).
 - **Stack:** Godot **4.6.2** stable, GDScript; app inteiro em [[📄 zimmy.gd]] anexado a
   [[📄 main.tscn]]. Sem dependências externas além da API do Godot.
-- **Estado atual:** branch `develop`; features recentes de clima e lembretes recorrentes
-  entregues. Release `.exe` (~100 MB) exportável ([[🚀 Export e Publicação (Prod)]]).
+- **Estado atual:** branch `develop`; último lote entregue — **reações ao mouse** (hover →
+  expressão; clique no olho → fecha até sair; sacudir o mouse → tontura/enjoo/susto),
+  **sons por grupo** (variações aleatórias em Alimentar/Carinho/Brincar), **fogos de
+  artifício** na comemoração de hora cheia, e a **fila de fala** unificada (reações
+  imediatas + notificações 10 s com furo de fila por ação do usuário e descarte após 60 s).
+  Removida a automação auto-alimentar (20 s). Release `.exe` (~100 MB) exportável
+  ([[🚀 Export e Publicação (Prod)]]).
 - **Público:** entusiastas de pet virtual + quem quer "produtividade fofa" no desktop.
 - **Ângulo de negócio:** grátis/OSS → retorno indireto (portfólio + topo de funil +
   doações/patrocínio). Ver [[💜 Financiamento e Patrocínio]] e [[🚀 Distribuição e Crescimento]].

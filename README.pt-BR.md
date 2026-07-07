@@ -79,6 +79,9 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 |------|-----------|
 | Arrastar (botão esquerdo) | Move o Zimmy pela tela (a posição é salva) |
 | Clique (sem arrastar) | Ele reage com um "oi" |
+| Passar o mouse sobre o pet | Reage com uma expressão feliz/animada |
+| Clicar num olho | Aquele olho **fecha** e fica fechado enquanto o cursor está sobre ele (reabre ao sair) |
+| Sacudir o mouse rápido sobre ele | Reação aleatória de **tontura / enjoo / susto** (cambaleio + olhos em espiral, balanço enjoado, ou tremor de susto) |
 | Botão direito | Abre o menu de contexto (abaixo), posicionado ao lado do pet sem cobri-lo e sempre dentro da tela |
 | Esc | Fecha |
 
@@ -96,7 +99,7 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 - **📊 Status** (check) — liga/desliga as **barras de status** abaixo do pet
   (Alimentar/Carinho/Brincar). Vem **desligado** por padrão; a escolha é **persistida** em
   `user://settings.json` (chave `status`).
-- **🦴 Alimentar / 🤚 Carinho / 🎾 Brincar** — interações que mudam humor/fome. Cada uma também toca um **som próprio** (uma mordidinha, um ronron, um arpejo alegre) quando o alerta daquela ação está ligado.
+- **🦴 Alimentar / 🤚 Carinho / 🎾 Brincar** — interações que mudam humor/fome. Cada uma também toca um **som próprio** (uma mordidinha, um ronron, um arpejo alegre) quando o alerta daquela ação está ligado — com **várias variações aleatórias por grupo** (sorteadas dentro do mesmo grupo), então nunca fica repetitivo.
 - **🔊 Alertas de som ▸** — submenu logo abaixo das ações, com uma **caixa por ação** (🦴 Alimentar / 🤚 Carinho / 🎾 Brincar, todas **ligadas** por padrão, **persistidas** em `user://settings.json`). Cada toggle governa **dois** gatilhos: o som tocado ao fazer a ação **e** um lembrete que toca quando a barra daquela necessidade **cai para 20% (baixa)**. Os sons são sintetizados em código (sem arquivos de áudio), como os alertas de WhatsApp/Gmail.
 - **🐶 Gerar pets** (check) — liga/desliga a geração contínua **do pet**: a cada ~10 s o
   Zimmy vira um pet aleatório. Além das cores, varia as **formas** e quais
@@ -154,7 +157,7 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   automações **agendadas** (as que declaram `const SCHEDULE`/`SCHEDULE_SECONDS`) como
   itens **marcáveis** (✓ = ligada), cada uma com um pequeno **ícone de relógio** à
   esquerda e a **frequência no rótulo** — é o **agendador visual**, persistido em
-  `user://schedules.json`. Exemplos: `alarme.gd` (daily@08:00), `auto_alimentar.gd` (20s),
+  `user://schedules.json`. Exemplos: `alarme.gd` (daily@08:00),
   `comemoracao_hora_cheia.gd` (hourly), `desligar_pc.gd` (daily@23:00),
   `lembrete_pomodoro.gd` (25m). Fica **desabilitado** quando não há automações agendadas.
 - **⏰ Lembretes ▸** — lembretes recorrentes **criados pelo usuário**, **sem editar `.gd`**.
@@ -205,6 +208,23 @@ o pet faz uma cara: **Alimentar = fome, boca aberta**; **Carinho = necessitado, 
 **Brincar = chateado, olhos fechados**. Quando **as três** chegam a 0, o Zimmy **fecha a
 própria janela e encerra o processo**. Com o **🔊 Alerta de som** daquela ação ligado, um som de lembrete também toca no instante em que a barra **cruza 20%** para baixo (uma vez por cruzamento).
 
+## Reações & fala
+
+O Zimmy reage ao que você faz com o mouse: **passar o mouse** sobre ele dispara uma
+expressão feliz/animada; **clicar num olho** fecha aquele olho (uma piscadinha) e o
+mantém fechado enquanto o cursor fica sobre ele, reabrindo ao sair; **sacudir o mouse
+rápido** sobre ele toca uma reação aleatória de **tontura / enjoo / susto** (cambaleio
+com olhos em espiral, balanço enjoado de bochechas esverdeadas, ou tremor assustado de
+olhos arregalados). Tudo **procedural** — animação + expressão facial, sem sprites.
+
+**Balão de fala** — duas pistas para nada se perder nem virar spam. **Reações** (seus
+cliques, hover, sacudida, saudação) aparecem **na hora**, com prioridade. **Notificações**
+(automações, e-mails, cotações, lembretes) entram numa **fila** e cada uma aparece por
+**10 s** na sua vez, sem se sobreporem; enquanto uma reação está no ar, a notificação
+**pausa** e retoma depois. Uma notificação disparada por uma **ação do usuário** (ex.:
+você clicou a automação) **fura a fila** e aparece na hora — inclusive as web
+assíncronas. Uma mensagem que espera mais de **60 s** na fila é descartada.
+
 ## Idioma
 
 Todos os textos do sistema têm tradução em **Português (Brasil)** e **English (US)**:
@@ -244,11 +264,14 @@ Cada automação é um GDScript com:
 - (opcional) `const SCHEDULE := "..."` — frequência para o Zimmy rodar a automação
   sozinho (ver **Agendador** abaixo).
 - um método `run(zimmy)` — chamado ao escolher o item (ou no disparo agendado). `zimmy`
-  é o nó principal, dando acesso a `notify()`, `say()`, `feed()`, `pet()`, `play()`,
-  `hop()`, `current`, e ao estado (`hunger`, `happy`), etc. As mensagens de automação/
-  e-mail devem usar **`zimmy.notify(texto)`**: entram numa **fila, aparecem uma de cada
-  vez e ficam visíveis ~5 s** para não se sobreporem (`say()` mostra na hora e some em
-  2,5 s, sem fila).
+  é o nó principal, dando acesso a `notify()`, `say()`, `celebrate()`, `feed()`, `pet()`,
+  `play()`, `hop()`, `current`, e ao estado (`hunger`, `happy`), etc. As mensagens de
+  automação/e-mail devem usar **`zimmy.notify(texto)`**: entram numa **fila e cada uma
+  fica visível 10 s na sua vez**, sem se sobreporem. Uma mensagem que espera mais de
+  **60 s** na fila é descartada. Notificação disparada por uma **ação do usuário** (ex.:
+  você clicou a automação) **fura a fila** e aparece na hora — inclusive as web
+  assíncronas. O `say()` é para **reações** imediatas (na hora, ~2,5 s, com prioridade
+  sobre a fila).
 
 Scripts que `extends RefCounted` são descartados após o `run()`; os que `extends Node`
 são adicionados como filhos do Zimmy e **persistem** (úteis para automações contínuas
@@ -278,9 +301,8 @@ para funcionar tanto no clique quanto no disparo agendado.
 
 | Automação | Arquivo | Tipo |
 |---|---|---|
-| Auto-alimentar 🦴 | `auto_alimentar.gd` | a cada 20s — alimenta se com fome |
 | Lembrete Pomodoro ☕ | `lembrete_pomodoro.gd` | a cada 25min — lembra de pausar |
-| Comemorar hora cheia 🎉 | `comemoracao_hora_cheia.gd` | `hourly` — comemora cada virada de hora |
+| Comemorar hora cheia 🎆 | `comemoracao_hora_cheia.gd` | `hourly` — comemora cada virada de hora com **fogos de artifício** (`zimmy.celebrate()`) + dancinha |
 | Cotação USD/EUR/GBP/JPY/CNY 💱 | `cotacao_*.gd` | avulsas — cotação da moeda em BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), grátis). As 5 moedas de maior influência (cesta SDR) ficam agrupadas no submenu **💱 Moedas** no menu principal (`MENU_GROUP := "moedas"`), cada item com uma **bandeirinha (ícone) à esquerda** (textura de `ICON_FLAG`) |
 | Clima 🌤️ | `clima.gd` | avulsa — tempo atual via [Open-Meteo](https://open-meteo.com/) (grátis, sem chave); detecta a localização pelo IP (fallback ipapi.co → ip-api.com) ou defina `LAT`/`LON` para fixar sua cidade |
 | Desligar PC 🔌 | `desligar_pc.gd` | `daily@23:00` — desliga o Windows com 60s de aviso |

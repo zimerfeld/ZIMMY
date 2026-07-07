@@ -28,8 +28,12 @@ tags: [moc, home, zimmy-pet]
   Gmail, alarm/reminders; **extensible** (drop a `.gd` into `Automacoes/`); **bilingual** (PT/EN).
 - **Stack:** Godot **4.6.2** stable, GDScript; the whole app lives in [[📄 zimmy.gd (EN)]] attached
   to [[📄 main.tscn (EN)]]. No external dependencies beyond the Godot API.
-- **Current state:** `develop` branch; recent weather and recurring-reminders features shipped.
-  Release `.exe` (~100 MB) exportable ([[🚀 Export e Publicação (Prod) (EN)|Export and Publishing]]).
+- **Current state:** `develop` branch; latest batch shipped — **mouse reactions** (hover →
+  expression; click an eye → closes until you leave; shake the mouse → dizzy/nauseous/scared),
+  **per-group sounds** (random variations for Feed/Pet/Play), **fireworks** on the hourly
+  celebration, and the unified **speech queue** (immediate reactions + 10 s notifications that
+  jump the queue on a user action and are discarded after 60 s). The auto-feed (20 s) automation
+  was removed. Release `.exe` (~100 MB) exportable ([[🚀 Export e Publicação (Prod) (EN)|Export and Publishing]]).
 - **Audience:** virtual-pet enthusiasts + people who want "cute productivity" on the desktop.
 - **Business angle:** free/OSS → indirect return (portfolio + top of funnel + donations/
   sponsorship). See [[💜 Financiamento e Patrocínio (EN)|Funding and Sponsorship]] and

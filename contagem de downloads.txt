@@ -6,7 +6,9 @@ Comando por repo:
   gh api repos/zimerfeld/<repo>/traffic/clones          (requer push access; so ultimos 14 dias)
   gh api repos/zimerfeld/<repo>/releases --jq '[.[].assets[].download_count]|add // 0'
 
-Obs.: os 4 repos nao publicam assets de release no GitHub (downloads = 0); a metrica viva e clones.
+Obs.: ZIMMY passou a publicar GitHub Release com o ZimmyPet.exe (a partir de 2026-07-07),
+      entao seu "downloads" deixa de ser sempre 0; os outros 3 repos ainda nao publicam assets
+      (downloads = 0) e a metrica viva deles continua sendo clones.
       GitExtensions.* sao pacotes NuGet — para adocao all-time via NuGet, ver o projeto zimerfeld.com.
 
 --------------------------------------------------------------------------------------------
@@ -17,3 +19,16 @@ ZIMARO                                       790      331          0            
 GitExtensions.ZimerfeldTree                  532      214          0               532
 ZIMMY                                        318      131          0               318
 GitExtensions.ZimerfeldCommitMsg             293      140          0               293
+
+--------------------------------------------------------------------------------------------
+Snapshot 2026-07-07
+--------------------------------------------------------------------------------------------
+Repo                                 Clones(14d)  Uniques  Downloads  Total(clones+dl)
+ZIMARO                                       706      271          0               706
+GitExtensions.ZimerfeldTree                  432      167          0               432
+GitExtensions.ZimerfeldCommitMsg             305      146          0               305
+ZIMMY                                        257      107          0               257
+
+NOTA 2026-07-07: ZIMMY passou a publicar GitHub Release com o ZimmyPet.exe anexado
+(tag 202607071044geracao-30s). Downloads=0 por enquanto (release recem-criada), mas a
+partir de agora a metrica de downloads do ZIMMY deixa de ser sempre 0.

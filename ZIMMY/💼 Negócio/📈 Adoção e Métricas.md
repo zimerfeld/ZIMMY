@@ -2,7 +2,7 @@
 tipo: negocio
 projeto: ZIMMY
 lang: pt-BR
-atualizado: 2026-07-04
+atualizado: 2026-07-07
 tags: [referencia, adocao, metricas, portfolio, zimmy-pet]
 ---
 
@@ -20,17 +20,23 @@ gh api repos/zimerfeld/<repo>/releases --jq '[.[].assets[].download_count]|add /
 ```
 - **`traffic/clones`** exige *push access* e cobre só os **últimos 14 dias** (janela móvel) —
   o valor **não é acumulado**; para o total histórico ver o cálculo do projeto zimerfeld.com.
-- Os 4 repos **não publicam assets de release** no GitHub, então *downloads = 0* e a métrica
-  viva é **clones**. Os `GitExtensions.*` são pacotes **NuGet** (adoção all-time via NuGet
-  fica no zimerfeld.com).
+- **ZIMMY passou a publicar GitHub Release** com o `ZimmyPet.exe` (desde 2026-07-07, tag
+  `202607071044geracao-30s`), então seu *downloads* deixa de ser sempre 0; os outros 3 repos
+  ainda **não publicam assets** (*downloads = 0*) e a métrica viva deles continua sendo
+  **clones**. Os `GitExtensions.*` são pacotes **NuGet** (adoção all-time via NuGet fica no
+  zimerfeld.com).
 
-## 📸 Snapshot 2026-07-01 (clones 14d)
+## 📸 Snapshot 2026-07-07 (clones 14d)
 | Repo | Clones (14d) | Uniques | Downloads | Total |
 |---|---|---|---|---|
-| ZIMARO | 790 | 331 | 0 | **790** |
-| GitExtensions.ZimerfeldTree | 532 | 214 | 0 | **532** |
-| **ZIMMY** | 318 | 131 | 0 | **318** |
-| GitExtensions.ZimerfeldCommitMsg | 293 | 140 | 0 | **293** |
+| ZIMARO | 706 | 271 | 0 | **706** |
+| GitExtensions.ZimerfeldTree | 432 | 167 | 0 | **432** |
+| GitExtensions.ZimerfeldCommitMsg | 305 | 146 | 0 | **305** |
+| **ZIMMY** | 257 | 107 | 0 | **257** |
+
+> Anterior (2026-07-01): ZIMARO 790 · Tree 532 · ZIMMY 318 · CommitMsg 293. Clones são
+> **janela móvel de 14 dias** (não acumulam); o histórico datado fica em
+> `contagem de downloads.txt` (fonte de verdade).
 
 > Ambiente: `gh` instalado em `C:\Program Files\GitHub CLI\gh.exe`, autenticado como
 > `zimerfeld` (keyring). Não estava mais bloqueado — era só rodar.

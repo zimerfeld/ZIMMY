@@ -2,7 +2,7 @@
 tipo: sistema
 projeto: ZIMMY
 lang: en-US
-atualizado: 2026-07-04
+atualizado: 2026-07-07
 tags: [sistema, animacao, zimmy-pet]
 ---
 
@@ -42,6 +42,20 @@ body/belly.
   squish/tilt); `happy` (generic celebration: hop/spin/dance).
 - The **shadow stays grounded** (drawn before the animated transform) and the status bars
   are unaffected. See [[🎨 Sistema - Render (_draw) (EN)]].
+
+## 😵 Shake animations (`dizzy`/`nausea`/`scared`)
+Shaking the mouse fast near the pet (see [[🚪 Entrada - Eventos de Input (EN)]]) calls
+`_trigger_shake()`, which picks one of three reactions — `dizzy` (wobble: wide oscillating
+rotation), `nausea` (slow sway + pulsing vertical squish), `scared` (fast jitter + a
+shrink with a small hop) — paired with the matching facial expression (`react_expr`, see
+[[😶‍🌫️ Sistema - Expressões Faciais (EN)]]) and a short line.
+
+## 🎆 Fireworks (`celebrate()`)
+`celebrate(duration=3)` (called by `comemoracao_hora_cheia.gd`) fires **fireworks**: while
+`fw_time>0`, `_spawn_burst()` launches ~14 radial sparks of one color in the band above the
+pet; `_update_fireworks` moves the particles (`{p,v,life}`) with light gravity and
+`_draw_fireworks` draws them on top of everything, with a trail and fading glow. It also
+does a hop + little dance. Cheap — only runs while fireworks are active.
 
 ## 👁️ Blink
 `blink_timer` counts down to the blink; `blink_t=0.16s` keeps the eyes closed; random

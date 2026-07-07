@@ -79,6 +79,9 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 |------|-----------|
 | Drag (left button) | Moves Zimmy around the screen (the position is saved) |
 | Click (without dragging) | He reacts with a "hi" |
+| Hover over the pet | He reacts with a happy/excited expression |
+| Click on an eye | That eye **closes** and stays shut while the cursor is over it (reopens when you leave) |
+| Shake the mouse fast over him | Random reaction: **dizzy / nauseous / scared** (wobble + spiral eyes, queasy sway, or a scared jitter) |
 | Right button | Opens the context menu (below), positioned beside the pet without covering it and always within the screen |
 | Esc | Closes |
 
@@ -95,7 +98,7 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
 
 - **📊 Status** (check) — toggles the **status bars** below the pet (Feed/Pet/Play). It is
   **off by default**; the choice is **persisted** in `user://settings.json` (`status` key).
-- **🦴 Feed / 🤚 Pet / 🎾 Play** — interactions that change mood/hunger. Each one also plays its **own sound** (a munch, a purr, a playful arpeggio) when the alert for that action is on.
+- **🦴 Feed / 🤚 Pet / 🎾 Play** — interactions that change mood/hunger. Each one also plays its **own sound** (a munch, a purr, a playful arpeggio) when the alert for that action is on — with **several random variations per group** (drawn within the same group) so it never gets repetitive.
 - **🔊 Sound alerts ▸** — submenu right below the actions with one **checkbox per action** (🦴 Feed / 🤚 Pet / 🎾 Play, all **on** by default, **persisted** in `user://settings.json`). Each toggle governs **both** the sound played when you do the action **and** a reminder that plays when the matching need bar **drops to 20% (low)**. The sounds are synthesized in code (no audio files), just like the WhatsApp/Gmail alerts.
 - **🐶 Random pets** (check) — toggles continuous generation **of the pet**: every ~10 s
   Zimmy turns into a random pet. Besides colors, it varies the **shapes** and which
@@ -154,7 +157,7 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   **scheduled** automations (those that declare `const SCHEDULE`/`SCHEDULE_SECONDS`) as
   **checkable** items (✓ = on), each with a small **clock icon** on the left and the
   **frequency in the label** — this is the **visual scheduler**, persisted in
-  `user://schedules.json`. Examples: `alarme.gd` (daily@08:00), `auto_alimentar.gd` (20s),
+  `user://schedules.json`. Examples: `alarme.gd` (daily@08:00),
   `comemoracao_hora_cheia.gd` (hourly), `desligar_pc.gd` (daily@23:00),
   `lembrete_pomodoro.gd` (25m). It is **disabled** when there are no scheduled automations.
 - **⏰ Reminders ▸** — **user-created** recurring reminders, with **no `.gd` editing**.
@@ -204,6 +207,23 @@ refills its bar to 100%. When a bar hits **0**, the pet shows a face: **Feed = h
 mouth open**; **Pet = needy, crying**; **Play = bored, eyes closed**. When **all three**
 reach 0, Zimmy **closes its own window and ends the process**. With the **🔊 Sound alert** for an action on, a reminder sound also plays the moment its bar **crosses 20%** going down (once per crossing).
 
+## Reactions & speech
+
+Zimmy reacts to what you do with the mouse: **hovering** over him triggers a happy/excited
+expression; **clicking on an eye** closes that eye (a wink) and keeps it shut while the
+cursor stays on it, reopening when you leave; **shaking the mouse fast** over him plays a
+random **dizzy / nauseous / scared** reaction (wobble with spiral eyes, a queasy
+green-cheeked sway, or a frightened jitter with wide eyes). These are all **procedural** —
+animation + facial expression, no sprites.
+
+**Speech bubble** — two lanes so nothing gets lost or spammy. **Reactions** (your clicks,
+hover, shake, greeting) appear **immediately** with priority. **Notifications** (automations,
+e-mails, currency quotes, reminders) go into a **queue** and each shows for **10 s** in
+turn, never overlapping; while a reaction is on screen the notification **pauses** and
+resumes afterward. A notification triggered by a **user action** (e.g. you clicked the
+automation) **jumps the queue** and shows right away — even the async web ones. A message
+that waits more than **60 s** in the queue is discarded.
+
 ## Language
 
 All system texts have a translation in **Português (Brasil)** and **English (US)**:
@@ -245,11 +265,14 @@ Each automation is a GDScript with:
 - (optional) `const SCHEDULE := "..."` — frequency for Zimmy to run the automation on
   its own (see **Scheduler** below).
 - a `run(zimmy)` method — called when choosing the item (or on the scheduled trigger).
-  `zimmy` is the main node, giving access to `notify()`, `say()`, `feed()`, `pet()`,
-  `play()`, `hop()`, `current`, and to the state (`hunger`, `happy`), etc. Automation/
-  e-mail messages should use **`zimmy.notify(text)`**: they are **queued, shown one at a
-  time and stay visible ~5 s** so they don't overwrite each other (`say()` shows
-  immediately and clears in 2.5 s, no queue).
+  `zimmy` is the main node, giving access to `notify()`, `say()`, `celebrate()`, `feed()`,
+  `pet()`, `play()`, `hop()`, `current`, and to the state (`hunger`, `happy`), etc.
+  Automation/e-mail messages should use **`zimmy.notify(text)`**: they enter a **queue and
+  each stays visible 10 s in turn**, so they never overlap. A message that waits more than
+  **60 s** in the queue is dropped. A notification triggered by a **user action** (e.g. you
+  clicked the automation) **jumps the queue** and shows immediately — even the async web
+  ones. `say()` is for immediate **reactions** (shows right away for ~2.5 s, with priority
+  over the queue).
 
 Scripts that `extends RefCounted` are discarded after `run()`; those that `extends Node`
 are added as children of Zimmy and **persist** (useful for continuous automations via
@@ -279,9 +302,8 @@ the `HTTPRequest` under the hood. In the *closure* use only `zimmy` and local va
 
 | Automation | File | Type |
 |---|---|---|
-| Auto-feed 🦴 | `auto_alimentar.gd` | every 20s — feeds if hungry |
 | Pomodoro reminder ☕ | `lembrete_pomodoro.gd` | every 25min — reminds you to take a break |
-| Celebrate full hour 🎉 | `comemoracao_hora_cheia.gd` | `hourly` — celebrates each turn of the hour |
+| Celebrate full hour 🎆 | `comemoracao_hora_cheia.gd` | `hourly` — celebrates each turn of the hour with **fireworks** (`zimmy.celebrate()`) + a little dance |
 | USD/EUR/GBP/JPY/CNY quote 💱 | `cotacao_*.gd` | one-off — currency quote in BRL ([AwesomeAPI](https://docs.awesomeapi.com.br/), free). The 5 most influential currencies (SDR basket) are grouped into the **💱 Currencies** submenu in the main menu (`MENU_GROUP := "moedas"`), each item with a small **flag icon on the left** (texture from `ICON_FLAG`) |
 | Weather 🌤️ | `clima.gd` | one-off — current weather via [Open-Meteo](https://open-meteo.com/) (free, no key); auto-detects location by IP (fallback ipapi.co → ip-api.com) or set `LAT`/`LON` to pin your city |
 | Shut down PC 🔌 | `desligar_pc.gd` | `daily@23:00` — shuts down Windows with a 60s warning |

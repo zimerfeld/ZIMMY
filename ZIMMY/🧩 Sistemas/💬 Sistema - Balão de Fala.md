@@ -2,7 +2,7 @@
 tipo: sistema
 projeto: ZIMMY
 lang: pt-BR
-atualizado: 2026-07-04
+atualizado: 2026-07-07
 tags: [sistema, fala, ui, zimmy-pet]
 ---
 
@@ -12,16 +12,26 @@ Um `Label` (criado no [[🟢 Fluxo - Inicialização]]) com contorno, usando a *
 padrão do Godot** (renderiza acentos e emojis coloridos no renderer Compatibility —
 um `SystemFont` faria o texto sumir).
 
-## 🔌 API
-- `say(msg, hold := 2.5)` — define o texto, agenda a limpeza (`speech_clear = hold`) e
-  chama `_relayout()`. Mostra **na hora** (interações do pet, seleção, salvar/erros).
-- `notify(msg)` — **fila de avisos** para automações/e-mails: enfileira em `notify_queue`
-  e o [[🔁 Fluxo - Loop (_process)]] solta a próxima a cada `NOTIFY_GAP = 5s` (`notify_cd`),
-  chamando `say(msg, NOTIFY_HOLD)` — a mensagem fica visível **5s** (`NOTIFY_HOLD`) antes
-  de sumir. Evita que várias mensagens (ex.: várias cotações) se sobreponham. A 1ª
-  aparece já; as seguintes esperam 5s.
-- No [[🔁 Fluxo - Loop (_process)]], ao expirar `speech_clear` o texto é limpo e a janela
-  encolhe.
+## 🔌 API — duas pistas (reação vs. fila)
+O balão tem **duas pistas** resolvidas por prioridade no pump do
+[[🔁 Fluxo - Loop (_process)]] (**reação > notificação > nada**), para nada se perder nem
+virar spam:
+- `say(msg, hold := REACTION_HOLD)` — **reação imediata** (interações do pet, hover,
+  sacudida, seleção, salvar/erros, saudação). Define `react_text`/`react_hold` e aparece
+  **na hora**, com prioridade sobre a fila. `REACTION_HOLD = 2.5s`.
+- `notify(msg)` — **fila de notificações** (automações/e-mails/lembretes). Enfileira em
+  `msg_queue` como `{text, wait}`; cada item fica visível `MSG_DURATION = 10s` na sua vez,
+  sem se sobreporem. Enquanto uma reação está no ar, a notificação **pausa** (`notify_hold`
+  não corre) e retoma depois — assim vê os 10s cheios.
+- **Furo de fila por ação do usuário:** ao clicar numa automação, `_on_pick_automation`
+  abre uma janela `urgent_cd = URGENT_WINDOW (6s)`. Dentro dela, `notify()` chama
+  `_preempt_with(msg)` — a notificação de fundo volta pra frente da fila e a resposta do
+  usuário aparece **na hora** (cobre também as web assíncronas, cujo callback chega dentro
+  da janela).
+- **Descarte por tempo:** a cada frame o `wait` de cada item cresce; itens que esperam
+  mais que `MAX_QUEUE_WAIT = 60s` na fila são **descartados** (já não são relevantes).
+- No pump, quando não há reação nem notificação e a fila esvazia, o texto é limpo e a
+  janela encolhe.
 
 ## 📐 Dimensionamento — em `_relayout()` ([[🪟 Sistema - Janela Overlay]])
 - Mede o texto com a fonte real; largura cresce só o necessário.
@@ -34,8 +44,9 @@ um `SystemFont` faria o texto sumir).
 Saudação inicial (`t("hello") % nome` — usa o **nome do pet salvo ativo**
 `current_pet_name`, ou "Zimmy" se for Default/aleatório); ações (`feed/pet/play/_react`);
 geração/seleção de pets e acessórios; salvar/erros; reclamações de mau humor
-([[😤 Sistema - Interação e Mau Humor]], lista `mood_neg`); e as **automações/e-mails** (via
-`notify()`, com espaçamento de 5s).
+([[😤 Sistema - Interação e Mau Humor]], lista `mood_neg`); reações ao mouse (hover/sacudida,
+ver [[😶‍🌫️ Sistema - Expressões Faciais]]); e as **automações/e-mails** (via `notify()`, fila
+de 10s).
 
 ## 🪞 Espelha no rosto
 `say()` também deduz a emoção do emoji e o rosto a reflete enquanto a fala dura —

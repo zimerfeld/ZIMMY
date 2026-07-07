@@ -2,7 +2,7 @@
 tipo: sistema
 projeto: ZIMMY
 lang: en-US
-atualizado: 2026-07-04
+atualizado: 2026-07-07
 tags: [sistema, fala, ui, zimmy-pet]
 ---
 
@@ -12,16 +12,25 @@ A `Label` (created in the [[🟢 Fluxo - Inicialização (EN)]]) with an outline
 **Godot default font** (it renders accents and colored emojis on the Compatibility
 renderer — a `SystemFont` would make the text disappear).
 
-## 🔌 API
-- `say(msg, hold := 2.5)` — sets the text, schedules clearing (`speech_clear = hold`) and
-  calls `_relayout()`. Shows **immediately** (pet interactions, selection, save/errors).
-- `notify(msg)` — **notification queue** for automations/e-mails: enqueues into
-  `notify_queue`, and the [[🔁 Fluxo - Loop (_process) (EN)]] releases the next one every
-  `NOTIFY_GAP = 5s` (`notify_cd`), calling `say(msg, NOTIFY_HOLD)` — the message stays
-  visible for **5s** (`NOTIFY_HOLD`) before hiding. Prevents several messages (e.g. many
-  currency quotes) from overwriting each other. The 1st shows now; the rest wait 5s.
-- In the [[🔁 Fluxo - Loop (_process) (EN)]], when `speech_clear` expires the text is cleared
-  and the window shrinks.
+## 🔌 API — two lanes (reaction vs. queue)
+The bubble has **two lanes** resolved by priority in the [[🔁 Fluxo - Loop (_process) (EN)]]
+pump (**reaction > notification > nothing**), so nothing gets lost or spammy:
+- `say(msg, hold := REACTION_HOLD)` — **immediate reaction** (pet interactions, hover, shake,
+  selection, save/errors, greeting). Sets `react_text`/`react_hold` and shows **right away**,
+  with priority over the queue. `REACTION_HOLD = 2.5s`.
+- `notify(msg)` — **notification queue** (automations/e-mails/reminders). Enqueues into
+  `msg_queue` as `{text, wait}`; each item stays visible `MSG_DURATION = 10s` in turn, never
+  overlapping. While a reaction is on screen the notification **pauses** (`notify_hold` does
+  not run) and resumes afterward, so it gets its full 10s.
+- **User-action queue jump:** clicking an automation opens a window
+  `urgent_cd = URGENT_WINDOW (6s)` in `_on_pick_automation`. Within it, `notify()` calls
+  `_preempt_with(msg)` — the background notification goes back to the front of the queue and
+  the user's response shows **immediately** (covers async web ones too, whose callback
+  arrives within the window).
+- **Time-based discard:** each frame every item's `wait` grows; items waiting more than
+  `MAX_QUEUE_WAIT = 60s` in the queue are **discarded** (no longer relevant).
+- In the pump, when there is no reaction nor notification and the queue empties, the text is
+  cleared and the window shrinks.
 
 ## 📐 Sizing — in `_relayout()` ([[🪟 Sistema - Janela Overlay (EN)]])
 - Measures the text with the real font; width grows only as needed.
@@ -34,8 +43,9 @@ renderer — a `SystemFont` would make the text disappear).
 Initial greeting (`t("hello") % name` — uses the **active saved pet name**
 `current_pet_name`, or "Zimmy" if Default/random); actions (`feed/pet/play/_react`); pet
 and accessory generation/selection; saving/errors; bad-mood complaints
-([[😤 Sistema - Interação e Mau Humor (EN)]], list `mood_neg`); and the **automations/
-e-mails** (via `notify()`, spaced 5s apart).
+([[😤 Sistema - Interação e Mau Humor (EN)]], list `mood_neg`); mouse reactions (hover/shake,
+see [[😶‍🌫️ Sistema - Expressões Faciais (EN)]]); and the **automations/e-mails** (via
+`notify()`, 10s queue).
 
 ## 🪞 Mirrors on the face
 `say()` also deduces the emotion from the emoji and the face reflects it while the

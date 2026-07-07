@@ -27,7 +27,7 @@ tags: [meta, backlog, zimmy-pet]
 
 ## 🟠 P1 — next batch
 - [x] **P1-1 · Close the vault documentation gap.** Done on 2026-07-01: created [[⚙️ Sistema - Automações e Agendador (EN)|Automations & Scheduler system]], [[💱 Sistema - Moedas (EN)|Currencies system]] and [[📧 Sistema - E-mails (EN)|E-mails system]] (PT + (EN) pair), with verified `zimmy.gd:line` refs and linked in [[🏠 Home (EN)|Home]] (PT/EN). Original details below, for reference:
-  - `Automations & Scheduler system` — `Automacoes/` folder, **⚙️ Automations** submenu (one-off) + **⏱️ Timers** (scheduled, `const SCHEDULE`/`SCHEDULE_SECONDS`, persisted in `user://schedules.json`). Scripts: `alarme.gd`, `auto_alimentar.gd`, `comemoracao_hora_cheia.gd`, `desligar_pc.gd`, `cancelar_desligamento.gd`, `lembrete_pomodoro.gd`, `whatsapp.gd`, `email_gmail.gd`.
+  - `Automations & Scheduler system` — `Automacoes/` folder, **⚙️ Automations** submenu (one-off) + **⏱️ Timers** (scheduled, `const SCHEDULE`/`SCHEDULE_SECONDS`, persisted in `user://schedules.json`). Scripts: `alarme.gd`, `comemoracao_hora_cheia.gd` (fireworks via `celebrate()`), `desligar_pc.gd`, `cancelar_desligamento.gd`, `lembrete_pomodoro.gd`, `whatsapp.gd`, `email_gmail.gd`.
   - `Currencies system` — **💱 Currencies** submenu (`MENU_GROUP := "moedas"`, pixel flag icons `ICON_FLAG`), scripts `cotacao_usd/eur/gbp/jpy/cny.gd`.
   - `E-mails system` — **📧 E-mails** submenu (Gmail, unread counter, sound alert `🔊`).
   - Automation API: `run(zimmy)`, `zimmy.notify()` (queue ~5 s) vs `say()` (2.5 s). Basis: `Automacoes/LEIAME.md` and README §Automations.

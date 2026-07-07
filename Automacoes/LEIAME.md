@@ -21,14 +21,19 @@ Cada automação é um script GDScript com:
   `zimmy` é o nó principal (`zimmy.gd`), dando acesso a `notify()`, `say()`, `feed()`,
   `pet()`, `play()`, `hop()`, `current`, `current_acc`, e ao estado (`hunger`, `happy`), etc.
 
-### Mensagens: use `notify()` (fila com 5s)
+### Mensagens: use `notify()` (fila de 10s)
 
 Para falar a partir de uma automação/e-mail, use **`zimmy.notify(texto)`**: as mensagens
-entram numa **fila**, aparecem **uma de cada vez** e ficam **visíveis por ~5 segundos**
-antes de sumir (a próxima é solta no mesmo ritmo), p/ não se sobreporem quando várias
-disparam juntas (ex.: várias cotações). A 1ª aparece já; as seguintes esperam o intervalo.
-(`zimmy.say(texto)` ainda existe e mostra **na hora**, sumindo em 2,5s, sem fila — use só
-se quiser ignorar o espaçamento.)
+entram numa **fila** e cada uma fica **visível 10 segundos** na sua vez, sem se sobreporem
+quando várias disparam juntas (ex.: várias cotações). Detalhes úteis:
+- Uma mensagem que espera **mais de 60s** na fila é **descartada** (já não é relevante).
+- Se a automação foi **disparada pelo usuário** (você clicou nela no menu), a resposta
+  **fura a fila** e aparece na hora — inclusive as web assíncronas (o resultado do callback
+  entra na janela de urgência).
+- Enquanto uma **reação** (say) está no ar, a notificação **pausa** e retoma depois.
+
+(`zimmy.say(texto)` é a **reação imediata**: mostra **na hora** por ~2,5s, com prioridade
+sobre a fila — use para feedback direto, não para avisos de fundo.)
 
 ### Textos bilíngues (i18n)
 
@@ -124,8 +129,9 @@ dentro do `zimmy` em `set_automation_badge(...)` — a automação só precisa a
 
 ## Exemplos inclusos
 
-`auto_alimentar`, `lembrete_pomodoro`, `comemoracao_hora_cheia`, `cotacao_usd/eur/gbp/jpy/cny`,
-`clima`, `desligar_pc`, `cancelar_desligamento`, `alarme`, `email_gmail`, `whatsapp`.
+`lembrete_pomodoro`, `comemoracao_hora_cheia` (fogos via `zimmy.celebrate()`),
+`cotacao_usd/eur/gbp/jpy/cny`, `clima`, `desligar_pc`, `cancelar_desligamento`, `alarme`,
+`email_gmail`, `whatsapp`.
 
 ### Exemplo mínimo (`extends RefCounted`)
 

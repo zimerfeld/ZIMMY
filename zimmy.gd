@@ -120,6 +120,13 @@ const ACTION_COOLDOWN := 1.0
 const MAX_REPEAT := 3
 const COMPLAIN_COOLDOWN := 1.5    # respiro entre reclamações (evita spam de fala)
 const REPEAT_RESET := 30.0        # após Ns sem repetir, a trava de 3x libera e reconta
+# --- sacudida do mouse: chacoalhar rápido perto do pet dispara tontura/enjoo/susto ---
+const SHAKE_MIN_SPEED := 22    # px/frame mínimos p/ contar como movimento rápido
+const SHAKE_REVERSALS := 6     # reversões de direção p/ disparar a reação
+const SHAKE_WINDOW := 0.6      # janela (s) p/ acumular as reversões (senão zera)
+const SHAKE_COOLDOWN := 3.0    # respiro entre reações de sacudida
+const SHAKE_RADIUS := 200.0    # só conta se o cursor estiver perto do centro do pet
+const HOVER_EXPRS := ["happy", "excited"]  # reações ao passar o mouse por cima
 # Frases de mau humor quando insistem na mesma ação: repulsa / raiva / tristeza /
 # indiferença / descaso.
 var action_cd := 0.0
@@ -128,11 +135,21 @@ var action_repeats := 0
 var complain_cd := 0.0
 var repeat_reset_cd := 0.0        # conta p/ liberar a trava de repetições (REPEAT_RESET)
 
-# --- fila de avisos (automações/e-mails) ---
-const NOTIFY_GAP := 5.0     # segundos entre mensagens vindas de automações/e-mails
-const NOTIFY_HOLD := 5.0    # segundos que a mensagem de automação/e-mail fica visível
-var notify_queue: Array[String] = []
-var notify_cd := 0.0
+# --- falas: duas pistas (ver say()/notify() e o pump em _process) ---
+# REAÇÕES (say): feedback direto do usuário — aparecem NA HORA, substituindo o balão,
+#   e duram REACTION_HOLD. NOTIFICAÇÕES (notify): automações/e-mails/lembretes — entram
+#   numa FILA e cada uma fica visível MSG_DURATION (10s), sem se sobrepor nem se perder.
+#   Enquanto uma reação está no ar, a notificação PAUSA (não gasta seus 10s visíveis).
+const MSG_DURATION := 10.0     # duração de cada notificação da fila
+const REACTION_HOLD := 2.5     # duração de uma reação imediata
+const URGENT_WINDOW := 6.0     # após uma AÇÃO do usuário, notificações resultantes furam a fila
+const MAX_QUEUE_WAIT := 60.0   # notificação que espera mais que isso na fila é descartada
+var msg_queue: Array = []      # fila de notificações: itens {text, wait} (wait = seg. esperando)
+var notify_text := ""          # notificação exibida agora (mantida enquanto visível)
+var notify_hold := 0.0         # tempo restante da notificação atual (pausa sob reação)
+var react_text := ""           # reação imediata exibida agora
+var react_hold := 0.0          # tempo restante da reação atual
+var urgent_cd := 0.0           # janela pós-ação do usuário: notify() fura a fila (imediato + à frente)
 
 # --- alertas sonoros (WhatsApp / Gmail) ---
 var whatsapp_sound_on := true      # toca um "telefone" quando chega conversa nova
@@ -149,6 +166,11 @@ var sound_play_on := true
 var _feed_player: AudioStreamPlayer    # "nhac nhac" ao alimentar / lembrete de fome
 var _pet_player: AudioStreamPlayer     # ronronado ao fazer carinho / lembrete de carência
 var _play_player: AudioStreamPlayer    # "boing" alegre ao brincar / lembrete de tédio
+# Cada ação tem VÁRIAS variações do som (sintetizadas), sorteadas dentro do mesmo grupo
+# a cada disparo p/ o áudio não ficar repetitivo (ver _play_group / _build_*_sounds).
+var _feed_variants: Array = []         # variações do som de alimentar (mordidas)
+var _pet_variants: Array = []          # variações do ronron (carinho)
+var _play_variants: Array = []         # variações do arpejo (brincar)
 
 # --- animação ---
 var bob := 0.0          # respiração (seno)
@@ -157,6 +179,25 @@ var vy := 0.0           # velocidade vertical do pulo
 var blink_t := 0.0      # tempo restante de piscada
 var blink_timer := 2.5  # contagem até a próxima piscada
 var pupil_off := Vector2.ZERO
+# --- olhos fechados no clique: cada olho fecha ao ser clicado e reabre quando o
+# cursor sai de cima dele (ver _input / _process / _draw). ---
+var eye_closed_l := false
+var eye_closed_r := false
+# --- reação por hover / sacudida: expressão temporária que sobrepõe o rosto neutro ---
+var react_expr := ""       # "dizzy"/"nausea"/"scared"/"happy"/"excited" ou "" (nenhuma)
+var react_expr_t := 0.0    # tempo restante da expressão de reação
+var hovering := false      # cursor está sobre o pet agora (p/ reagir só ao ENTRAR)
+# --- detecção de sacudida do mouse (chacoalhar rápido perto do pet) ---
+var _last_mouse := Vector2i.ZERO
+var _shake_dir := 0        # sinal da última direção X com velocidade
+var _shake_count := 0      # reversões de direção acumuladas na janela atual
+var _shake_window := 0.0   # tempo restante da janela de acumulação
+var shake_cd := 0.0        # respiro após disparar (não repetir em seguida)
+# --- fogos de artifício (comemoração de hora cheia): partículas coloridas na faixa
+# acima do pet (headroom). Enquanto fw_time > 0 novos estouros são lançados. ---
+var fw_particles: Array = []   # cada: {p:Vector2, v:Vector2, life:float, max:float, col:Color}
+var fw_time := 0.0             # tempo restante lançando estouros
+var fw_spawn_cd := 0.0         # intervalo até o próximo estouro
 # Animação de reação ("número" sorteado por ação de menu): rotação/escala/balanço
 # aplicados no _draw em torno de um pivô; os pulos continuam pela física (vy/y_off).
 var anim := ""          # nome da animação em curso ("" = nenhuma)
@@ -194,7 +235,6 @@ var anchor := Vector2i.ZERO  # ponto fixo na tela = centro-inferior do pet
 
 # --- fala ---
 var speech: Label
-var speech_clear := 0.0
 var expression := "neutral"   # emoção refletida no rosto (vinda do emoji falado)
 
 # --- UI ---
@@ -450,6 +490,19 @@ const STRING_LISTS := {
 	"play": {
 		"pt": ["yupiii! 🎾", "de novo!", "tô voando! 🚀"],
 		"en": ["yippee! 🎾", "again!", "I'm flying! 🚀"],
+	},
+	# reações a chacoalhar o mouse rápido (sacudida): tontura / enjoo / susto
+	"shake_dizzy": {
+		"pt": ["que tontura... 😵", "para de rodar! 😵", "tô zonzo 😵"],
+		"en": ["so dizzy... 😵", "stop spinning! 😵", "I'm woozy 😵"],
+	},
+	"shake_nausea": {
+		"pt": ["ugh... tô enjoado 🤢", "vou passar mal... 🤢", "que enjoo 🤢"],
+		"en": ["ugh... I feel sick 🤢", "gonna be sick... 🤢", "so queasy 🤢"],
+	},
+	"shake_scared": {
+		"pt": ["aaah! que susto! 😱", "me assustou! 😱", "eek! 😱"],
+		"en": ["aaah! so scary! 😱", "you scared me! 😱", "eek! 😱"],
 	},
 	# --- bancos para nomes COMBINATÓRIOS (substantivo + adjetivo) ---
 	# Os adjetivos pt são propositalmente invariáveis em gênero (terminam em -e/-l/-z/
@@ -1818,6 +1871,9 @@ func _on_pick_automation(id: int) -> void:
 	if not automation_ids.has(id):
 		return
 	var path := String(automation_ids[id])
+	# Ação do usuário: abre a janela p/ a resposta (mesmo assíncrona, via callback web)
+	# furar a fila e aparecer na hora — ver notify()/_preempt_with.
+	urgent_cd = URGENT_WINDOW
 	if schedule_defs.has(path):
 		# Agendada: alterna ligada/desligada (persistente) em vez de rodar na hora.
 		var on := not bool(automation_enabled.get(path, false))
@@ -1996,22 +2052,33 @@ func _build_audio() -> void:
 	add_child(_chime_player)
 	# Sons das ações (Alimentar/Carinho/Brincar): tocam ao executar a ação e como
 	# lembrete quando a necessidade fica baixa. Também sintetizados em código.
+	_feed_variants = _build_feed_sounds()
 	_feed_player = AudioStreamPlayer.new()
-	_feed_player.stream = _build_feed_sound()
+	_feed_player.stream = _feed_variants[0]
 	_feed_player.volume_db = -8.0
 	add_child(_feed_player)
+	_pet_variants = _build_pet_sounds()
 	_pet_player = AudioStreamPlayer.new()
-	_pet_player.stream = _build_pet_sound()
+	_pet_player.stream = _pet_variants[0]
 	_pet_player.volume_db = -8.0
 	add_child(_pet_player)
+	_play_variants = _build_play_sounds()
 	_play_player = AudioStreamPlayer.new()
-	_play_player.stream = _build_play_sound()
+	_play_player.stream = _play_variants[0]
 	_play_player.volume_db = -8.0
 	add_child(_play_player)
 
 ## Toca um alerta — só se ainda não estiver tocando, para não se sobrepor a si mesmo.
 func _play_alert(player: AudioStreamPlayer) -> void:
 	if player and not player.playing:
+		player.play()
+
+## Toca uma variação SORTEADA do grupo (Alimentar/Carinho/Brincar): troca o stream do
+## player por uma das variações antes de tocar, p/ o som variar dentro do mesmo caráter.
+func _play_group(player: AudioStreamPlayer, variants: Array) -> void:
+	if player and not player.playing:
+		if not variants.is_empty():
+			player.stream = variants.pick_random()
 		player.play()
 
 ## Empacota amostras float [-1,1] num AudioStreamWAV PCM 16-bit mono.
@@ -2063,50 +2130,74 @@ func _build_chime_sound() -> AudioStreamWAV:
 			samples.append(v * 0.7)
 	return _make_wav(samples, rate)
 
-## Alimentar: duas "mordidinhas" curtas e graves (mastigada) — par de blips ~190 Hz.
-func _build_feed_sound() -> AudioStreamWAV:
+## Alimentar: "mordidinhas" curtas e graves (mastigada) — blips no tom-base `base_f`.
+## Parametrizado p/ gerar variações (tom, nº de mordidas, ritmo) — ver _build_feed_sounds.
+func _synth_feed(base_f: float, munches: int, dur: float, gap: float) -> AudioStreamWAV:
 	var rate := 22050
 	var samples := PackedFloat32Array()
-	for _munch in 2:                                   # duas mordidas
-		var dur := 0.13
+	for _munch in munches:
 		var n := int(dur * rate)
 		for i in n:
 			var t := float(i) / rate
 			var env: float = exp(-13.0 * t)            # ataque seco que decai rápido (mordida)
-			var v := (sin(TAU * 190.0 * t) + 0.5 * sin(TAU * 95.0 * t)) * env
+			var v := (sin(TAU * base_f * t) + 0.5 * sin(TAU * base_f * 0.5 * t)) * env
 			samples.append(v * 0.7)
-		var gap := int(0.06 * rate)                    # pausinha entre as duas mordidas
-		for _j in gap:
+		for _j in int(gap * rate):                     # pausinha entre as mordidas
 			samples.append(0.0)
 	return _make_wav(samples, rate)
 
-## Carinho: ronronado quente — tom grave (~72 Hz) com tremolo (~26 Hz) e envelope suave.
-func _build_pet_sound() -> AudioStreamWAV:
+## Carinho: ronronado quente — tom grave `base_f` com tremolo `trem_hz` e envelope suave.
+func _synth_pet(base_f: float, trem_hz: float, dur: float) -> AudioStreamWAV:
 	var rate := 22050
 	var samples := PackedFloat32Array()
-	var dur := 0.7
 	var n := int(dur * rate)
 	for i in n:
 		var t := float(i) / rate
 		var env: float = sin(PI * t / dur)             # sobe e desce (não começa/termina seco)
-		var tremolo: float = 0.5 + 0.5 * sin(TAU * 26.0 * t)   # o "rrrr" do ronron
-		var v := sin(TAU * 72.0 * t) * tremolo * env
+		var tremolo: float = 0.5 + 0.5 * sin(TAU * trem_hz * t)   # o "rrrr" do ronron
+		var v := sin(TAU * base_f * t) * tremolo * env
 		samples.append(v * 0.8)
 	return _make_wav(samples, rate)
 
-## Brincar: arpejo alegre p/ cima (sol-dó-mi-dó agudo), cada nota com decaimento curto.
-func _build_play_sound() -> AudioStreamWAV:
+## Brincar: arpejo alegre com as notas `notes` (Hz), cada uma com decaimento curto.
+func _synth_play(notes: Array, note_dur: float) -> AudioStreamWAV:
 	var rate := 22050
 	var samples := PackedFloat32Array()
-	for f in [392.0, 523.0, 659.0, 784.0]:             # sol → dó → mi → dó agudo
-		var dur := 0.12
-		var n := int(dur * rate)
+	for f in notes:
+		var n := int(note_dur * rate)
 		for i in n:
 			var t := float(i) / rate
 			var env: float = exp(-6.0 * t)
-			var v := sin(TAU * f * t) * env
+			var v := sin(TAU * float(f) * t) * env
 			samples.append(v * 0.7)
 	return _make_wav(samples, rate)
+
+## Variações do som de Alimentar (mordidas): tom-base, nº de mordidas e ritmo distintos.
+func _build_feed_sounds() -> Array:
+	return [
+		_synth_feed(190.0, 2, 0.13, 0.06),
+		_synth_feed(160.0, 3, 0.10, 0.05),
+		_synth_feed(220.0, 2, 0.12, 0.07),
+		_synth_feed(140.0, 3, 0.11, 0.05),
+	]
+
+## Variações do ronron (Carinho): tons e tremolos diferentes p/ o "rrrr" variar.
+func _build_pet_sounds() -> Array:
+	return [
+		_synth_pet(72.0, 26.0, 0.70),
+		_synth_pet(64.0, 22.0, 0.80),
+		_synth_pet(80.0, 30.0, 0.60),
+		_synth_pet(68.0, 18.0, 0.75),
+	]
+
+## Variações do arpejo (Brincar): sequências de notas alegres diferentes.
+func _build_play_sounds() -> Array:
+	return [
+		_synth_play([392.0, 523.0, 659.0, 784.0], 0.12),    # sol-dó-mi-dó agudo
+		_synth_play([440.0, 554.0, 659.0, 880.0], 0.12),    # lá-dó#-mi-lá
+		_synth_play([523.0, 659.0, 784.0, 1046.0], 0.11),   # dó-mi-sol-dó agudo
+		_synth_play([349.0, 440.0, 523.0, 698.0], 0.13),    # fá-lá-dó-fá
+	]
 
 # ------------------------------------------------------------------ credenciais
 ## Caminho do arquivo de credencial de uma automação: user://cred_<key>.json (gitignored).
@@ -2738,6 +2829,9 @@ func _process(delta: float) -> void:
 		action_cd -= delta
 	if complain_cd > 0.0:
 		complain_cd -= delta
+	# Janela pós-ação do usuário (notificações resultantes furam a fila).
+	if urgent_cd > 0.0:
+		urgent_cd -= delta
 
 	# Trava de repetições: após REPEAT_RESET (30s) sem nova ação aceita, zera a
 	# contagem para a mesma ação voltar a funcionar (e recontar até 3).
@@ -2760,21 +2854,13 @@ func _process(delta: float) -> void:
 		stat_play = maxf(stat_play - 1.0, 0.0)
 		# Alerta sonoro só na TRANSIÇÃO para baixo de STAT_LOW (não a cada ciclo abaixo dele).
 		if sound_feed_on and before_feed > STAT_LOW and stat_feed <= STAT_LOW:
-			_play_alert(_feed_player)
+			_play_group(_feed_player, _feed_variants)
 		if sound_pet_on and before_pet > STAT_LOW and stat_pet <= STAT_LOW:
-			_play_alert(_pet_player)
+			_play_group(_pet_player, _pet_variants)
 		if sound_play_on and before_play > STAT_LOW and stat_play <= STAT_LOW:
-			_play_alert(_play_player)
+			_play_group(_play_player, _play_variants)
 		if stat_feed <= 0.0 and stat_pet <= 0.0 and stat_play <= 0.0:
 			get_tree().quit()
-
-	# Fila de avisos de automações/e-mails: solta a próxima a cada NOTIFY_GAP e a
-	# mantém visível por NOTIFY_HOLD (5s) antes de sumir.
-	if notify_cd > 0.0:
-		notify_cd -= delta
-	if notify_cd <= 0.0 and not notify_queue.is_empty():
-		say(notify_queue.pop_front(), NOTIFY_HOLD)
-		notify_cd = NOTIFY_GAP
 
 	# Pulinho com "gravidade".
 	y_off += vy * delta
@@ -2794,6 +2880,10 @@ func _process(delta: float) -> void:
 		if anim_t >= anim_dur:
 			anim = ""
 
+	# Fogos de artifício da comemoração (só processa quando há algo ativo).
+	if fw_time > 0.0 or not fw_particles.is_empty():
+		_update_fireworks(delta)
+
 	# Piscar.
 	blink_timer -= delta
 	if blink_timer <= 0.0:
@@ -2808,6 +2898,54 @@ func _process(delta: float) -> void:
 		int(pet_x + PET_DRAW / 2.0), int(pet_y + PET_DRAW / 2.0))
 	var d := Vector2(gm - center)
 	pupil_off = d.limit_length(120.0) / 120.0 * 3.5
+
+	# --- Reações ao cursor: expressão temporária, hover, sacudida e clique no olho ---
+	if react_expr_t > 0.0:
+		react_expr_t -= delta
+		if react_expr_t <= 0.0:
+			react_expr = ""
+	if shake_cd > 0.0:
+		shake_cd -= delta
+
+	var win_pos := get_window().position
+	var pet_rect := Rect2i(win_pos + Vector2i(int(pet_x), int(pet_y)),
+		Vector2i(PET_DRAW, PET_DRAW))
+	var over_pet := pet_rect.has_point(gm)
+
+	# Hover: ao ENTRAR sobre o pet (sem arrastar/sem fala) ele reage com uma expressão.
+	# Enquanto o cursor fica parado por cima, a reação some e o rosto volta ao normal.
+	if over_pet and not dragging and speech.text == "":
+		if not hovering:
+			hovering = true
+			if react_expr == "":
+				_show_react(HOVER_EXPRS.pick_random(), 1.1)
+	else:
+		hovering = false
+
+	# Sacudida: reversões rápidas de direção do mouse perto do pet → tontura/enjoo/susto.
+	var mdelta := gm - _last_mouse
+	_last_mouse = gm
+	if _shake_window > 0.0:
+		_shake_window -= delta
+		if _shake_window <= 0.0:
+			_shake_count = 0
+			_shake_dir = 0
+	if d.length() < SHAKE_RADIUS and absi(mdelta.x) > SHAKE_MIN_SPEED:
+		var sdir := signi(mdelta.x)
+		if sdir != 0 and _shake_dir != 0 and sdir != _shake_dir:
+			_shake_count += 1
+			_shake_window = SHAKE_WINDOW
+			if _shake_count >= SHAKE_REVERSALS and shake_cd <= 0.0:
+				_trigger_shake()
+		_shake_dir = sdir
+
+	# Olho fechado no clique: reabre assim que o cursor sai de cima daquele olho.
+	if eye_closed_l or eye_closed_r:
+		var over_eye := _mouse_over_eye_local(Vector2(gm - win_pos))
+		if eye_closed_l and over_eye != 1:
+			eye_closed_l = false
+		if eye_closed_r and over_eye != 2:
+			eye_closed_r = false
 
 	# Geração aleatória contínua: um único temporizador para pets e acessórios — quando
 	# ambos estão ligados, trocam JUNTOS no mesmo tique de RANDOM_PERIOD.
@@ -2833,13 +2971,36 @@ func _process(delta: float) -> void:
 	if hunger > 70.0:
 		happy = clampf(happy - delta * 0.5, 0.0, 100.0)
 
-	# Limpa a fala (e encolhe a janela de volta).
-	if speech_clear > 0.0:
-		speech_clear -= delta
-		if speech_clear <= 0.0:
-			speech.text = ""
-			expression = "neutral"
-			_relayout()
+	# Envelhece a fila e descarta o que esperou demais (> MAX_QUEUE_WAIT, 60s): mensagens
+	# antigas já não são relevantes e não devem "ressuscitar" muito depois.
+	if not msg_queue.is_empty():
+		var kept: Array = []
+		for it in msg_queue:
+			it["wait"] += delta
+			if it["wait"] <= MAX_QUEUE_WAIT:
+				kept.append(it)
+		msg_queue = kept
+
+	# Falas: reações (say) têm prioridade e aparecem na hora; notificações (notify) entram
+	# numa fila de 10s cada e PAUSAM enquanto uma reação está no ar (assim veem os 10s
+	# cheios e não se perdem). Prioridade no balão: reação > notificação > nada.
+	if react_hold > 0.0:
+		react_hold -= delta
+		if react_hold <= 0.0:
+			react_text = ""
+	if react_hold <= 0.0:
+		if notify_hold > 0.0:
+			notify_hold -= delta          # só corre quando não há reação por cima
+			if notify_hold <= 0.0:
+				notify_text = ""
+		if notify_hold <= 0.0 and not msg_queue.is_empty():
+			notify_text = String(msg_queue.pop_front()["text"])
+			notify_hold = MSG_DURATION
+	var shown := react_text if react_hold > 0.0 else (notify_text if notify_hold > 0.0 else "")
+	if shown != speech.text:
+		speech.text = shown
+		expression = _expression_from_text(shown) if shown != "" else "neutral"
+		_relayout()
 
 	queue_redraw()
 
@@ -2964,6 +3125,16 @@ func _draw() -> void:
 			"squish":
 				a_sy = 1.0 - sin(p * PI) * 0.28; a_sx = 1.0 + sin(p * PI) * 0.22
 				pivot = Vector2(100.0, 162.0)
+			"dizzy":   # cambaleia: rotação oscilante ampla + vai-e-vem lento
+				a_rot = sin(p * TAU * 2.5) * 0.42; a_dx = sin(p * TAU * 1.5) * 9.0
+				pivot = Vector2(100.0, 160.0)
+			"nausea":   # enjoo: balanço lento + "engulo" (squish vertical pulsante)
+				a_dx = sin(p * TAU * 1.5) * 8.0
+				a_sy = 1.0 - sin(p * TAU * 3.0) * 0.10; a_sx = 1.0 + sin(p * TAU * 3.0) * 0.06
+				a_rot = sin(p * TAU * 1.5) * 0.12; pivot = Vector2(100.0, 162.0)
+			"scared":   # susto: tremor rápido (jitter) + encolhida
+				a_dx = sin(p * TAU * 15.0) * 5.0; a_rot = sin(p * TAU * 17.0) * 0.06
+				a_sy = 1.0 - sin(p * PI) * 0.12; pivot = Vector2(100.0, 150.0)
 		var base := Transform2D(0.0, Vector2(pet_x, pet_y))
 		base.x *= PET_SCALE
 		base.y *= PET_SCALE
@@ -3054,11 +3225,17 @@ func _draw() -> void:
 	if c.get("whiskers", "none") != "none":
 		_draw_whiskers(c.get("whiskers"), o)
 
-	# Olhos / boca. Prioridade: fala com emoji emotivo > necessidade zerada > rosto padrão
-	# (olhos seguindo o cursor + boca do config).
+	# Olhos / boca. Prioridade: reação (hover/sacudida) > fala com emoji emotivo >
+	# necessidade zerada > rosto padrão (olhos seguindo o cursor + boca do config).
 	var lx := 100.0 - eye_dx
 	var rx := 100.0 + eye_dx
-	var expr := expression if speech.text != "" else _need_expression()
+	var expr := "neutral"
+	if react_expr != "":
+		expr = react_expr
+	elif speech.text != "":
+		expr = expression
+	else:
+		expr = _need_expression()
 	if expr != "neutral":
 		_draw_expression(expr, lx, rx, eye_y, eye_w, eye_h, o)
 	else:
@@ -3074,9 +3251,20 @@ func _draw() -> void:
 			_ellipse(Vector2(lx, eye_y) + o, Vector2(ew_eff, 2), Color.WHITE)
 			_ellipse(Vector2(rx, eye_y) + o, Vector2(ew_eff, 2), Color.WHITE)
 		else:
-			_ellipse(Vector2(lx, eye_y) + o, Vector2(ew_eff, eh_eff), Color.WHITE)
-			_ellipse(Vector2(rx, eye_y) + o, Vector2(ew_eff, eh_eff), Color.WHITE)
-			_draw_pupils(Vector2(lx, eye_y) + o, Vector2(rx, eye_y) + o, c.get("pupil_style", "round"))
+			# Cada olho pode estar fechado por clique (arco ∪) ou aberto (branco + pupila).
+			var pstyle: String = c.get("pupil_style", "round")
+			if eye_closed_l:
+				draw_arc(Vector2(lx, eye_y) + o, ew_eff, 0.15, PI - 0.15, 10, INK, 2.2, true)
+			else:
+				_ellipse(Vector2(lx, eye_y) + o, Vector2(ew_eff, eh_eff), Color.WHITE)
+			if eye_closed_r:
+				draw_arc(Vector2(rx, eye_y) + o, ew_eff, 0.15, PI - 0.15, 10, INK, 2.2, true)
+			else:
+				_ellipse(Vector2(rx, eye_y) + o, Vector2(ew_eff, eh_eff), Color.WHITE)
+			if not eye_closed_l:
+				_draw_pupil(Vector2(lx, eye_y) + o, pstyle)
+			if not eye_closed_r:
+				_draw_pupil(Vector2(rx, eye_y) + o, pstyle)
 			# Sobrancelhas (só no rosto neutro de olhos abertos).
 			if c.get("eyebrow", "none") != "none":
 				_draw_eyebrows(c.get("eyebrow"), lx, rx, eye_y, eh_eff, o)
@@ -3096,6 +3284,21 @@ func _draw() -> void:
 	# Barras de necessidade (no rodapé — fixas, não acompanham o pulo). Só com Status ligado.
 	if show_status:
 		_draw_stat_bars()
+
+	# Fogos de artifício por cima de tudo (comemoração).
+	if not fw_particles.is_empty():
+		_draw_fireworks()
+
+## Desenha as fagulhas dos fogos em coords lógicas (transform base do pet), com brilho
+## que some conforme a vida da partícula e um pequeno rastro.
+func _draw_fireworks() -> void:
+	draw_set_transform(Vector2(pet_x, pet_y), 0.0, Vector2(PET_SCALE, PET_SCALE))
+	for pt in fw_particles:
+		var a: float = clampf(pt.life / pt.max, 0.0, 1.0)
+		var col: Color = pt.col
+		var tail: Vector2 = pt.p - pt.v * 0.03
+		draw_line(tail, pt.p, Color(col.r, col.g, col.b, a * 0.5), 1.5, true)
+		draw_circle(pt.p, 2.2, Color(col.r, col.g, col.b, a))
 
 ## Barras de necessidade (Alimentar/Carinho/Brincar) no **rodapé** abaixo do pet, em
 ## pixels reais (transform identidade — não escala com PET_SCALE nem com o pulo). Só a
@@ -3250,6 +3453,45 @@ func _draw_expression(expr: String, lx: float, rx: float, eye_y: float, eye_w: f
 			draw_line(lc + Vector2(-eye_w - 1.0, -eye_h - 2.0), lc + Vector2(eye_w, -eye_h - 1.0), INK, 1.8, true)  # sobrancelha caída
 			draw_line(rc + Vector2(eye_w + 1.0, -eye_h - 2.0), rc + Vector2(-eye_w, -eye_h - 1.0), INK, 1.8, true)
 			draw_line(Vector2(92, 117) + o, Vector2(108, 117) + o, INK, 2.4, true)
+		"dizzy":   # tontura (sacudida): olhos em espiral (@_@) + boca ondulada
+			for ec in [lc, rc]:
+				var sp := PackedVector2Array()
+				for i in 24:
+					var tt := float(i) / 23.0
+					var ang := tt * TAU * 2.0
+					var rad := (eye_w + 1.5) * tt
+					sp.append(ec + Vector2(cos(ang) * rad, sin(ang) * rad))
+				draw_polyline(sp, INK, 1.7, true)
+			var dw := PackedVector2Array()
+			for i in 7:
+				var x := 92.0 + float(i) * 2.7
+				var yy := 117.0 + (2.0 if i % 2 == 0 else -2.0)
+				dw.append(Vector2(x, yy) + o)
+			draw_polyline(dw, INK, 2.0, true)
+		"nausea":   # enjoo (sacudida): olhos semicerrados + bochechas esverdeadas + boca ondulada
+			var green := Color(0.5, 0.75, 0.4, 0.5)
+			_ellipse(Vector2(72, 118) + o, Vector2(8, 5), green)
+			_ellipse(Vector2(128, 118) + o, Vector2(8, 5), green)
+			_ellipse(lc, Vector2(eye_w, eye_h * 0.5), Color.WHITE)
+			_ellipse(rc, Vector2(eye_w, eye_h * 0.5), Color.WHITE)
+			draw_circle(lc + Vector2(0.0, 1.5), 3.4, INK)
+			draw_circle(rc + Vector2(0.0, 1.5), 3.4, INK)
+			draw_line(lc + Vector2(-eye_w, -eye_h * 0.5), lc + Vector2(eye_w, -eye_h * 0.5), INK, 1.8, true)  # pálpebra caída
+			draw_line(rc + Vector2(-eye_w, -eye_h * 0.5), rc + Vector2(eye_w, -eye_h * 0.5), INK, 1.8, true)
+			var nw := PackedVector2Array()
+			for i in 7:
+				var x := 91.0 + float(i) * 3.0
+				var yy := 118.0 + (2.5 if i % 2 == 0 else -2.5)
+				nw.append(Vector2(x, yy) + o)
+			draw_polyline(nw, INK, 2.2, true)
+		"scared":   # susto (sacudida): olhos arregalados (pupila pequena) + sobrancelhas altas + boca aberta + suor
+			for ec in [lc, rc]:
+				_ellipse(ec, Vector2(eye_w + 2.0, eye_h + 2.5), Color.WHITE)
+				draw_circle(ec, 2.5, INK)
+			draw_arc(lc + Vector2(0.0, -eye_h - 3.0), eye_w, PI + 0.3, TAU - 0.3, 8, INK, 1.8, true)
+			draw_arc(rc + Vector2(0.0, -eye_h - 3.0), eye_w, PI + 0.3, TAU - 0.3, 8, INK, 1.8, true)
+			_ellipse(Vector2(100, 118) + o, Vector2(5, 6), INK)
+			_ellipse(Vector2(115, 100) + o, Vector2(2.5, 4.0), Color(0.45, 0.7, 0.98, 0.85))
 
 func _draw_eyelashes(c: Vector2, ew: float, eh: float, dir: float) -> void:
 	# 3 traços curtos no canto externo-superior do olho.
@@ -3396,33 +3638,29 @@ func _draw_eyebrows(style: String, lx: float, rx: float, eye_y: float, eh: float
 			draw_line(Vector2(rx - 5.0, top) + o, Vector2(rx + 5.0, top - 3.0) + o, INK, 2.2, true)
 
 ## Pupilas conforme o estilo (o pupil_off faz seguir o cursor). lc/rc já com offset.
-func _draw_pupils(lc: Vector2, rc: Vector2, style: String) -> void:
+## Pupila de UM olho (centro `ec`), no estilo dado. Permite desenhar só o olho aberto
+## quando o outro está fechado por clique (ver _draw).
+func _draw_pupil(ec: Vector2, style: String) -> void:
 	var p := pupil_off
 	match style:
 		"big":
-			for ec in [lc, rc]:
-				draw_circle(ec + Vector2(1.5, 1.5) + p, 7.0, INK)
-				draw_circle(ec + Vector2(3.5, -1.5) + p, 2.4, Color.WHITE)
-				draw_circle(ec + Vector2(-1.5, 2.5) + p, 1.2, Color.WHITE)
+			draw_circle(ec + Vector2(1.5, 1.5) + p, 7.0, INK)
+			draw_circle(ec + Vector2(3.5, -1.5) + p, 2.4, Color.WHITE)
+			draw_circle(ec + Vector2(-1.5, 2.5) + p, 1.2, Color.WHITE)
 		"cat":
-			for ec in [lc, rc]:
-				_ellipse(ec + Vector2(2.0, 2.0) + p, Vector2(2.2, 6.5), INK)
-				draw_circle(ec + Vector2(3.5, -1.5) + p, 1.4, Color.WHITE)
+			_ellipse(ec + Vector2(2.0, 2.0) + p, Vector2(2.2, 6.5), INK)
+			draw_circle(ec + Vector2(3.5, -1.5) + p, 1.4, Color.WHITE)
 		"sparkle":
-			for ec in [lc, rc]:
-				draw_circle(ec + Vector2(2.0, 2.0) + p, 5.5, INK)
-				_star(ec + Vector2(3.5, -1.5) + p, 2.8, 1.1, 4, Color.WHITE)
+			draw_circle(ec + Vector2(2.0, 2.0) + p, 5.5, INK)
+			_star(ec + Vector2(3.5, -1.5) + p, 2.8, 1.1, 4, Color.WHITE)
 		"heart":
-			for ec in [lc, rc]:
-				var hc: Vector2 = ec + Vector2(2.0, 2.0) + p
-				draw_circle(hc + Vector2(-2.2, -1.4), 2.6, INK)
-				draw_circle(hc + Vector2(2.2, -1.4), 2.6, INK)
-				_triangle(hc + Vector2(-4.2, -0.2), hc + Vector2(4.2, -0.2), hc + Vector2(0.0, 4.6), INK)
+			var hc: Vector2 = ec + Vector2(2.0, 2.0) + p
+			draw_circle(hc + Vector2(-2.2, -1.4), 2.6, INK)
+			draw_circle(hc + Vector2(2.2, -1.4), 2.6, INK)
+			_triangle(hc + Vector2(-4.2, -0.2), hc + Vector2(4.2, -0.2), hc + Vector2(0.0, 4.6), INK)
 		_:  # "round"
-			draw_circle(lc + Vector2(2.0, 2.0) + p, 5.5, INK)
-			draw_circle(rc + Vector2(2.0, 2.0) + p, 5.5, INK)
-			draw_circle(lc + Vector2(4.0, -1.0) + p, 1.8, Color.WHITE)
-			draw_circle(rc + Vector2(4.0, -1.0) + p, 1.8, Color.WHITE)
+			draw_circle(ec + Vector2(2.0, 2.0) + p, 5.5, INK)
+			draw_circle(ec + Vector2(4.0, -1.0) + p, 1.8, Color.WHITE)
 
 # ------------------------------------------------------------------ acessórios
 func _draw_accessories(o: Vector2, eye_dx: float, eye_y: float, eye_w: float) -> void:
@@ -3716,7 +3954,15 @@ func _input(event: InputEvent) -> void:
 			else:
 				dragging = false
 				if not moved:
-					_react()   # clique sem arrastar = carinho rápido
+					# Clique no olho fecha aquele olho (reabre ao sair de cima — ver
+					# _process). Fora dos olhos, é o carinho rápido de sempre.
+					var eye := _mouse_over_eye_local(event.position)
+					if eye == 1:
+						eye_closed_l = true
+					elif eye == 2:
+						eye_closed_r = true
+					else:
+						_react()   # clique sem arrastar = carinho rápido
 				else:
 					_save_settings()   # guarda a nova posição
 		elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
@@ -3780,7 +4026,7 @@ func feed() -> void:
 	say(ta("feed").pick_random())
 	play_action_anim("feed")
 	if sound_feed_on:
-		_play_alert(_feed_player)
+		_play_group(_feed_player, _feed_variants)
 
 func pet() -> void:
 	if not _can_act("pet"):
@@ -3790,7 +4036,7 @@ func pet() -> void:
 	say(ta("pet_react").pick_random())
 	play_action_anim("pet")
 	if sound_pet_on:
-		_play_alert(_pet_player)
+		_play_group(_pet_player, _pet_variants)
 
 func play() -> void:
 	if not _can_act("play"):
@@ -3801,7 +4047,7 @@ func play() -> void:
 	say(ta("play").pick_random())
 	play_action_anim("play")
 	if sound_play_on:
-		_play_alert(_play_player)
+		_play_group(_play_player, _play_variants)
 
 func _react() -> void:
 	if not _can_act("react"):
@@ -3810,8 +4056,91 @@ func _react() -> void:
 	say(t("hi_react"))
 	play_action_anim("react")
 
+## Mostra uma expressão de reação temporária (hover/sacudida) por `dur` segundos.
+## Sobrepõe o rosto neutro/necessidade enquanto react_expr_t > 0 (ver _draw).
+func _show_react(expr: String, dur: float) -> void:
+	react_expr = expr
+	react_expr_t = dur
+
+## Disparo da sacudida: sorteia tontura/enjoo/susto (animação + expressão + fala) e
+## tira um tiquinho de humor. Limitado por SHAKE_COOLDOWN p/ não repetir em sequência.
+func _trigger_shake() -> void:
+	_shake_count = 0
+	_shake_window = 0.0
+	_shake_dir = 0
+	shake_cd = SHAKE_COOLDOWN
+	var kind: String = ["dizzy", "nausea", "scared"].pick_random()
+	play_anim(kind)
+	_show_react(kind, anim_dur + 0.4)
+	say(ta("shake_" + kind).pick_random(), anim_dur + 0.4)
+	happy = clampf(happy - 4.0, 0.0, 100.0)
+
+## Qual olho está sob o ponto `wl` (em coords da janela)? 0 = nenhum, 1 = esquerdo,
+## 2 = direito. Converte para o espaço lógico do pet (0..200) e testa cada elipse com
+## uma margem generosa p/ o clique não precisar de mira perfeita.
+func _mouse_over_eye_local(wl: Vector2) -> int:
+	var p := (wl - Vector2(pet_x, pet_y)) / PET_SCALE
+	var eye_dx: float = current.get("eye_dx", 18.0)
+	var eye_y: float = current.get("eye_y", 96.0) + y_off
+	var rw: float = current.get("eye_w", 10.0) + 5.0
+	var rh: float = current.get("eye_h", 12.0) + 5.0
+	if _in_ellipse(p, Vector2(100.0 - eye_dx, eye_y), rw, rh):
+		return 1
+	if _in_ellipse(p, Vector2(100.0 + eye_dx, eye_y), rw, rh):
+		return 2
+	return 0
+
+## Ponto `p` dentro da elipse de centro `c` e raios `rw`/`rh`?
+func _in_ellipse(p: Vector2, c: Vector2, rw: float, rh: float) -> bool:
+	var dx := (p.x - c.x) / rw
+	var dy := (p.y - c.y) / rh
+	return dx * dx + dy * dy <= 1.0
+
 func hop(force := 320.0) -> void:
 	vy = -force
+
+## Comemoração: dispara fogos de artifício por `duration` segundos + pulo e dancinha.
+## Chamado por automações (ex.: comemoração de hora cheia) via zimmy.celebrate().
+func celebrate(duration := 3.0) -> void:
+	fw_time = maxf(fw_time, duration)
+	fw_spawn_cd = 0.0
+	hop(440.0)
+	play_anim("dance")
+
+## Avança os fogos: lança novos estouros enquanto fw_time > 0 e move as partículas
+## (com leve gravidade), descartando as que apagaram. Barato — só roda quando ativo.
+func _update_fireworks(delta: float) -> void:
+	if fw_time > 0.0:
+		fw_time -= delta
+		fw_spawn_cd -= delta
+		if fw_spawn_cd <= 0.0:
+			fw_spawn_cd = randf_range(0.22, 0.5)
+			_spawn_burst()
+	var alive: Array = []
+	for pt in fw_particles:
+		pt.life -= delta
+		if pt.life > 0.0:
+			pt.v.y += 55.0 * delta        # gravidade leve (as fagulhas caem)
+			pt.p += pt.v * delta
+			alive.append(pt)
+	fw_particles = alive
+
+## Um estouro: ~14 fagulhas radiais de uma cor, na faixa acima do pet (coords lógicas;
+## y negativo = headroom acima do corpo).
+func _spawn_burst() -> void:
+	var cx := randf_range(45.0, 155.0)
+	var cy := randf_range(-80.0, 10.0)
+	var col := Color.from_hsv(randf(), 0.55, 1.0)
+	var n := 14
+	for i in n:
+		var ang := TAU * float(i) / float(n) + randf_range(-0.12, 0.12)
+		var spd := randf_range(38.0, 72.0)
+		var life := randf_range(0.6, 1.0)
+		fw_particles.append({
+			"p": Vector2(cx, cy),
+			"v": Vector2(cos(ang), sin(ang)) * spd,
+			"life": life, "max": life, "col": col,
+		})
 
 ## Sorteia e dispara uma das animações associadas à `action` (ver ACTION_ANIMS).
 ## É como cada item de menu distinto ganha uma reação variada do pet.
@@ -3837,19 +4166,36 @@ func play_anim(name: String) -> void:
 		"squish":     anim_dur = 0.5
 		"tilt":       anim_dur = 0.6
 		"dance":      anim_dur = 1.1; hop(220.0); hop_queue = 1; hop_queue_force = 220.0
+		"dizzy":      anim_dur = 1.5          # cambaleia tonto (sacudida)
+		"nausea":     anim_dur = 1.4          # balanço enjoado (sacudida)
+		"scared":     anim_dur = 1.0; hop(150.0)   # tremor + pulinho de susto (sacudida)
 		_:            anim_dur = 0.5; hop(320.0)
 
-func say(msg: String, hold := 2.5) -> void:
-	speech.text = msg
-	expression = _expression_from_text(msg)
-	speech_clear = hold        # quanto tempo o balão fica visível antes de sumir
-	_relayout()
+## Reação imediata (feedback direto do usuário): aparece NA HORA, substituindo o balão,
+## e dura `hold` segundos. Pausa a notificação que estiver no ar (que retoma depois).
+func say(msg: String, hold := REACTION_HOLD) -> void:
+	react_text = msg
+	react_hold = hold
 
-## Mensagem vinda de uma automação/e-mail: entra numa fila e é exibida com um
-## intervalo de NOTIFY_GAP (5s) entre uma e a próxima, p/ não se sobreporem.
-## A 1ª aparece já; as seguintes esperam o intervalo (ver _process).
+## Notificação (automação/e-mail/lembrete): entra numa FILA e é exibida por MSG_DURATION
+## (10s) na sua vez, sem se sobrepor às outras. Enquanto uma reação está no ar, a
+## notificação atual pausa e retoma quando a reação some (ver o pump em _process). Item
+## que espera mais de MAX_QUEUE_WAIT (60s) na fila é descartado (já não é relevante).
+## Se veio logo após uma AÇÃO do usuário (janela urgent_cd), fura a fila e aparece na hora.
 func notify(msg: String) -> void:
-	notify_queue.append(msg)
+	if urgent_cd > 0.0:
+		_preempt_with(msg)
+	else:
+		msg_queue.append({"text": msg, "wait": 0.0})
+
+## Mostra `msg` imediatamente no lugar da notificação (resposta a uma ação do usuário),
+## devolvendo a notificação de fundo que estava no ar à FRENTE da fila p/ retomar depois —
+## assim a resposta do usuário fura a fila sem descartar o que estava rodando.
+func _preempt_with(msg: String) -> void:
+	if notify_hold > 0.0 and notify_text != "":
+		msg_queue.push_front({"text": notify_text, "wait": 0.0})
+	notify_text = msg
+	notify_hold = MSG_DURATION
 
 ## Deduz a emoção do rosto a partir dos emojis da fala (prioridade pela ordem).
 func _expression_from_text(msg: String) -> String:

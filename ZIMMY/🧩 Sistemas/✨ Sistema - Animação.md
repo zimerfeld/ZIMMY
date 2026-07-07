@@ -2,7 +2,7 @@
 tipo: sistema
 projeto: ZIMMY
 lang: pt-BR
-atualizado: 2026-07-04
+atualizado: 2026-07-07
 tags: [sistema, animacao, zimmy-pet]
 ---
 
@@ -42,6 +42,20 @@ corpo/barriga.
   squish/tilt); `happy` (comemoração genérica: hop/spin/dance).
 - A **sombra fica no chão** (desenhada antes do transform animado) e as barras de status
   não são afetadas. Ver [[🎨 Sistema - Render (_draw)]].
+
+## 😵 Animações de sacudida (`dizzy`/`nausea`/`scared`)
+Sacudir o mouse rápido perto do pet (ver [[🚪 Entrada - Eventos de Input]]) chama
+`_trigger_shake()`, que sorteia uma de três reações — `dizzy` (cambaleio: rotação
+oscilante ampla), `nausea` (balanço lento + squish vertical pulsante), `scared` (tremor
+rápido/jitter + encolhida com pulinho) — casadas com a expressão facial homônima
+(`react_expr`, ver [[😶‍🌫️ Sistema - Expressões Faciais]]) e uma fala curta.
+
+## 🎆 Fogos de artifício (`celebrate()`)
+`celebrate(duration=3)` (chamado por `comemoracao_hora_cheia.gd`) dispara **fogos**:
+enquanto `fw_time>0`, `_spawn_burst()` lança ~14 fagulhas radiais de uma cor na faixa
+acima do pet; `_update_fireworks` move as partículas (`{p,v,life}`) com leve gravidade e
+`_draw_fireworks` as desenha por cima de tudo, com rastro e brilho que some. Acompanha um
+pulo + dancinha. Barato — só roda quando há fogos ativos.
 
 ## 👁️ Piscada
 `blink_timer` conta até piscar; `blink_t=0.16s` mantém os olhos fechados; intervalo

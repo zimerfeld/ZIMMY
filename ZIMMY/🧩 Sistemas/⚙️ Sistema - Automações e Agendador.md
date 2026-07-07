@@ -74,8 +74,9 @@ localizados `fmt_num` / `fmt_pct` / `fmt_money_brl` / `fmt_quote_date` (vírgula
   quando o valor aumenta, toca o alerta sonoro do submenu correspondente.
 
 ## 📜 Scripts inclusos (`Automacoes/`)
-`alarme.gd` (daily@08:00), `auto_alimentar.gd` (20s), `comemoracao_hora_cheia.gd`
-(hourly), `desligar_pc.gd` (daily@23:00) + `cancelar_desligamento.gd`,
+`alarme.gd` (daily@08:00), `comemoracao_hora_cheia.gd` (hourly — dispara **fogos de
+artifício** via `zimmy.celebrate()`, ver [[✨ Sistema - Animação]]), `desligar_pc.gd`
+(daily@23:00) + `cancelar_desligamento.gd`,
 `lembrete_pomodoro.gd` (25m), `email_gmail.gd` ([[📧 Sistema - E-mails]]), `whatsapp.gd`,
 `cotacao_usd/eur/gbp/jpy/cny.gd` ([[💱 Sistema - Moedas]]), `clima.gd` (tempo atual via Open-Meteo,
 grátis/sem chave; geolocalização por IP com fallback). Modelo: `exemplo_automacao.gd.example`.

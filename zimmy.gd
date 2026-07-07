@@ -45,7 +45,7 @@ const SCHEDULES_FILE := "user://schedules.json" # quais automações agendadas e
 const NOTES_FILE := "user://notes.json"         # bloquinho de notas de texto (lista de strings)
 const REMINDERS_FILE := "user://reminders.json" # lembretes recorrentes criados pelo usuário
 const AUTOMACOES_DIR := "res://Automacoes/"   # scripts de automação (drop-in) — ver Automacoes/LEIAME.md
-const RANDOM_PERIOD := 10.0  # segundos entre gerações aleatórias de pets/acessórios (quando ligado)
+const RANDOM_PERIOD := 30.0  # segundos entre gerações aleatórias de pets/acessórios (quando ligado)
 const PET_COLOR_KEYS := ["body_color", "belly_color", "ear_color", "cheek_color",
 	"antenna_color", "nose_color", "horn_color"]
 const ACC_COLOR_KEYS := ["hat_color", "glasses_color", "bow_color", "scarf_color",

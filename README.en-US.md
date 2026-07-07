@@ -100,14 +100,14 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   **off by default**; the choice is **persisted** in `user://settings.json` (`status` key).
 - **🦴 Feed / 🤚 Pet / 🎾 Play** — interactions that change mood/hunger. Each one also plays its **own sound** (a munch, a purr, a playful arpeggio) when the alert for that action is on — with **several random variations per group** (drawn within the same group) so it never gets repetitive.
 - **🔊 Sound alerts ▸** — submenu right below the actions with one **checkbox per action** (🦴 Feed / 🤚 Pet / 🎾 Play, all **on** by default, **persisted** in `user://settings.json`). Each toggle governs **both** the sound played when you do the action **and** a reminder that plays when the matching need bar **drops to 20% (low)**. The sounds are synthesized in code (no audio files), just like the WhatsApp/Gmail alerts.
-- **🐶 Random pets** (check) — toggles continuous generation **of the pet**: every ~10 s
+- **🐶 Random pets** (check) — toggles continuous generation **of the pet**: every ~30 s
   Zimmy turns into a random pet. Besides colors, it varies the **shapes** and which
   **elements** make him up (round or pointy ears, antennas, nose, eyelashes, cheeks,
   and the mouth style). Each new pet gets a **welcome phrase and a suggested name** —
   that name pre-fills the text box (selected) when you Save or Rename it. Names are
   **combinatorial** (noun + adjective, ~900 combos per language), so they rarely repeat.
 - **🎲 Random accessories** (check) — independent from the previous one: toggles
-  continuous generation **of the accessories** (every ~10 s it draws a
+  continuous generation **of the accessories** (every ~30 s it draws a
   hat/glasses/bow/scarf). Turning it on also automatically turns on the accessory
   display. Each new accessory gets a **congratulations phrase and a suggested name**
   that pre-fills the text box when you Save or Rename it (also **combinatorial**, ~900

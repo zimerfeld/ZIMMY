@@ -8,8 +8,6 @@ tags: [moc, home, zimmy-pet]
 
 # 🏠 ZIMMY — Neuron Vault
 
-> 🇧🇷 Leia esta página em português → [[🏠 Home]]
-
 > [!abstract] 🧠 What this vault is
 > Claude's persistent memory for the **ZIMMY (Zimmy Pet)** project. A procedural *desktop pet*
 > in Godot 4 that also became a light assistant. This vault is maintained by Claude and

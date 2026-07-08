@@ -59,6 +59,7 @@ Defined in [[📄 export_presets.cfg (EN)]]: Windows Desktop platform, `embed_pc
   + 2D MSAA off. See [[📄 project.godot (EN)]] and [[🪟 Sistema - Janela Overlay (EN)]].
 
 ## 🔗 Links
+[[📦 Atualizar Asset da Release (GitHub) (EN)|Update the Release Asset (GitHub)]] — publish/update the `.exe` on the releases page ·
 [[💻 Rodar no Editor (Dev) (EN)|Run in the Editor (Dev)]] · [[📄 export_presets.cfg (EN)]] ·
 [[📄 project.godot (EN)]] · [[🎮 itch.io — Página (EN)|itch.io — Page]] ·
 [[🚀 Distribuição e Crescimento (EN)|Distribution and Growth]] · [[🏠 Home (EN)|Home]]

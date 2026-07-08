@@ -59,5 +59,6 @@ arquitetura `x86_64`, ícone `res://zimmy.ico`, exclui `tools/*`.
   + MSAA 2D desligado. Ver [[📄 project.godot]] e [[🪟 Sistema - Janela Overlay]].
 
 ## 🔗 Ligações
+[[📦 Atualizar Asset da Release (GitHub)]] — publicar/atualizar o `.exe` na página de releases ·
 [[💻 Rodar no Editor (Dev)]] · [[📄 export_presets.cfg]] · [[📄 project.godot]] ·
 [[🎮 itch.io — Página]] · [[🚀 Distribuição e Crescimento]] · [[🏠 Home]]

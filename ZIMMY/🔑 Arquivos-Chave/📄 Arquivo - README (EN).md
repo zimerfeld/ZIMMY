@@ -9,6 +9,8 @@ caminho: README.md
 
 # 📄 README.md
 
+> 🇪🇸 Lee esta página en español → [[📄 Arquivo - README (ES)]]
+
 Project documentation and the **source of truth** for the facts (this vault mirrors the
 README, not the other way around). In Portuguese.
 

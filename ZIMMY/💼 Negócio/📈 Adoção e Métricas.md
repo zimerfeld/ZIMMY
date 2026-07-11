@@ -8,6 +8,8 @@ tags: [referencia, adocao, metricas, portfolio, zimmy-pet]
 
 # 📈 Adoção e Métricas
 
+> 🇪🇸 Lee esta página en español → [[📈 Adoção e Métricas (ES)]]
+
 Acompanhamento de **adoção** dos produtos open source do portfólio (owner `zimerfeld`).
 Regra global: manter a contagem sempre atualizada. Fonte de verdade no repo ZIMMY:
 `contagem de downloads.txt` (log datado).

@@ -8,6 +8,8 @@ tags: [sistema, necessidades, gameplay, zimmy-pet]
 
 # 📊 System - Needs (Feed/Pet/Play)
 
+> 🇪🇸 Lee esta página en español → [[📊 Sistema - Necessidades (ES)]]
+
 Three tamagotchi-style needs, shown as **subtle bars at the bottom** of the pet. State in
 `stat_feed` / `stat_pet` / `stat_play` (0..100, `STAT_MAX=100`). **Not persisted**: they
 start full (100%) on every launch.

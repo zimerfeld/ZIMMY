@@ -4,11 +4,12 @@ extends RefCounted
 
 const AUTOMATION_NAME := "Cotação USD"
 const AUTOMATION_NAME_EN := "USD rate"
+const AUTOMATION_NAME_ES := "Cotización USD"
 const MENU_GROUP := "moedas"      # vai para o submenu 💱 Moedas (dentro de Automações)
 const ICON_FLAG := "us"           # bandeira (textura) à esquerda do item — ver _flag_icon()
 
 func run(zimmy) -> void:
-	zimmy.notify(zimmy.lang_text("buscando USD... 🌐", "fetching USD... 🌐"))
+	zimmy.notify(zimmy.lang_text("buscando USD... 🌐", "fetching USD... 🌐", "buscando USD... 🌐"))
 	zimmy.http_get_json("https://economia.awesomeapi.com.br/last/USD-BRL", func(ok, data):
 		if ok and data is Dictionary and data.has("USDBRL"):
 			var d = data["USDBRL"]
@@ -17,5 +18,5 @@ func run(zimmy) -> void:
 			var dt = zimmy.fmt_quote_date(str(d.get("create_date", "")))
 			zimmy.notify("💵 USD/BRL: %s (%s) — %s" % [val, pct, dt])
 		else:
-			zimmy.notify(zimmy.lang_text("falha na cotação USD 🌐", "USD quote failed 🌐"))
+			zimmy.notify(zimmy.lang_text("falha na cotação USD 🌐", "USD quote failed 🌐", "fallo en la cotización USD 🌐"))
 	)

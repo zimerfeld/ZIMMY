@@ -10,6 +10,8 @@ linguagem: Python
 
 # 📄 tools/make_icon.py
 
+> 🇪🇸 Lee esta página en español → [[📄 tools - make_icon.py (ES)]]
+
 Script Python (requer **Pillow**) que reproduz o desenho procedural do pet e gera os
 ícones — para que o ícone case com a carinha desenhada em [[📄 zimmy.gd]] (`_draw()`).
 

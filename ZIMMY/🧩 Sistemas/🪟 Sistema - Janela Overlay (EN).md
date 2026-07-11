@@ -8,6 +8,8 @@ tags: [sistema, overlay, zimmy-pet]
 
 # 🪟 System - Overlay Window
 
+> 🇪🇸 Lee esta página en español → [[🪟 Sistema - Janela Overlay (ES)]]
+
 The "magic": a **transparent, borderless, always-on-top** window that floats over
 the desktop and resizes dynamically.
 

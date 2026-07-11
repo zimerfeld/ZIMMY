@@ -8,6 +8,9 @@ tags: [sistema, moedas, cotacoes, automacoes, zimmy-pet]
 
 # 💱 System - Currencies (quotes)
 
+> 🇧🇷 Leia esta página em português → [[💱 Sistema - Moedas]]
+> 🇪🇸 Lee esta página en español → [[💱 Sistema - Moedas (ES)]]
+
 Automations that fetch **currency quotes** and have Zimmy speak the value. They are regular
 scripts in the `Automacoes/` folder that group into their own submenu via
 `const MENU_GROUP := "moedas"`. A specialized case of

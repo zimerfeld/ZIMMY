@@ -8,6 +8,9 @@ tags: [procedimento, dev, editor, godot, zimmy-pet]
 
 # 💻 Run in the Editor (Dev)
 
+> 🇧🇷 Leia esta página em português → [[💻 Rodar no Editor (Dev)]]
+> 🇪🇸 Lee esta página en español → [[💻 Rodar no Editor (Dev) (ES)]]
+
 > **Goal:** open and run Zimmy Pet in the **Godot editor** during development (a fast
 > code → run → see loop), without going through the production export.
 > Engine: **Godot 4.6.2 stable** at `C:\GODOT\Godot_v4.6.2-stable_win64.exe\` (the "exe" is

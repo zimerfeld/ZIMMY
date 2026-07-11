@@ -8,6 +8,8 @@ tags: [endpoint, input, zimmy-pet]
 
 # 🚪 Entry Point - Input Events
 
+> 🇪🇸 Lee esta página en español → [[🚪 Entrada - Eventos de Input (ES)]]
+
 The overlay's input "API". It goes through `_input(event)` **and** global-cursor sampling in
 the [[🔁 Fluxo - Loop (_process) (EN)]] (hover/shake work even without focus/events).
 (There are no network endpoints — it's a desktop app; these events are the interaction surface.)

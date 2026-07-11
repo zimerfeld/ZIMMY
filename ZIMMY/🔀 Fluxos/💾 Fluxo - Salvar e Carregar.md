@@ -8,6 +8,8 @@ tags: [fluxo, persistencia, zimmy-pet]
 
 # 💾 Fluxo - Salvar e Carregar
 
+> 🇪🇸 Lee esta página en español → [[💾 Fluxo - Salvar e Carregar (ES)]]
+
 Pets e acessórios são salvos/carregados **independentemente**. Ver
 [[💾 Sistema - Persistência]] e [[🧭 Sistema - Menu de Contexto]].
 

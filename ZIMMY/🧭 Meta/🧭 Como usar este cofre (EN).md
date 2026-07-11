@@ -8,6 +8,9 @@ tags: [meta, zimmy-pet]
 
 # 🧭 How to use this vault
 
+> 🇧🇷 Leia esta página em português → [[🧭 Como usar este cofre]]
+> 🇪🇸 Lee esta página en español → [[🧭 Como usar este cofre (ES)]]
+
 > To **resume work**, see [[📌 Backlog (EN)|Backlog]] (P0/P1/P2 priorities).
 
 This Obsidian vault is the **technical memory** of the Zimmy Pet project, created and maintained

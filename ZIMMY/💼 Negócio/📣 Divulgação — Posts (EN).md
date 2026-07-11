@@ -8,6 +8,8 @@ tags: [referencia, divulgacao, marketing, growth, zimmy-pet]
 
 # 📣 Promo Posts (new features)
 
+> 🇪🇸 Lee esta página en español → [[📣 Divulgação — Posts (ES)]]
+
 **Ready-to-publish** copy, always in **two versions (PT-BR + EN-US)** (global rule).
 Features covered: **⏱️ Timers/Scheduler**, **💱 Currencies**, **📧 E-mail (Gmail)**,
 **⏰ Alarm**. Factual basis: [[⚙️ Sistema - Automações e Agendador (EN)|Automations & Scheduler system]],

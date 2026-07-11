@@ -9,6 +9,7 @@ tags: [moc, home, zimmy-pet]
 # 🏠 ZIMMY — Cofre de Neurônios
 
 > 🇺🇸 Read this page in English → [[🏠 Home (EN)]]
+> 🇪🇸 Lee esta página en español → [[🏠 Home (ES)]]
 
 > [!abstract] 🧠 O que é este cofre
 > Memória persistente do Claude para o projeto **ZIMMY (Zimmy Pet)**. Um *desktop pet*

@@ -8,6 +8,8 @@ tags: [sistema, expressao, rosto, zimmy-pet]
 
 # 😶‍🌫️ Sistema - Expressões Faciais
 
+> 🇪🇸 Lee esta página en español → [[😶‍🌫️ Sistema - Expressões Faciais (ES)]]
+
 Enquanto o pet fala, **o rosto espelha a emoção do emoji** da frase. Adicionado em
 2026-06-20.
 

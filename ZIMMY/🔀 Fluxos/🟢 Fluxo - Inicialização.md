@@ -8,6 +8,8 @@ tags: [fluxo, ciclo-de-vida, zimmy-pet]
 
 # 🟢 Fluxo - Inicialização (`_ready`)
 
+> 🇪🇸 Lee esta página en español → [[🟢 Fluxo - Inicialização (ES)]]
+
 `_ready()` (`zimmy.gd:198`) roda uma vez ao abrir.
 
 1. **Transparência/overlay** — `gui_embed_subwindows=false`, `transparent_bg`,

@@ -8,10 +8,13 @@ extends RefCounted
 
 const AUTOMATION_NAME := "Lembrete Pomodoro ☕"
 const AUTOMATION_NAME_EN := "Pomodoro reminder ☕"
+const AUTOMATION_NAME_ES := "Recordatorio Pomodoro ☕"
 const SCHEDULE := "25m"
 
 func run(zimmy) -> void:
 	var pt := ["hora da pausa! ☕", "respira e alonga 🧘", "levanta um pouco! 🚶"]
 	var en := ["break time! ☕", "breathe and stretch 🧘", "stand up a bit! 🚶"]
-	zimmy.notify((en if zimmy.lang == "en" else pt).pick_random())
+	var es := ["¡hora de la pausa! ☕", "respira y estírate 🧘", "¡levántate un poco! 🚶"]
+	var opts := en if zimmy.lang == "en" else (es if zimmy.lang == "es" else pt)
+	zimmy.notify(opts.pick_random())
 	zimmy.hop(360.0)

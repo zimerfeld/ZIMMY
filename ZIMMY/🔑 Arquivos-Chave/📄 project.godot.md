@@ -9,6 +9,8 @@ caminho: project.godot
 
 # 📄 project.godot
 
+> 🇪🇸 Lee esta página en español → [[📄 project.godot (ES)]]
+
 Config do projeto Godot. `config/features = "4.6"`. Cena inicial:
 `run/main_scene = "res://main.tscn"` ([[📄 main.tscn]]). Ícone do editor:
 `res://icon.png`.

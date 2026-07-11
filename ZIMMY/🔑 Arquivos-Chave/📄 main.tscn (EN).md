@@ -9,6 +9,8 @@ caminho: main.tscn
 
 # 📄 main.tscn
 
+> 🇪🇸 Lee esta página en español → [[📄 main.tscn (ES)]]
+
 Root scene, minimal. A single `Node2D` node named **Zimmy** with the script
 [[📄 zimmy.gd (EN)]] attached.
 

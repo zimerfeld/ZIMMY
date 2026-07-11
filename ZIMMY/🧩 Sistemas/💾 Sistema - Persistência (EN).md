@@ -8,6 +8,8 @@ tags: [sistema, persistencia, dados, zimmy-pet]
 
 # 💾 System - Persistence
 
+> 🇪🇸 Lee esta página en español → [[💾 Sistema - Persistência (ES)]]
+
 Three JSON files in `user://` (on Windows:
 `%APPDATA%\Godot\app_userdata\Zimmy Pet\`). Schemas in [[🗂️ Glossário de Configs (EN)]].
 

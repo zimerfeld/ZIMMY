@@ -8,6 +8,9 @@ tags: [sistema, acessorios, zimmy-pet]
 
 # 🎀 System - Accessories
 
+> 🇧🇷 Leia esta página em português → [[🎀 Sistema - Acessórios]]
+> 🇪🇸 Lee esta página en español → [[🎀 Sistema - Acessórios (ES)]]
+
 A **pet-independent** layer, drawn on top. Saving/loading is separate from the
 pets (a saved pet does not carry an accessory and vice versa), so you can combine any
 pet with any accessory.

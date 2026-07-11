@@ -8,6 +8,9 @@ tags: [sistema, pets, zimmy-pet]
 
 # 🐾 System - Pets
 
+> 🇧🇷 Leia esta página em português → [[🐾 Sistema - Pets]]
+> 🇪🇸 Lee esta página en español → [[🐾 Sistema - Pets (ES)]]
+
 Each pet is a **config** (Dictionary) consumed by `_draw()`. The same code generates the
 Default, the random ones and the saved ones. Full schema in [[🗂️ Glossário de Configs (EN)]].
 

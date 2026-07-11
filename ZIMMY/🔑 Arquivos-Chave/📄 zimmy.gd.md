@@ -10,6 +10,8 @@ linguagem: GDScript
 
 # 📄 zimmy.gd
 
+> 🇪🇸 Lee esta página en español → [[📄 zimmy.gd (ES)]]
+
 `extends Node2D` — **todo** o app vive aqui (~908 linhas). Anexado à cena raiz
 [[📄 main.tscn]]. Sem dependências externas além da API do Godot.
 

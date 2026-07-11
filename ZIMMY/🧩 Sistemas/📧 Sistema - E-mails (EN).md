@@ -8,6 +8,8 @@ tags: [sistema, email, gmail, whatsapp, automacoes, zimmy-pet]
 
 # 📧 System - E-mails (Gmail)
 
+> 🇪🇸 Lee esta página en español → [[📧 Sistema - E-mails (ES)]]
+
 An automation that checks the **unread e-mail count** on Gmail and shows the counter in the
 menu, with a sound alert when new mail arrives. A specialized case of
 [[⚙️ Sistema - Automações e Agendador (EN)]] (`const MENU_GROUP := "email"`), with the sibling

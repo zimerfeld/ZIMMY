@@ -8,6 +8,8 @@ tags: [sistema, interacao, gameplay, zimmy-pet]
 
 # 😤 Sistema - Interação e Mau Humor
 
+> 🇪🇸 Lee esta página en español → [[😤 Sistema - Interação e Mau Humor (ES)]]
+
 Limita o spam de interações e dá personalidade ao pet. Centralizado em
 `_can_act(action)` (`zimmy.gd:846`), chamado no início de cada ação
 ([[🚪 Entrada - Funções de Ação]]).

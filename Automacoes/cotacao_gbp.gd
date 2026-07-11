@@ -3,11 +3,12 @@ extends RefCounted
 
 const AUTOMATION_NAME := "Cotação GBP"
 const AUTOMATION_NAME_EN := "GBP rate"
+const AUTOMATION_NAME_ES := "Cotización GBP"
 const MENU_GROUP := "moedas"      # vai para o submenu 💱 Moedas (dentro de Automações)
 const ICON_FLAG := "gb"           # bandeira (textura) à esquerda do item — ver _flag_icon()
 
 func run(zimmy) -> void:
-	zimmy.notify(zimmy.lang_text("buscando GBP... 🌐", "fetching GBP... 🌐"))
+	zimmy.notify(zimmy.lang_text("buscando GBP... 🌐", "fetching GBP... 🌐", "buscando GBP... 🌐"))
 	zimmy.http_get_json("https://economia.awesomeapi.com.br/last/GBP-BRL", func(ok, data):
 		if ok and data is Dictionary and data.has("GBPBRL"):
 			var d = data["GBPBRL"]
@@ -16,5 +17,5 @@ func run(zimmy) -> void:
 			var dt = zimmy.fmt_quote_date(str(d.get("create_date", "")))
 			zimmy.notify("💷 GBP/BRL: %s (%s) — %s" % [val, pct, dt])
 		else:
-			zimmy.notify(zimmy.lang_text("falha na cotação GBP 🌐", "GBP quote failed 🌐"))
+			zimmy.notify(zimmy.lang_text("falha na cotação GBP 🌐", "GBP quote failed 🌐", "fallo en la cotización GBP 🌐"))
 	)

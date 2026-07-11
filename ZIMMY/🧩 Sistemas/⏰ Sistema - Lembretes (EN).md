@@ -8,6 +8,9 @@ tags: [sistema, lembretes, agendador, usuario, zimmy-pet]
 
 # ⏰ System - Reminders (user recurring)
 
+> 🇧🇷 Leia esta página em português → [[⏰ Sistema - Lembretes]]
+> 🇪🇸 Lee esta página en español → [[⏰ Sistema - Lembretes (ES)]]
+
 Recurring reminders the **user creates through the UI, with no `.gd` editing**. It's a
 **native** system (it does NOT use the `Automacoes/` folder), so it works in the exported
 `.exe`. It mirrors the Notes pattern (item created via dialog, persisted, submenu + delete)

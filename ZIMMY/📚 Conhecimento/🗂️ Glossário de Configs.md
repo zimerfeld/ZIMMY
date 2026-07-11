@@ -8,6 +8,9 @@ tags: [referencia, dados, zimmy-pet]
 
 # 🗂️ Glossário de Configs
 
+> 🇺🇸 Read this page in English → [[🗂️ Glossário de Configs (EN)]]
+> 🇪🇸 Lee esta página en español → [[🗂️ Glossário de Configs (ES)]]
+
 Tipos de dado que descrevem o que aparece na tela. Ver [[🐾 Sistema - Pets]],
 [[🎀 Sistema - Acessórios]] e [[💾 Sistema - Persistência]].
 

@@ -7,6 +7,16 @@ Guidance for Claude Code when working in this repository.
 - **Responder sempre no chat em português (Brasil).** Todas as respostas ao
   usuário devem ser em pt-BR, independentemente do idioma do pedido ou do código.
 
+## Paridade de idiomas (PT / EN / ES)
+
+- **Manter sempre a paridade entre os três idiomas — Português (pt-BR), Inglês
+  (en-US) e Espanhol (es-ES).** Ao criar ou alterar qualquer texto localizável,
+  **criar/atualizar a tradução nos três idiomas na mesma mudança**, sem deixar
+  nenhum idioma para trás. Isso vale para: textos de UI e falas (`STRINGS` /
+  `STRING_LISTS` em `zimmy.gd`), automações (`AUTOMATION_NAME[_EN|_ES]` e o 3º
+  argumento `es` de `lang_text`), os `README.*` e as notas do cofre Obsidian
+  (versões base PT, `(EN)` e `(ES)`, com os links de troca de idioma).
+
 ## Publicação / Deploy (gitflow)
 
 - **NÃO pedir para criar nem aprovar Pull Requests.** O processo de publicação já

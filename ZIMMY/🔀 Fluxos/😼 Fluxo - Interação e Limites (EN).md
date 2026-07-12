@@ -8,6 +8,8 @@ tags: [fluxo, interacao, zimmy-pet]
 
 # 😼 Flow - Interaction and Limits
 
+> 🇪🇸 Lee esta página en español → [[😼 Fluxo - Interação e Limites (ES)]]
+
 How a click/action turns (or doesn't) into a reaction. Rules in
 [[😤 Sistema - Interação e Mau Humor (EN)]].
 

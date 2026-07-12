@@ -8,6 +8,8 @@ tags: [sistema, necessidades, gameplay, zimmy-pet]
 
 # 📊 Sistema - Necessidades (Alimentar/Carinho/Brincar)
 
+> 🇪🇸 Lee esta página en español → [[📊 Sistema - Necessidades (ES)]]
+
 Três necessidades estilo tamagotchi, mostradas como **barras sutis no rodapé** do pet.
 Estado em `stat_feed` / `stat_pet` / `stat_play` (0..100, `STAT_MAX=100`). **Não são
 persistidas**: começam cheias (100%) a cada abertura.

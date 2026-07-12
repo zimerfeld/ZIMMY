@@ -8,6 +8,8 @@ tags: [endpoint, menu, zimmy-pet]
 
 # 🚪 Entrada - Itens do Menu
 
+> 🇪🇸 Lee esta página en español → [[🚪 Entrada - Itens do Menu (ES)]]
+
 Endpoints acionados pelo menu de contexto. Ids `MI_*` despachados em `_on_menu(id)`
 (`zimmy.gd:306`). Submenus têm handlers próprios. Ver [[🧭 Sistema - Menu de Contexto]].
 

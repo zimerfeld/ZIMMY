@@ -188,8 +188,8 @@ C:\GODOT\rcedit-x64.exe "C:\GODOT\ZIMMY\build\ZimmyPet.exe" --set-icon "C:\GODOT
   "(N) WhatsApp" quando há não lidas). Mantenha o **WhatsApp Web aberto e vinculado**.
   Ver **WhatsApp** abaixo.
 - **🌐 Idioma ▸** — escolhe o idioma de **todos os textos do sistema** (menu, diálogos e
-  as falas do pet) entre **Português (Brasil)** e **English (US)**. A troca é imediata e
-  a opção fica marcada (✓). Ver **Idioma** abaixo.
+  as falas do pet) entre **Português (Brasil)**, **English (US)** e **Español (España)**.
+  A troca é imediata e a opção fica marcada (✓). Ver **Idioma** abaixo.
 - **❤️ Doação ▸** — submenu com dois jeitos de apoiar o projeto: **GitHub Sponsors** e
   **Ko-fi**. Cada um abre o link no navegador (`OS.shell_open`).
 - **Sair**.
@@ -227,8 +227,8 @@ assíncronas. Uma mensagem que espera mais de **60 s** na fila é descartada.
 
 ## Idioma
 
-Todos os textos do sistema têm tradução em **Português (Brasil)** e **English (US)**:
-os itens do menu de contexto, os diálogos (salvar/renomear/excluir/login) e as **falas
+Todos os textos do sistema têm tradução em **Português (Brasil)**, **English (US)** e
+**Español (España)**: os itens do menu de contexto, os diálogos (salvar/renomear/excluir/login) e as **falas
 do pet** (saudação, reações de alimentar/carinho/brincar, mau humor, avisos). Escolha o
 idioma em **🌐 Idioma ▸**; a interface inteira muda na hora e a escolha é **persistida**
 em `user://settings.json` (chave `lang`), voltando no mesmo idioma na próxima abertura.
@@ -257,8 +257,11 @@ Cada automação é um GDScript com:
 - (opcional) `const AUTOMATION_NAME := "Nome no menu"` — texto exibido no submenu. Sem
   ele, o nome é derivado do arquivo (`minha_automacao.gd` → "Minha Automacao").
 - (opcional) `const AUTOMATION_NAME_EN := "Menu name"` — nome em inglês, usado quando o
-  idioma do app é English (US); sem ele, cai no `AUTOMATION_NAME`. Para falas bilíngues
-  use `zimmy.lang_text(pt, en)` e `zimmy.lang`; para números/datas localizados use
+  idioma do app é English (US); sem ele, cai no `AUTOMATION_NAME`.
+- (opcional) `const AUTOMATION_NAME_ES := "Nombre en el menú"` — nome em espanhol, usado
+  quando o idioma do app é Español (España); sem ele, cai no `AUTOMATION_NAME`. Para falas
+  bilíngues/trilíngues use `zimmy.lang_text(pt, en, es)` (o terceiro argumento `es` é
+  opcional e cai no texto em português) e `zimmy.lang`; para números/datas localizados use
   `zimmy.fmt_num` / `fmt_pct` / `fmt_money_brl` / `fmt_quote_date` (as automações de
   cotação usam esses helpers, então valores e datas seguem o idioma escolhido).
 - (opcional) `const SCHEDULE := "..."` — frequência para o Zimmy rodar a automação

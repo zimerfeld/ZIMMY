@@ -8,6 +8,8 @@ tags: [referencia, distribuicao, growth, estrategia, investimento, zimmy-pet]
 
 # 🚀 Distribution and Growth
 
+> 🇪🇸 Lee esta página en español → [[🚀 Distribuição e Crescimento (ES)]]
+
 Analysis with an **investor lens** (potential × feasibility × return × risk) to expand
 Zimmy Pet's adoption. Today the only channel is **GitHub** (repo + release). Current metric in
 [[📈 Adoção e Métricas (EN)|Adoption & Metrics]]; ready copy in

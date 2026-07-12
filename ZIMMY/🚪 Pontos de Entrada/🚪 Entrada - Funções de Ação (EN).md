@@ -8,6 +8,8 @@ tags: [endpoint, api, zimmy-pet]
 
 # 🚪 Entry Point - Action Functions
 
+> 🇪🇸 Lee esta página en español → [[🚪 Entrada - Funções de Ação (ES)]]
+
 The pet behavior's "public API". All interaction ones go through
 `_can_act()` ([[😤 Sistema - Interação e Mau Humor (EN)]]).
 

@@ -8,6 +8,8 @@ tags: [sistema, expressao, rosto, zimmy-pet]
 
 # 😶‍🌫️ System - Facial Expressions
 
+> 🇪🇸 Lee esta página en español → [[😶‍🌫️ Sistema - Expressões Faciais (ES)]]
+
 While the pet speaks, **the face mirrors the emotion of the sentence's emoji**. Added in
 2026-06-20.
 

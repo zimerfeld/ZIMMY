@@ -8,6 +8,9 @@ tags: [sistema, animacao, zimmy-pet]
 
 # ✨ Sistema - Animação
 
+> 🇺🇸 Read this page in English → [[✨ Sistema - Animação (EN)]]
+> 🇪🇸 Lee esta página en español → [[✨ Sistema - Animação (ES)]]
+
 Animações procedurais tocadas no [[🔁 Fluxo - Loop (_process)]] e aplicadas no
 [[🎨 Sistema - Render (_draw)]].
 

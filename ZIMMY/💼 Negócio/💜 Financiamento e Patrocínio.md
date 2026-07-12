@@ -8,6 +8,8 @@ tags: [referencia, financiamento, patrocinio, monetizacao, investimento, zimmy-p
 
 # 💜 Financiamento e Patrocínio
 
+> 🇪🇸 Lee esta página en español → [[💜 Financiamento e Patrocínio (ES)]]
+
 Como o Zimmy Pet é **grátis e open source** (sem venda direta), a monetização é
 **indireta**: doações/patrocínio e valor de portfólio. Estratégia de crescimento em
 [[🚀 Distribuição e Crescimento]]; métricas em [[📈 Adoção e Métricas]].

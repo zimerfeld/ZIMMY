@@ -8,6 +8,9 @@ tags: [meta, backlog, zimmy-pet]
 
 # 🗂️ _Prioritized backlog
 
+> 🇧🇷 Leia esta página em português → [[📌 Backlog]]
+> 🇪🇸 Lee esta página en español → [[📌 Backlog (ES)]]
+
 > **Self-sufficient** note to resume the project in any new chat.
 > The global rule makes Claude read this vault at the start — so **start here** and then
 > go to [[🏠 Home (EN)|Home]] and [[🧭 Como usar este cofre (EN)|How to use this vault]].

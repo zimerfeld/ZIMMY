@@ -8,6 +8,8 @@ tags: [referencia, itch, distribuicao, marketing, zimmy-pet]
 
 # 🎮 itch.io — Página (pronta para colar)
 
+> 🇪🇸 Lee esta página en español → [[🎮 itch.io — Página (ES)]]
+
 Conteúdo pronto para a página do Zimmy Pet no itch.io. **Bilíngue** (regra global). O itch.io
 aceita Markdown no corpo. Contexto/estratégia em [[🚀 Distribuição e Crescimento]]; copy de
 redes em [[📣 Divulgação — Posts]]. Repo: https://github.com/zimerfeld/ZIMMY

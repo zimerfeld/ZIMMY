@@ -3,11 +3,12 @@ extends RefCounted
 
 const AUTOMATION_NAME := "Cotação EUR"
 const AUTOMATION_NAME_EN := "EUR rate"
+const AUTOMATION_NAME_ES := "Cotización EUR"
 const MENU_GROUP := "moedas"      # vai para o submenu 💱 Moedas (dentro de Automações)
 const ICON_FLAG := "eu"           # bandeira (textura) à esquerda do item — ver _flag_icon()
 
 func run(zimmy) -> void:
-	zimmy.notify(zimmy.lang_text("buscando EUR... 🌐", "fetching EUR... 🌐"))
+	zimmy.notify(zimmy.lang_text("buscando EUR... 🌐", "fetching EUR... 🌐", "buscando EUR... 🌐"))
 	zimmy.http_get_json("https://economia.awesomeapi.com.br/last/EUR-BRL", func(ok, data):
 		if ok and data is Dictionary and data.has("EURBRL"):
 			var d = data["EURBRL"]
@@ -16,5 +17,5 @@ func run(zimmy) -> void:
 			var dt = zimmy.fmt_quote_date(str(d.get("create_date", "")))
 			zimmy.notify("💶 EUR/BRL: %s (%s) — %s" % [val, pct, dt])
 		else:
-			zimmy.notify(zimmy.lang_text("falha na cotação EUR 🌐", "EUR quote failed 🌐"))
+			zimmy.notify(zimmy.lang_text("falha na cotação EUR 🌐", "EUR quote failed 🌐", "fallo en la cotización EUR 🌐"))
 	)

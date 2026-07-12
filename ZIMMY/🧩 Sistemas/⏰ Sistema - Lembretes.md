@@ -8,6 +8,9 @@ tags: [sistema, lembretes, agendador, usuario, zimmy-pet]
 
 # ⏰ Sistema - Lembretes (recorrentes do usuário)
 
+> 🇺🇸 Read this page in English → [[⏰ Sistema - Lembretes (EN)]]
+> 🇪🇸 Lee esta página en español → [[⏰ Sistema - Lembretes (ES)]]
+
 Lembretes recorrentes que o **usuário cria pela interface, sem editar `.gd`**. É um sistema
 **nativo** (não usa a pasta `Automacoes/`), então funciona no `.exe` exportado. Espelha o
 padrão do sistema de Notas (item criado por diálogo, persistido, submenu + excluir) e reusa

@@ -8,6 +8,9 @@ tags: [procedimento, build, export, zimmy-pet]
 
 # 🚀 Export e Publicação (Prod)
 
+> 🇺🇸 Read this page in English → [[🚀 Export e Publicação (Prod) (EN)]]
+> 🇪🇸 Lee esta página en español → [[🚀 Export e Publicação (Prod) (ES)]]
+
 > **Objetivo:** gerar o binário de produção `build/ZimmyPet.exe` (Windows) e publicá-lo
 > nos canais de distribuição (GitHub releases / itch.io).
 > Engine: **Godot 4.6.2 stable** em `C:\GODOT\Godot_v4.6.2-stable_win64.exe\` (a "exe"

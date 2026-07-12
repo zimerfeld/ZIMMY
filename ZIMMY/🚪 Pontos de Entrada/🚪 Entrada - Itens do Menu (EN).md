@@ -8,6 +8,8 @@ tags: [endpoint, menu, zimmy-pet]
 
 # 🚪 Entry Point - Menu Items
 
+> 🇪🇸 Lee esta página en español → [[🚪 Entrada - Itens do Menu (ES)]]
+
 Endpoints triggered by the context menu. `MI_*` ids dispatched in `_on_menu(id)`
 (`zimmy.gd:306`). Submenus have their own handlers. See [[🧭 Sistema - Menu de Contexto (EN)]].
 

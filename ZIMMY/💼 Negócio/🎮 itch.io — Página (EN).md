@@ -8,6 +8,8 @@ tags: [referencia, itch, distribuicao, marketing, zimmy-pet]
 
 # 🎮 itch.io — Page (ready to paste)
 
+> 🇪🇸 Lee esta página en español → [[🎮 itch.io — Página (ES)]]
+
 Ready-to-use content for the Zimmy Pet page on itch.io. **Bilingual** (global rule). itch.io
 accepts Markdown in the body. Context/strategy in
 [[🚀 Distribuição e Crescimento (EN)|Distribution and Growth]]; social copy in

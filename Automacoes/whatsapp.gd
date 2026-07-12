@@ -38,7 +38,8 @@ func run(zimmy) -> void:
 		zimmy.set_automation_badge(BADGE_KEY, "?")
 		zimmy.notify(zimmy.lang_text(
 			"💬 WhatsApp Web não está aberto 🔗 (abra e deixe como janela/aba ativa)",
-			"💬 WhatsApp Web isn't open 🔗 (open it and keep it as the active window/tab)"))
+			"💬 WhatsApp Web isn't open 🔗 (open it and keep it as the active window/tab)",
+			"💬 WhatsApp Web no está abierto 🔗 (ábrelo y déjalo como ventana/pestaña activa)"))
 		return
 	# "(3) WhatsApp - Google Chrome" → 3 ; "WhatsApp - ..." sem parênteses → 0 (tudo lido)
 	var re := RegEx.new()
@@ -48,6 +49,7 @@ func run(zimmy) -> void:
 	zimmy.set_automation_badge(BADGE_KEY, str(n))
 	if n > 0:
 		zimmy.notify(zimmy.lang_text("💬 WhatsApp: %d conversa(s) não lida(s)",
-			"💬 WhatsApp: %d unread chat(s)") % n)
+			"💬 WhatsApp: %d unread chat(s)",
+			"💬 WhatsApp: %d chat(s) sin leer") % n)
 	else:
-		zimmy.notify(zimmy.lang_text("💬 WhatsApp: tudo lido ✅", "💬 WhatsApp: all read ✅"))
+		zimmy.notify(zimmy.lang_text("💬 WhatsApp: tudo lido ✅", "💬 WhatsApp: all read ✅", "💬 WhatsApp: todo leído ✅"))

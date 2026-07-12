@@ -333,140 +333,148 @@ const DONATE_SPONSORS_URL := "https://github.com/sponsors/zimerfeld"
 const DONATE_KOFI_URL := "https://ko-fi.com/C0D621FCGD"
 const LANG_PT := 1   # ids dos itens do submenu de idioma
 const LANG_EN := 2
+const LANG_ES := 3
 
 # --- idioma (i18n) ---
-var lang := "pt"   # "pt" (Português BR) ou "en" (English US); persistido em settings.json
+# "pt" (Português BR), "en" (English US) ou "es" (Español ES); persistido em settings.json
+var lang := "pt"
 
-# Tabela de textos do sistema (menu, diálogos, falas). Cada chave traz pt/en.
+# Tabela de textos do sistema (menu, diálogos, falas). Cada chave traz pt/en/es.
 const STRINGS := {
 	# menu de contexto
-	"mi_feed":       {"pt": "🦴 Alimentar",          "en": "🦴 Feed"},
-	"mi_pet":        {"pt": "🤚 Carinho",            "en": "🤚 Pet"},
-	"mi_play":       {"pt": "🎾 Brincar",            "en": "🎾 Play"},
-	"mi_random":     {"pt": "🐶 Gerar pets",         "en": "🐶 Random pets"},
-	"mi_random_acc": {"pt": "🎲 Gerar acessórios",   "en": "🎲 Random accessories"},
-	"mi_show_acc":   {"pt": "👓 Mostrar acessórios", "en": "👓 Show accessories"},
-	"mi_status":     {"pt": "📊 Status",             "en": "📊 Status"},
-	"mi_save_pet":   {"pt": "💾 Salvar Pet...",      "en": "💾 Save Pet..."},
-	"mi_rename_pet": {"pt": "💾 Renomear Pet...",    "en": "💾 Rename Pet..."},
-	"mi_choose_pet": {"pt": "📂 Escolher pet",       "en": "📂 Choose pet"},
-	"mi_del_pet":    {"pt": "🗑️ Excluir pet",        "en": "🗑️ Delete pet"},
-	"mi_save_acc":   {"pt": "🎀 Salvar Acessório...","en": "🎀 Save Accessory..."},
-	"mi_rename_acc": {"pt": "🎀 Renomear Acessório...","en": "🎀 Rename Accessory..."},
-	"mi_choose_acc": {"pt": "🧳 Escolher acessório", "en": "🧳 Choose accessory"},
-	"mi_del_acc":    {"pt": "🗑️ Excluir acessório",  "en": "🗑️ Delete accessory"},
-	"mi_automations":{"pt": "⚙️ Automações",         "en": "⚙️ Automations"},
-	"mi_timers":     {"pt": "⏱️ Temporizadores",     "en": "⏱️ Timers"},
-	"mi_moedas":     {"pt": "💱 Moedas",             "en": "💱 Currencies"},
-	"mi_notes":      {"pt": "📝 Notas",              "en": "📝 Notes"},
-	"mi_emails":     {"pt": "📧 E-mails",            "en": "📧 E-mails"},
-	"mi_whatsapp":   {"pt": "💬 WhatsApp",           "en": "💬 WhatsApp"},
-	"mi_sound_alert":{"pt": "🔊 Alerta de som",      "en": "🔊 Sound alert"},
-	"mi_sounds":     {"pt": "🔊 Alertas de som",     "en": "🔊 Sound alerts"},
-	"mi_donate":     {"pt": "❤️ Doação",             "en": "❤️ Donate"},
-	"mi_language":   {"pt": "🌐 Idioma",             "en": "🌐 Language"},
-	"mi_quit":       {"pt": "Sair",                  "en": "Quit"},
+	"mi_feed":       {"pt": "🦴 Alimentar",          "en": "🦴 Feed",                "es": "🦴 Alimentar"},
+	"mi_pet":        {"pt": "🤚 Carinho",            "en": "🤚 Pet",                 "es": "🤚 Mimar"},
+	"mi_play":       {"pt": "🎾 Brincar",            "en": "🎾 Play",                "es": "🎾 Jugar"},
+	"mi_random":     {"pt": "🐶 Gerar pets",         "en": "🐶 Random pets",         "es": "🐶 Generar mascotas"},
+	"mi_random_acc": {"pt": "🎲 Gerar acessórios",   "en": "🎲 Random accessories",  "es": "🎲 Generar accesorios"},
+	"mi_show_acc":   {"pt": "👓 Mostrar acessórios", "en": "👓 Show accessories",    "es": "👓 Mostrar accesorios"},
+	"mi_status":     {"pt": "📊 Status",             "en": "📊 Status",              "es": "📊 Estado"},
+	"mi_save_pet":   {"pt": "💾 Salvar Pet...",      "en": "💾 Save Pet...",         "es": "💾 Guardar mascota..."},
+	"mi_rename_pet": {"pt": "💾 Renomear Pet...",    "en": "💾 Rename Pet...",       "es": "💾 Renombrar mascota..."},
+	"mi_choose_pet": {"pt": "📂 Escolher pet",       "en": "📂 Choose pet",          "es": "📂 Elegir mascota"},
+	"mi_del_pet":    {"pt": "🗑️ Excluir pet",        "en": "🗑️ Delete pet",          "es": "🗑️ Eliminar mascota"},
+	"mi_save_acc":   {"pt": "🎀 Salvar Acessório...","en": "🎀 Save Accessory...",   "es": "🎀 Guardar accesorio..."},
+	"mi_rename_acc": {"pt": "🎀 Renomear Acessório...","en": "🎀 Rename Accessory...","es": "🎀 Renombrar accesorio..."},
+	"mi_choose_acc": {"pt": "🧳 Escolher acessório", "en": "🧳 Choose accessory",    "es": "🧳 Elegir accesorio"},
+	"mi_del_acc":    {"pt": "🗑️ Excluir acessório",  "en": "🗑️ Delete accessory",    "es": "🗑️ Eliminar accesorio"},
+	"mi_automations":{"pt": "⚙️ Automações",         "en": "⚙️ Automations",         "es": "⚙️ Automatizaciones"},
+	"mi_timers":     {"pt": "⏱️ Temporizadores",     "en": "⏱️ Timers",              "es": "⏱️ Temporizadores"},
+	"mi_moedas":     {"pt": "💱 Moedas",             "en": "💱 Currencies",          "es": "💱 Divisas"},
+	"mi_notes":      {"pt": "📝 Notas",              "en": "📝 Notes",               "es": "📝 Notas"},
+	"mi_emails":     {"pt": "📧 E-mails",            "en": "📧 E-mails",             "es": "📧 Correos"},
+	"mi_whatsapp":   {"pt": "💬 WhatsApp",           "en": "💬 WhatsApp",            "es": "💬 WhatsApp"},
+	"mi_sound_alert":{"pt": "🔊 Alerta de som",      "en": "🔊 Sound alert",         "es": "🔊 Alerta de sonido"},
+	"mi_sounds":     {"pt": "🔊 Alertas de som",     "en": "🔊 Sound alerts",        "es": "🔊 Alertas de sonido"},
+	"mi_donate":     {"pt": "❤️ Doação",             "en": "❤️ Donate",              "es": "❤️ Donar"},
+	"mi_language":   {"pt": "🌐 Idioma",             "en": "🌐 Language",            "es": "🌐 Idioma"},
+	"mi_quit":       {"pt": "Sair",                  "en": "Quit",                   "es": "Salir"},
 	# submenus / sentinelas (rótulo exibido; o valor lógico continua "Default"/"Nenhum")
-	"select":        {"pt": "Selecione...",          "en": "Select..."},
-	"default_pet":   {"pt": "Padrão",                "en": "Default"},
-	"none_acc":      {"pt": "Nenhum",                "en": "None"},
-	"no_saved_pets": {"pt": "(nenhum pet salvo)",    "en": "(no saved pets)"},
-	"no_saved_acc":  {"pt": "(nenhum acessório salvo)","en": "(no saved accessories)"},
+	"select":        {"pt": "Selecione...",          "en": "Select...",              "es": "Seleccionar..."},
+	"default_pet":   {"pt": "Padrão",                "en": "Default",                "es": "Predeterminado"},
+	"none_acc":      {"pt": "Nenhum",                "en": "None",                   "es": "Ninguno"},
+	"no_saved_pets": {"pt": "(nenhum pet salvo)",    "en": "(no saved pets)",        "es": "(no hay mascotas guardadas)"},
+	"no_saved_acc":  {"pt": "(nenhum acessório salvo)","en": "(no saved accessories)","es": "(no hay accesorios guardados)"},
 	# diálogos salvar / renomear
-	"save_pet_title":   {"pt": "Salvar Pet",         "en": "Save Pet"},
-	"save_acc_title":   {"pt": "Salvar Acessório",   "en": "Save Accessory"},
-	"rename_pet_title": {"pt": "Renomear Pet",       "en": "Rename Pet"},
-	"rename_acc_title": {"pt": "Renomear Acessório", "en": "Rename Accessory"},
-	"name_pet_label":   {"pt": "Nome do pet:",       "en": "Pet name:"},
-	"name_acc_label":   {"pt": "Nome do acessório:", "en": "Accessory name:"},
-	"newname_pet_label":{"pt": "Novo nome do pet:",  "en": "New pet name:"},
-	"newname_acc_label":{"pt": "Novo nome do acessório:","en": "New accessory name:"},
-	"ph_pet":           {"pt": "ex: Fofinho",        "en": "e.g. Fluffy"},
-	"ph_acc":           {"pt": "ex: Chapéu de Festa","en": "e.g. Party Hat"},
-	"btn_save":         {"pt": "Salvar",             "en": "Save"},
-	"btn_rename":       {"pt": "Renomear",           "en": "Rename"},
+	"save_pet_title":   {"pt": "Salvar Pet",         "en": "Save Pet",               "es": "Guardar mascota"},
+	"save_acc_title":   {"pt": "Salvar Acessório",   "en": "Save Accessory",         "es": "Guardar accesorio"},
+	"rename_pet_title": {"pt": "Renomear Pet",       "en": "Rename Pet",             "es": "Renombrar mascota"},
+	"rename_acc_title": {"pt": "Renomear Acessório", "en": "Rename Accessory",       "es": "Renombrar accesorio"},
+	"name_pet_label":   {"pt": "Nome do pet:",       "en": "Pet name:",              "es": "Nombre de la mascota:"},
+	"name_acc_label":   {"pt": "Nome do acessório:", "en": "Accessory name:",        "es": "Nombre del accesorio:"},
+	"newname_pet_label":{"pt": "Novo nome do pet:",  "en": "New pet name:",          "es": "Nuevo nombre de la mascota:"},
+	"newname_acc_label":{"pt": "Novo nome do acessório:","en": "New accessory name:","es": "Nuevo nombre del accesorio:"},
+	"ph_pet":           {"pt": "ex: Fofinho",        "en": "e.g. Fluffy",            "es": "p. ej. Peluchín"},
+	"ph_acc":           {"pt": "ex: Chapéu de Festa","en": "e.g. Party Hat",         "es": "p. ej. Gorro de Fiesta"},
+	"btn_save":         {"pt": "Salvar",             "en": "Save",                   "es": "Guardar"},
+	"btn_rename":       {"pt": "Renomear",           "en": "Rename",                 "es": "Renombrar"},
 	# diálogo excluir
-	"delete_title":   {"pt": "Excluir",              "en": "Delete"},
-	"btn_delete":     {"pt": "Excluir",              "en": "Delete"},
-	"btn_cancel":     {"pt": "Cancelar",             "en": "Cancel"},
+	"delete_title":   {"pt": "Excluir",              "en": "Delete",                 "es": "Eliminar"},
+	"btn_delete":     {"pt": "Excluir",              "en": "Delete",                 "es": "Eliminar"},
+	"btn_cancel":     {"pt": "Cancelar",             "en": "Cancel",                 "es": "Cancelar"},
 	"delete_confirm": {"pt": "Excluir o %s \"%s\" permanentemente?",
-		"en": "Permanently delete the %s \"%s\"?"},
-	"kind_pet":       {"pt": "pet",                  "en": "pet"},
-	"kind_acc":       {"pt": "acessório",            "en": "accessory"},
+		"en": "Permanently delete the %s \"%s\"?",
+		"es": "¿Eliminar el %s \"%s\" de forma permanente?"},
+	"kind_pet":       {"pt": "pet",                  "en": "pet",                    "es": "mascota"},
+	"kind_acc":       {"pt": "acessório",            "en": "accessory",              "es": "accesorio"},
 	# diálogo de credenciais
-	"cred_ok":        {"pt": "Entrar",               "en": "Sign in"},
-	"cred_email_label":{"pt": "E-mail:",             "en": "E-mail:"},
-	"cred_pass_label":{"pt": "App Password (senha de app):", "en": "App Password:"},
-	"cred_user_ph":   {"pt": "voce@gmail.com",       "en": "you@gmail.com"},
+	"cred_ok":        {"pt": "Entrar",               "en": "Sign in",                "es": "Entrar"},
+	"cred_email_label":{"pt": "E-mail:",             "en": "E-mail:",                "es": "Correo:"},
+	"cred_pass_label":{"pt": "App Password (senha de app):", "en": "App Password:",  "es": "Contraseña de aplicación:"},
+	"cred_user_ph":   {"pt": "voce@gmail.com",       "en": "you@gmail.com",          "es": "tu@gmail.com"},
 	"cred_pass_ph":   {"pt": "senha de aplicativo (não a senha normal)",
-		"en": "app password (not your normal password)"},
+		"en": "app password (not your normal password)",
+		"es": "contraseña de aplicación (no la contraseña normal)"},
 	"cred_open_page": {"pt": "↗ Abrir a página da Senha de app",
-		"en": "↗ Open the App Password page"},
+		"en": "↗ Open the App Password page",
+		"es": "↗ Abrir la página de Contraseñas de aplicación"},
 	# falas (say)
-	"hello":          {"pt": "olá! eu sou o %s 🧡","en": "hi! I'm %s 🧡"},
-	"say_default":    {"pt": "Padrão 🐾",            "en": "Default 🐾"},
-	"say_no_acc":     {"pt": "sem acessório 🚫",     "en": "no accessory 🚫"},
-	"pet_deleted":    {"pt": "pet excluído: %s 🗑️",  "en": "pet deleted: %s 🗑️"},
-	"acc_deleted":    {"pt": "acessório excluído: %s 🗑️","en": "accessory deleted: %s 🗑️"},
-	"welcome_pet":    {"pt": "bem-vindo, %s! 🎉",    "en": "welcome, %s! 🎉"},
+	"hello":          {"pt": "olá! eu sou o %s 🧡","en": "hi! I'm %s 🧡",            "es": "¡hola! soy %s 🧡"},
+	"say_default":    {"pt": "Padrão 🐾",            "en": "Default 🐾",             "es": "Predeterminado 🐾"},
+	"say_no_acc":     {"pt": "sem acessório 🚫",     "en": "no accessory 🚫",        "es": "sin accesorio 🚫"},
+	"pet_deleted":    {"pt": "pet excluído: %s 🗑️",  "en": "pet deleted: %s 🗑️",     "es": "mascota eliminada: %s 🗑️"},
+	"acc_deleted":    {"pt": "acessório excluído: %s 🗑️","en": "accessory deleted: %s 🗑️","es": "accesorio eliminado: %s 🗑️"},
+	"welcome_pet":    {"pt": "bem-vindo, %s! 🎉",    "en": "welcome, %s! 🎉",        "es": "¡bienvenido, %s! 🎉"},
 	"congrats_acc":   {"pt": "parabéns pelo novo visual, %s! 🎉",
-		"en": "congrats on the new look, %s! 🎉"},
-	"name_invalid":   {"pt": "nome inválido 🙈",     "en": "invalid name 🙈"},
-	"pet_saved":      {"pt": "pet salvo: %s 💾",     "en": "pet saved: %s 💾"},
-	"acc_saved":      {"pt": "acessório salvo: %s 🎀","en": "accessory saved: %s 🎀"},
-	"name_kept":      {"pt": "nome mantido 🙂",      "en": "name unchanged 🙂"},
+		"en": "congrats on the new look, %s! 🎉",
+		"es": "¡felicidades por el nuevo look, %s! 🎉"},
+	"name_invalid":   {"pt": "nome inválido 🙈",     "en": "invalid name 🙈",        "es": "nombre inválido 🙈"},
+	"pet_saved":      {"pt": "pet salvo: %s 💾",     "en": "pet saved: %s 💾",       "es": "mascota guardada: %s 💾"},
+	"acc_saved":      {"pt": "acessório salvo: %s 🎀","en": "accessory saved: %s 🎀","es": "accesorio guardado: %s 🎀"},
+	"name_kept":      {"pt": "nome mantido 🙂",      "en": "name unchanged 🙂",      "es": "nombre sin cambios 🙂"},
 	"pet_exists":     {"pt": "já existe um pet com esse nome 🙈",
-		"en": "a pet with that name already exists 🙈"},
+		"en": "a pet with that name already exists 🙈",
+		"es": "ya existe una mascota con ese nombre 🙈"},
 	"acc_exists":     {"pt": "já existe um acessório com esse nome 🙈",
-		"en": "an accessory with that name already exists 🙈"},
-	"pet_renamed":    {"pt": "pet renomeado: %s ✏️", "en": "pet renamed: %s ✏️"},
-	"acc_renamed":    {"pt": "acessório renomeado: %s ✏️","en": "accessory renamed: %s ✏️"},
-	"automation_invalid":{"pt": "automação inválida 🚫","en": "invalid automation 🚫"},
-	"automation_norun":{"pt": "automação sem run() 🤔","en": "automation has no run() 🤔"},
+		"en": "an accessory with that name already exists 🙈",
+		"es": "ya existe un accesorio con ese nombre 🙈"},
+	"pet_renamed":    {"pt": "pet renomeado: %s ✏️", "en": "pet renamed: %s ✏️",     "es": "mascota renombrada: %s ✏️"},
+	"acc_renamed":    {"pt": "acessório renomeado: %s ✏️","en": "accessory renamed: %s ✏️","es": "accesorio renombrado: %s ✏️"},
+	"automation_invalid":{"pt": "automação inválida 🚫","en": "invalid automation 🚫","es": "automatización inválida 🚫"},
+	"automation_norun":{"pt": "automação sem run() 🤔","en": "automation has no run() 🤔","es": "automatización sin run() 🤔"},
 	# notas (📝 Notas)
-	"note_new":       {"pt": "➕ Nova nota...",       "en": "➕ New note..."},
-	"note_paste":     {"pt": "📋 Colar da área de transferência","en": "📋 Paste from clipboard"},
-	"note_delete":    {"pt": "🗑️ Excluir nota",       "en": "🗑️ Delete note"},
-	"note_empty":     {"pt": "(nenhuma nota)",       "en": "(no notes)"},
-	"note_new_title": {"pt": "Nova nota",            "en": "New note"},
-	"note_ph":        {"pt": "Digite ou cole o texto da nota...","en": "Type or paste the note text..."},
-	"note_saved":     {"pt": "nota salva 📝",         "en": "note saved 📝"},
-	"note_pasted":    {"pt": "nota colada da área de transferência 📋","en": "note pasted from clipboard 📋"},
-	"note_copied":    {"pt": "nota copiada! 📋",      "en": "note copied! 📋"},
-	"note_deleted":   {"pt": "nota excluída 🗑️",      "en": "note deleted 🗑️"},
-	"note_clip_empty":{"pt": "área de transferência vazia 🤔","en": "clipboard is empty 🤔"},
-	"note_empty_input":{"pt": "nota vazia 🤔",        "en": "empty note 🤔"},
+	"note_new":       {"pt": "➕ Nova nota...",       "en": "➕ New note...",         "es": "➕ Nueva nota..."},
+	"note_paste":     {"pt": "📋 Colar da área de transferência","en": "📋 Paste from clipboard","es": "📋 Pegar del portapapeles"},
+	"note_delete":    {"pt": "🗑️ Excluir nota",       "en": "🗑️ Delete note",         "es": "🗑️ Eliminar nota"},
+	"note_empty":     {"pt": "(nenhuma nota)",       "en": "(no notes)",             "es": "(no hay notas)"},
+	"note_new_title": {"pt": "Nova nota",            "en": "New note",               "es": "Nueva nota"},
+	"note_ph":        {"pt": "Digite ou cole o texto da nota...","en": "Type or paste the note text...","es": "Escribe o pega el texto de la nota..."},
+	"note_saved":     {"pt": "nota salva 📝",         "en": "note saved 📝",          "es": "nota guardada 📝"},
+	"note_pasted":    {"pt": "nota colada da área de transferência 📋","en": "note pasted from clipboard 📋","es": "nota pegada del portapapeles 📋"},
+	"note_copied":    {"pt": "nota copiada! 📋",      "en": "note copied! 📋",        "es": "¡nota copiada! 📋"},
+	"note_deleted":   {"pt": "nota excluída 🗑️",      "en": "note deleted 🗑️",        "es": "nota eliminada 🗑️"},
+	"note_clip_empty":{"pt": "área de transferência vazia 🤔","en": "clipboard is empty 🤔","es": "el portapapeles está vacío 🤔"},
+	"note_empty_input":{"pt": "nota vazia 🤔",        "en": "empty note 🤔",          "es": "nota vacía 🤔"},
 	# lembretes (⏰ Lembretes)
-	"mi_reminders":   {"pt": "⏰ Lembretes",          "en": "⏰ Reminders"},
-	"rem_new":        {"pt": "➕ Novo lembrete...",   "en": "➕ New reminder..."},
-	"rem_delete":     {"pt": "🗑️ Excluir lembrete",   "en": "🗑️ Delete reminder"},
-	"rem_empty":      {"pt": "(nenhum lembrete)",     "en": "(no reminders)"},
-	"rem_new_title":  {"pt": "Novo lembrete",         "en": "New reminder"},
-	"rem_msg_label":  {"pt": "Mensagem:",             "en": "Message:"},
-	"rem_freq_label": {"pt": "Frequência:",           "en": "Frequency:"},
-	"rem_time_label": {"pt": "Hora (HH:MM):",         "en": "Time (HH:MM):"},
-	"rem_ph":         {"pt": "ex: Beber água 💧",     "en": "e.g. Drink water 💧"},
-	"rem_freq_15m":   {"pt": "A cada 15 minutos",     "en": "Every 15 minutes"},
-	"rem_freq_30m":   {"pt": "A cada 30 minutos",     "en": "Every 30 minutes"},
-	"rem_freq_1h":    {"pt": "A cada 1 hora",         "en": "Every 1 hour"},
-	"rem_freq_hourly":{"pt": "De hora em hora (:00)", "en": "On the hour (:00)"},
-	"rem_freq_daily": {"pt": "Diariamente às...",     "en": "Daily at..."},
-	"rem_saved":      {"pt": "lembrete criado ⏰",     "en": "reminder created ⏰"},
-	"rem_deleted":    {"pt": "lembrete excluído 🗑️",   "en": "reminder deleted 🗑️"},
-	"rem_on":         {"pt": "⏰ lembrete ligado: %s", "en": "⏰ reminder on: %s"},
-	"rem_off":        {"pt": "⏸️ lembrete desligado: %s","en": "⏸️ reminder off: %s"},
-	"rem_empty_input":{"pt": "mensagem vazia 🤔",     "en": "empty message 🤔"},
-	"rem_bad_time":   {"pt": "hora inválida (use HH:MM) 🙈","en": "invalid time (use HH:MM) 🙈"},
-	"login_incomplete":{"pt": "login incompleto 🙈", "en": "incomplete login 🙈"},
-	"hi_react":       {"pt": "oi! 👋",               "en": "hi! 👋"},
-	"sched_on":       {"pt": "⏱️ %s ligada (%s)",    "en": "⏱️ %s on (%s)"},
-	"sched_off":      {"pt": "⏸️ %s desligada",      "en": "⏸️ %s off"},
+	"mi_reminders":   {"pt": "⏰ Lembretes",          "en": "⏰ Reminders",           "es": "⏰ Recordatorios"},
+	"rem_new":        {"pt": "➕ Novo lembrete...",   "en": "➕ New reminder...",     "es": "➕ Nuevo recordatorio..."},
+	"rem_delete":     {"pt": "🗑️ Excluir lembrete",   "en": "🗑️ Delete reminder",     "es": "🗑️ Eliminar recordatorio"},
+	"rem_empty":      {"pt": "(nenhum lembrete)",     "en": "(no reminders)",         "es": "(no hay recordatorios)"},
+	"rem_new_title":  {"pt": "Novo lembrete",         "en": "New reminder",           "es": "Nuevo recordatorio"},
+	"rem_msg_label":  {"pt": "Mensagem:",             "en": "Message:",               "es": "Mensaje:"},
+	"rem_freq_label": {"pt": "Frequência:",           "en": "Frequency:",             "es": "Frecuencia:"},
+	"rem_time_label": {"pt": "Hora (HH:MM):",         "en": "Time (HH:MM):",          "es": "Hora (HH:MM):"},
+	"rem_ph":         {"pt": "ex: Beber água 💧",     "en": "e.g. Drink water 💧",    "es": "p. ej. Beber agua 💧"},
+	"rem_freq_15m":   {"pt": "A cada 15 minutos",     "en": "Every 15 minutes",       "es": "Cada 15 minutos"},
+	"rem_freq_30m":   {"pt": "A cada 30 minutos",     "en": "Every 30 minutes",       "es": "Cada 30 minutos"},
+	"rem_freq_1h":    {"pt": "A cada 1 hora",         "en": "Every 1 hour",           "es": "Cada 1 hora"},
+	"rem_freq_hourly":{"pt": "De hora em hora (:00)", "en": "On the hour (:00)",      "es": "En punto cada hora (:00)"},
+	"rem_freq_daily": {"pt": "Diariamente às...",     "en": "Daily at...",            "es": "Diariamente a las..."},
+	"rem_saved":      {"pt": "lembrete criado ⏰",     "en": "reminder created ⏰",     "es": "recordatorio creado ⏰"},
+	"rem_deleted":    {"pt": "lembrete excluído 🗑️",   "en": "reminder deleted 🗑️",    "es": "recordatorio eliminado 🗑️"},
+	"rem_on":         {"pt": "⏰ lembrete ligado: %s", "en": "⏰ reminder on: %s",     "es": "⏰ recordatorio activado: %s"},
+	"rem_off":        {"pt": "⏸️ lembrete desligado: %s","en": "⏸️ reminder off: %s", "es": "⏸️ recordatorio desactivado: %s"},
+	"rem_empty_input":{"pt": "mensagem vazia 🤔",     "en": "empty message 🤔",       "es": "mensaje vacío 🤔"},
+	"rem_bad_time":   {"pt": "hora inválida (use HH:MM) 🙈","en": "invalid time (use HH:MM) 🙈","es": "hora inválida (usa HH:MM) 🙈"},
+	"login_incomplete":{"pt": "login incompleto 🙈", "en": "incomplete login 🙈",    "es": "inicio de sesión incompleto 🙈"},
+	"hi_react":       {"pt": "oi! 👋",               "en": "hi! 👋",                 "es": "¡hola! 👋"},
+	"sched_on":       {"pt": "⏱️ %s ligada (%s)",    "en": "⏱️ %s on (%s)",          "es": "⏱️ %s activada (%s)"},
+	"sched_off":      {"pt": "⏸️ %s desligada",      "en": "⏸️ %s off",              "es": "⏸️ %s desactivada"},
 	# automações: rótulos de frequência / badges
-	"automation":     {"pt": "automação",            "en": "automation"},
-	"unread":         {"pt": "não lidos",            "en": "unread"},
-	"freq_hourly":    {"pt": "toda hora cheia",      "en": "every hour"},
-	"freq_daily":     {"pt": "todo dia %02d:%02d",   "en": "daily at %02d:%02d"},
-	"freq_every":     {"pt": "a cada %s",            "en": "every %s"},
+	"automation":     {"pt": "automação",            "en": "automation",             "es": "automatización"},
+	"unread":         {"pt": "não lidos",            "en": "unread",                 "es": "sin leer"},
+	"freq_hourly":    {"pt": "toda hora cheia",      "en": "every hour",             "es": "cada hora en punto"},
+	"freq_daily":     {"pt": "todo dia %02d:%02d",   "en": "daily at %02d:%02d",     "es": "todos los días a las %02d:%02d"},
+	"freq_every":     {"pt": "a cada %s",            "en": "every %s",               "es": "cada %s"},
 }
 
 # Listas de falas (sorteadas) por idioma.
@@ -478,31 +486,40 @@ const STRING_LISTS := {
 		"en": ["ugh, not again 🤢", "stop it! 😠", "grrr... 😤",
 			"again?... 😢", "I'm tired of this 😞", "whatever 😑",
 			"sure... 🙄", "...zzz 😴"],
+		"es": ["puaj, otra vez no 🤢", "¡para ya! 😠", "grrr... 😤",
+			"¿otra vez?... 😢", "estoy cansado de esto 😞", "lo que sea 😑",
+			"como quieras... 🙄", "...zzz 😴"],
 	},
 	"feed": {
 		"pt": ["nhac nhac! 😋", "obrigado!", "que delícia 🦴"],
 		"en": ["nom nom! 😋", "thank you!", "yummy 🦴"],
+		"es": ["¡ñam ñam! 😋", "¡gracias!", "qué rico 🦴"],
 	},
 	"pet_react": {
 		"pt": ["ronron... 🥰", "adoro carinho!", "mais! mais!"],
 		"en": ["purr... 🥰", "I love pets!", "more! more!"],
+		"es": ["ronroneo... 🥰", "¡me encantan los mimos!", "¡más! ¡más!"],
 	},
 	"play": {
 		"pt": ["yupiii! 🎾", "de novo!", "tô voando! 🚀"],
 		"en": ["yippee! 🎾", "again!", "I'm flying! 🚀"],
+		"es": ["¡yupi! 🎾", "¡otra vez!", "¡estoy volando! 🚀"],
 	},
 	# reações a chacoalhar o mouse rápido (sacudida): tontura / enjoo / susto
 	"shake_dizzy": {
 		"pt": ["que tontura... 😵", "para de rodar! 😵", "tô zonzo 😵"],
 		"en": ["so dizzy... 😵", "stop spinning! 😵", "I'm woozy 😵"],
+		"es": ["qué mareo... 😵", "¡deja de dar vueltas! 😵", "estoy mareado 😵"],
 	},
 	"shake_nausea": {
 		"pt": ["ugh... tô enjoado 🤢", "vou passar mal... 🤢", "que enjoo 🤢"],
 		"en": ["ugh... I feel sick 🤢", "gonna be sick... 🤢", "so queasy 🤢"],
+		"es": ["uf... tengo náuseas 🤢", "me voy a marear... 🤢", "qué asco 🤢"],
 	},
 	"shake_scared": {
 		"pt": ["aaah! que susto! 😱", "me assustou! 😱", "eek! 😱"],
 		"en": ["aaah! so scary! 😱", "you scared me! 😱", "eek! 😱"],
+		"es": ["¡aaah! ¡qué susto! 😱", "¡me asustaste! 😱", "¡ay! 😱"],
 	},
 	# --- bancos para nomes COMBINATÓRIOS (substantivo + adjetivo) ---
 	# Os adjetivos pt são propositalmente invariáveis em gênero (terminam em -e/-l/-z/
@@ -518,6 +535,10 @@ const STRING_LISTS := {
 			"Spark", "Breeze", "Cocoa", "Luna", "Pip", "Mochi", "Waffle", "Maple", "Pumpkin",
 			"Biscuit", "Noodle", "Marble", "Pixel", "Comet", "Nugget", "Button", "Pickle",
 			"Muffin", "Sprout", "Bean", "Peach", "Dot"],
+		"es": ["Miel", "Nube", "Galleta", "Palomita", "Estrella", "Trueno", "Mora", "Chispa",
+			"Brisa", "Cacao", "Luna", "Gota", "Algodón", "Cometa", "Caramelo", "Trufa", "Flan",
+			"Bombón", "Confeti", "Pétalo", "Copo", "Rayo", "Botón", "Bizcocho", "Calabaza",
+			"Durazno", "Avellana", "Mermelada", "Néctar", "Sol"],
 	},
 	"pet_adjs": {
 		"pt": ["Alegre", "Doce", "Saltitante", "Brilhante", "Radiante", "Veloz", "Feliz",
@@ -528,6 +549,10 @@ const STRING_LISTS := {
 			"Merry", "Snuggly", "Dreamy", "Peppy", "Jolly", "Spunky", "Witty", "Cuddly",
 			"Zippy", "Goofy", "Plucky", "Dapper", "Breezy", "Sparky", "Mellow", "Bubbly",
 			"Chirpy", "Frisky", "Nimble", "Quirky", "Wobbly", "Perky"],
+		"es": ["Alegre", "Dulce", "Saltarín", "Brillante", "Radiante", "Veloz", "Feliz",
+			"Gentil", "Noble", "Fuerte", "Elegante", "Vibrante", "Centelleante", "Reluciente",
+			"Valiente", "Estelar", "Lunar", "Solar", "Celeste", "Sutil", "Ágil", "Jovial",
+			"Leal", "Audaz", "Sagaz", "Chispeante", "Fascinante", "Genial", "Fugaz", "Astral"],
 	},
 	"acc_nouns": {
 		"pt": ["Charme", "Gala", "Visual", "Estilo", "Brilho", "Pose", "Toque", "Glamour",
@@ -538,6 +563,10 @@ const STRING_LISTS := {
 			"Touch", "Trim", "Accent", "Ensemble", "Outfit", "Getup", "Garb", "Attire",
 			"Finish", "Sheen", "Luster", "Motif", "Combo", "Set", "Aura", "Drip", "Fit",
 			"Statement", "Edit", "Polish", "Grace"],
+		"es": ["Encanto", "Gala", "Estilo", "Brillo", "Pose", "Toque", "Glamur", "Lujo",
+			"Pompa", "Hechizo", "Acabado", "Traje", "Conjunto", "Aura", "Realce", "Detalle",
+			"Refinamiento", "Esplendor", "Fulgor", "Lustre", "Adorno", "Barniz", "Porte",
+			"Capricho", "Garbo", "Esmero", "Sello", "Toque", "Aire", "Floreo"],
 	},
 	"acc_adjs": {
 		"pt": ["Elegante", "Radiante", "Brilhante", "Real", "Estelar", "Vibrante", "Cintilante",
@@ -548,6 +577,10 @@ const STRING_LISTS := {
 			"Sleek", "Classy", "Glam", "Posh", "Snazzy", "Swanky", "Dashing", "Polished",
 			"Refined", "Vivid", "Bold", "Festive", "Regal", "Trendy", "Glossy", "Charming",
 			"Suave", "Slick", "Spiffy", "Ritzy", "Plush", "Lavish"],
+		"es": ["Elegante", "Radiante", "Brillante", "Real", "Estelar", "Vibrante", "Centelleante",
+			"Reluciente", "Noble", "Sutil", "Chic", "Singular", "Chispeante", "Fascinante",
+			"Jovial", "Celeste", "Astral", "Solar", "Lunar", "Imperial", "Sideral", "Floral",
+			"Polar", "Especial", "Triunfal", "Magistral", "Colosal", "Genial", "Fenomenal", "Original"],
 	},
 }
 
@@ -562,21 +595,26 @@ func ta(key: String) -> Array:
 	return e.get(lang, e.get("pt", []))
 
 # --- helpers de idioma/locale para as automações (Automacoes/*.gd) ---
-## Escolhe entre dois textos conforme o idioma atual. As automações usam isto para
-## falas bilíngues sem precisar de tabela própria: zimmy.lang_text("pt...", "en...").
-func lang_text(pt_text: String, en_text: String) -> String:
-	return en_text if lang == "en" else pt_text
+## Escolhe entre textos conforme o idioma atual. As automações usam isto para
+## falas multilíngues sem precisar de tabela própria: zimmy.lang_text("pt...", "en...", "es...").
+## O texto em espanhol é opcional; se vazio, o espanhol cai no português.
+func lang_text(pt_text: String, en_text: String, es_text := "") -> String:
+	if lang == "en":
+		return en_text
+	if lang == "es":
+		return es_text if es_text != "" else pt_text
+	return pt_text
 
 ## Formata um número com N casas, usando o separador decimal do idioma
-## (vírgula no pt-BR, ponto no en-US).
+## (vírgula no pt-BR e es-ES, ponto no en-US).
 func fmt_num(v: float, decimals := 2) -> String:
 	var s := String.num(v, decimals)
-	return s.replace(".", ",") if lang == "pt" else s
+	return s if lang == "en" else s.replace(".", ",")
 
 ## Formata uma variação percentual com sinal (+/-) e separador localizado.
 func fmt_pct(v: float) -> String:
 	var s := ("+" if v >= 0.0 else "") + String.num(v, 2)
-	if lang == "pt":
+	if lang != "en":
 		s = s.replace(".", ",")
 	return s + "%"
 
@@ -914,6 +952,7 @@ func _build_menu() -> void:
 	lang_menu = PopupMenu.new()
 	lang_menu.add_radio_check_item("Português (Brasil)", LANG_PT)
 	lang_menu.add_radio_check_item("English (US)", LANG_EN)
+	lang_menu.add_radio_check_item("Español (España)", LANG_ES)
 	lang_menu.id_pressed.connect(_on_pick_language)
 	donate_menu = PopupMenu.new()
 	donate_menu.add_icon_item(_provider_icon(Color("ea4aaa")), "GitHub Sponsors", DONATE_SPONSORS)
@@ -1011,10 +1050,14 @@ func _on_pick_sound(id: int) -> void:
 func _refresh_lang_checks() -> void:
 	lang_menu.set_item_checked(lang_menu.get_item_index(LANG_PT), lang == "pt")
 	lang_menu.set_item_checked(lang_menu.get_item_index(LANG_EN), lang == "en")
+	lang_menu.set_item_checked(lang_menu.get_item_index(LANG_ES), lang == "es")
 
 ## Troca o idioma, persiste e reaplica todos os rótulos da UI.
 func _on_pick_language(id: int) -> void:
-	var new_lang := "en" if id == LANG_EN else "pt"
+	var new_lang := "pt"
+	match id:
+		LANG_EN: new_lang = "en"
+		LANG_ES: new_lang = "es"
 	if new_lang == lang:
 		return
 	lang = new_lang
@@ -1793,9 +1836,11 @@ func _scan_automations() -> Array:
 func _automation_name_from(gd, filename: String) -> String:
 	if gd is GDScript:
 		var consts: Dictionary = (gd as GDScript).get_script_constant_map()
-		# Nome bilíngue: usa AUTOMATION_NAME_EN no inglês, se a automação declarar.
+		# Nome multilíngue: usa AUTOMATION_NAME_EN/_ES conforme o idioma, se a automação declarar.
 		if lang == "en" and consts.has("AUTOMATION_NAME_EN"):
 			return str(consts["AUTOMATION_NAME_EN"])
+		if lang == "es" and consts.has("AUTOMATION_NAME_ES"):
+			return str(consts["AUTOMATION_NAME_ES"])
 		if consts.has("AUTOMATION_NAME"):
 			return str(consts["AUTOMATION_NAME"])
 	return filename.trim_suffix(".gd").capitalize()
@@ -2788,7 +2833,8 @@ func _load_selection() -> void:
 	if not (parsed is Dictionary):
 		return
 	if parsed.has("lang"):
-		lang = "en" if String(parsed["lang"]) == "en" else "pt"
+		var saved_lang := String(parsed["lang"])
+		lang = saved_lang if saved_lang in ["pt", "en", "es"] else "pt"
 	if parsed.has("show_acc"):
 		show_accessories = bool(parsed["show_acc"])
 	if parsed.has("status"):

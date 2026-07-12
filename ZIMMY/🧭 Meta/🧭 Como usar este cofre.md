@@ -8,6 +8,9 @@ tags: [meta, zimmy-pet]
 
 # 🧭 Como usar este cofre
 
+> 🇺🇸 Read this page in English → [[🧭 Como usar este cofre (EN)]]
+> 🇪🇸 Lee esta página en español → [[🧭 Como usar este cofre (ES)]]
+
 > Para **retomar o trabalho**, veja [[📌 Backlog]] (prioridades P0/P1/P2).
 
 Este cofre Obsidian é a **memória técnica** do projeto Zimmy Pet, criada e mantida

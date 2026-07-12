@@ -8,6 +8,9 @@ tags: [sistema, moedas, cotacoes, automacoes, zimmy-pet]
 
 # 💱 Sistema - Moedas (cotações)
 
+> 🇺🇸 Read this page in English → [[💱 Sistema - Moedas (EN)]]
+> 🇪🇸 Lee esta página en español → [[💱 Sistema - Moedas (ES)]]
+
 Automações que buscam **cotações de moeda** e o Zimmy fala o valor. São scripts normais
 da pasta `Automacoes/` que se agrupam num submenu próprio via `const MENU_GROUP := "moedas"`.
 Caso especializado de [[⚙️ Sistema - Automações e Agendador]].

@@ -8,6 +8,9 @@ tags: [sistema, automacoes, agendador, extensibilidade, zimmy-pet]
 
 # ⚙️ System - Automations & Scheduler
 
+> 🇧🇷 Leia esta página em português → [[⚙️ Sistema - Automações e Agendador]]
+> 🇪🇸 Lee esta página en español → [[⚙️ Sistema - Automações e Agendador (ES)]]
+
 Zimmy's **extensibility** layer: any `.gd` script dropped in the `Automacoes/` folder
 becomes a menu item. **One-off** scripts show up under **⚙️ Automations** (run once when
 clicked) and those declaring a frequency show up under **⏱️ Timers** (Zimmy runs them by

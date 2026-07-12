@@ -9,9 +9,10 @@ extends RefCounted
 
 const AUTOMATION_NAME := "Comemorar hora cheia 🎆"
 const AUTOMATION_NAME_EN := "Celebrate the hour 🎆"
+const AUTOMATION_NAME_ES := "Celebrar la hora en punto 🎆"
 const SCHEDULE := "hourly"
 
 func run(zimmy) -> void:
 	var h: int = Time.get_time_dict_from_system().hour
-	zimmy.notify(zimmy.lang_text("%dh em ponto! 🎆🎉", "%d o'clock sharp! 🎆🎉") % h)
+	zimmy.notify(zimmy.lang_text("%dh em ponto! 🎆🎉", "%d o'clock sharp! 🎆🎉", "¡las %d en punto! 🎆🎉") % h)
 	zimmy.celebrate()   # fogos de artifício + pulo + dancinha

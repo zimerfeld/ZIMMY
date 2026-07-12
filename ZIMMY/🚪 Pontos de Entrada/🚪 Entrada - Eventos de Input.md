@@ -8,6 +8,8 @@ tags: [endpoint, input, zimmy-pet]
 
 # 🚪 Entrada - Eventos de Input
 
+> 🇪🇸 Lee esta página en español → [[🚪 Entrada - Eventos de Input (ES)]]
+
 A "API" de entrada do overlay. Passa por `_input(event)` **e** por amostragem do cursor
 global no [[🔁 Fluxo - Loop (_process)]] (hover/sacudida funcionam mesmo sem foco/eventos).
 (Não há endpoints de rede — é um app desktop; estes eventos são a superfície de interação.)

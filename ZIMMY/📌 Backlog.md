@@ -8,6 +8,9 @@ tags: [meta, backlog, zimmy-pet]
 
 # 🗂️ _Backlog priorizado
 
+> 🇺🇸 Read this page in English → [[📌 Backlog (EN)]]
+> 🇪🇸 Lee esta página en español → [[📌 Backlog (ES)]]
+
 > Nota **autossuficiente** para retomar o projeto em qualquer chat novo.
 > A regra global faz o Claude ler este cofre no início — então **comece por aqui** e
 > depois pela [[🏠 Home]] e [[🧭 Como usar este cofre]].

@@ -9,6 +9,8 @@ caminho: README.md
 
 # 📄 README.md
 
+> 🇪🇸 Lee esta página en español → [[📄 Arquivo - README (ES)]]
+
 Documentação do projeto e **fonte da verdade** dos fatos (este cofre espelha o
 README, não o contrário). Em português.
 

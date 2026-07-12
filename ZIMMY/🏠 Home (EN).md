@@ -9,6 +9,7 @@ tags: [moc, home, zimmy-pet]
 # 🏠 ZIMMY — Neuron Vault
 
 > 🇧🇷 Leia esta página em português → [[🏠 Home]]
+> 🇪🇸 Lee esta página en español → [[🏠 Home (ES)]]
 
 > [!abstract] 🧠 What this vault is
 > Claude's persistent memory for the **ZIMMY (Zimmy Pet)** project. A procedural *desktop pet*

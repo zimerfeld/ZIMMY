@@ -8,6 +8,9 @@ tags: [sistema, automacoes, agendador, extensibilidade, zimmy-pet]
 
 # ⚙️ Sistema - Automações e Agendador
 
+> 🇺🇸 Read this page in English → [[⚙️ Sistema - Automações e Agendador (EN)]]
+> 🇪🇸 Lee esta página en español → [[⚙️ Sistema - Automações e Agendador (ES)]]
+
 Camada de **extensibilidade** do Zimmy: qualquer script `.gd` colocado na pasta
 `Automacoes/` vira um item de menu. Scripts **avulsos** aparecem em **⚙️ Automações**
 (executam uma vez ao clicar) e os que declaram frequência aparecem em

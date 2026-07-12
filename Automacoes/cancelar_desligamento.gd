@@ -4,7 +4,8 @@ extends RefCounted
 
 const AUTOMATION_NAME := "Cancelar desligamento ❌"
 const AUTOMATION_NAME_EN := "Cancel shutdown ❌"
+const AUTOMATION_NAME_ES := "Cancelar apagado ❌"
 
 func run(zimmy) -> void:
 	OS.execute("shutdown", ["/a"])
-	zimmy.notify(zimmy.lang_text("desligamento cancelado ✋", "shutdown canceled ✋"))
+	zimmy.notify(zimmy.lang_text("desligamento cancelado ✋", "shutdown canceled ✋", "apagado cancelado ✋"))

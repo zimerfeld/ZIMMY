@@ -8,6 +8,8 @@ tags: [sistema, overlay, zimmy-pet]
 
 # 🪟 Sistema - Janela Overlay
 
+> 🇪🇸 Lee esta página en español → [[🪟 Sistema - Janela Overlay (ES)]]
+
 A "mágica": uma janela **transparente, sem bordas, sempre no topo** que flutua sobre
 a área de trabalho e se redimensiona dinamicamente.
 

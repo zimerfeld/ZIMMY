@@ -8,6 +8,9 @@ tags: [sistema, acessorios, zimmy-pet]
 
 # 🎀 Sistema - Acessórios
 
+> 🇺🇸 Read this page in English → [[🎀 Sistema - Acessórios (EN)]]
+> 🇪🇸 Lee esta página en español → [[🎀 Sistema - Acessórios (ES)]]
+
 Camada **independente do pet**, desenhada por cima. Salvar/carregar é separado dos
 pets (um pet salvo não leva acessório e vice-versa), então dá para combinar qualquer
 pet com qualquer acessório.

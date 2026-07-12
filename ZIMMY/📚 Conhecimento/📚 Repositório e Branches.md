@@ -8,6 +8,9 @@ tags: [referencia, git, zimmy-pet]
 
 # 📚 Repositório e Branches
 
+> 🇺🇸 Read this page in English → [[📚 Repositório e Branches (EN)]]
+> 🇪🇸 Lee esta página en español → [[📚 Repositório e Branches (ES)]]
+
 - **Remote**: `origin` → https://github.com/zimerfeld/ZIMMY.git
 - **Branch padrão remoto**: `main` (`origin/HEAD -> origin/main`).
 - **Branches locais**: `main`, `develop`, `feature/aleatorios` (ativa em 2026-06-20).

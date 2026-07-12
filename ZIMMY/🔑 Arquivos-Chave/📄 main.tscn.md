@@ -9,6 +9,8 @@ caminho: main.tscn
 
 # 📄 main.tscn
 
+> 🇪🇸 Lee esta página en español → [[📄 main.tscn (ES)]]
+
 Cena raiz, mínima. Um único nó `Node2D` chamado **Zimmy** com o script
 [[📄 zimmy.gd]] anexado.
 

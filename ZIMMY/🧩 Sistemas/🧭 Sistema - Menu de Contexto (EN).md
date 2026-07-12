@@ -8,6 +8,8 @@ tags: [sistema, ui, menu, zimmy-pet]
 
 # 🧭 System - Context Menu
 
+> 🇪🇸 Lee esta página en español → [[🧭 Sistema - Menu de Contexto (ES)]]
+
 Native `PopupMenu` (right-click) with submenus (`pets_menu`, `acc_menu`,
 `pets_del_menu`, `acc_del_menu`) and two `ConfirmationDialog`s (save / delete).
 Assembled in `_build_menu()` (`zimmy.gd:242`).

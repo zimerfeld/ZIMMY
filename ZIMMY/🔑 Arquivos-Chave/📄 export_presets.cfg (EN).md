@@ -9,6 +9,8 @@ caminho: export_presets.cfg
 
 # 📄 export_presets.cfg
 
+> 🇪🇸 Lee esta página en español → [[📄 export_presets.cfg (ES)]]
+
 Single preset: **`Windows Desktop`** (`preset.0`).
 
 | Field | Value |

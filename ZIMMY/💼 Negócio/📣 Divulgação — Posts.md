@@ -8,6 +8,8 @@ tags: [referencia, divulgacao, marketing, growth, zimmy-pet]
 
 # 📣 Divulgação — Posts (features novas)
 
+> 🇪🇸 Lee esta página en español → [[📣 Divulgação — Posts (ES)]]
+
 Copy **pronta para publicar**, sempre em **duas versões (PT-BR + EN-US)** (regra global).
 Features cobertas: **⏱️ Temporizadores/Agendador**, **💱 Moedas**, **📧 E-mails (Gmail)**,
 **⏰ Alarme**. Base factual: [[⚙️ Sistema - Automações e Agendador]], [[💱 Sistema - Moedas]],

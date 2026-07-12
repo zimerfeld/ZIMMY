@@ -8,6 +8,8 @@ tags: [fluxo, persistencia, zimmy-pet]
 
 # 💾 Flow - Save and Load
 
+> 🇪🇸 Lee esta página en español → [[💾 Fluxo - Salvar e Carregar (ES)]]
+
 Pets and accessories are saved/loaded **independently**. See
 [[💾 Sistema - Persistência (EN)]] and [[🧭 Sistema - Menu de Contexto (EN)]].
 

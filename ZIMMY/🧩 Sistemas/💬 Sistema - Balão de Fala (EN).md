@@ -8,6 +8,9 @@ tags: [sistema, fala, ui, zimmy-pet]
 
 # 💬 System - Speech Bubble
 
+> 🇧🇷 Leia esta página em português → [[💬 Sistema - Balão de Fala]]
+> 🇪🇸 Lee esta página en español → [[💬 Sistema - Balão de Fala (ES)]]
+
 A `Label` (created in the [[🟢 Fluxo - Inicialização (EN)]]) with an outline, using the
 **Godot default font** (it renders accents and colored emojis on the Compatibility
 renderer — a `SystemFont` would make the text disappear).

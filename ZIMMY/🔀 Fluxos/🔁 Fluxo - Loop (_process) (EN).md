@@ -8,6 +8,8 @@ tags: [fluxo, ciclo-de-vida, zimmy-pet]
 
 # 🔁 Flow - Loop (`_process`)
 
+> 🇪🇸 Lee esta página en español → [[🔁 Fluxo - Loop (_process) (ES)]]
+
 `_process(delta)` (`zimmy.gd:483`) runs every frame, in order:
 
 1. **Breathing** — `bob += delta*2.2` ([[✨ Sistema - Animação (EN)]]).

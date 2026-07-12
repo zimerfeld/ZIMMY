@@ -8,6 +8,9 @@ tags: [sistema, render, desenho, zimmy-pet]
 
 # 🎨 Sistema - Render (_draw)
 
+> 🇺🇸 Read this page in English → [[🎨 Sistema - Render (_draw) (EN)]]
+> 🇪🇸 Lee esta página en español → [[🎨 Sistema - Render (_draw) (ES)]]
+
 Tudo é desenhado em código a cada frame (`queue_redraw()` no
 [[🔁 Fluxo - Loop (_process)]]). Sem sprites.
 

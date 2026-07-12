@@ -8,6 +8,8 @@ tags: [fluxo, input, janela, zimmy-pet]
 
 # 🖱️ Flow - Dragging and Position
 
+> 🇪🇸 Lee esta página en español → [[🖱️ Fluxo - Arrastar e Posição (ES)]]
+
 Move the window and remember where the pet was left. Logic in `_input()`
 ([[🚪 Entrada - Eventos de Input (EN)]]) + persistence ([[💾 Sistema - Persistência (EN)]]).
 

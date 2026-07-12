@@ -8,6 +8,8 @@ tags: [fluxo, geracao, zimmy-pet]
 
 # 🎲 Fluxo - Geração Aleatória
 
+> 🇪🇸 Lee esta página en español → [[🎲 Fluxo - Geração Aleatória (ES)]]
+
 Pet e acessórios têm checkboxes **independentes**, mas compartilham um **único
 temporizador** (`random_timer`): com os dois ligados, trocam **juntos** no mesmo tique.
 

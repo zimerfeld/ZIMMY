@@ -8,6 +8,9 @@ tags: [procedure, release, github, distribution, zimmy-pet]
 
 # 📦 Update the Release Asset (GitHub)
 
+> 🇧🇷 Leia esta página em português → [[📦 Atualizar Asset da Release (GitHub)]]
+> 🇪🇸 Lee esta página en español → [[📦 Atualizar Asset da Release (GitHub) (ES)]]
+
 > **Goal:** replace/update the `ZimmyPet.exe` binary published on the releases page
 > (`https://github.com/zimerfeld/ZIMMY/releases`) and make it visible to the public.
 

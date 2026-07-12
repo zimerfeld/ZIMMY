@@ -17,6 +17,13 @@ Guidance for Claude Code when working in this repository.
   argumento `es` de `lang_text`), os `README.*` e as notas do cofre Obsidian
   (versões base PT, `(EN)` e `(ES)`, com os links de troca de idioma).
 
+## Seletor / pílula de idioma (UI)
+
+- **A pílula (toggle) de idioma deve sempre exibir as opções `AUTO`, `PT`, `EN` e
+  `ES`, nessa ordem, com `AUTO` pré-selecionado por padrão.** `AUTO` detecta o idioma
+  automaticamente (idioma do navegador/sistema); `PT` / `EN` / `ES` fixam o idioma
+  escolhido. Vale para a landing (`index.html`) e para qualquer seletor de idioma da UI.
+
 ## Publicação / Deploy (gitflow)
 
 - **NÃO pedir para criar nem aprovar Pull Requests.** O processo de publicação já

@@ -2,6 +2,11 @@
 
 Guidance for Claude Code when working in this repository.
 
+## Idioma da conversa
+
+- **Responder sempre no chat em português (Brasil).** Todas as respostas ao
+  usuário devem ser em pt-BR, independentemente do idioma do pedido ou do código.
+
 ## Publicação / Deploy (gitflow)
 
 - **NÃO pedir para criar nem aprovar Pull Requests.** O processo de publicação já
